@@ -5406,7 +5406,7 @@ function renderSkillPage() {
 
     const mapSlot = document.getElementById('skill-map-slot');
     if (mapSlot && !mapSlot.firstChild) {
-        mapSlot.innerHTML = '<img class="skill-map" src="assets/pages/skill/skillmap_q85.webp" alt="">';
+        mapSlot.innerHTML = '<img class="skill-map" src="assets/pages/skill/skillmap_q85.webp?v=2" alt="">';
     }
 
     // Node centers per skill key, and lit state of each link (parent -> child)
