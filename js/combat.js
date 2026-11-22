@@ -1412,12 +1412,12 @@ function awardKill(m) {
             showMonsterGroundDrop(m, `<img src="assets/items/elemental/stone_${stoneEl}.webp" alt="" style="width:44px;height:44px;object-fit:contain;">`);
         }
     }
-    // Refine materials: Ingot from normal monsters (5%), Bar from mini bosses (5%), Alloy from bosses (2%)
-    if (!m.isBoss && !m.isMiniBoss && Math.random() < 0.05) addRefineOre(1, m);
-    // Planks (Tent and Pet House upgrades): normal monsters 10%, mini bosses 20%, bosses 40% per kill
-    if (!m.isBoss && !m.isMiniBoss && Math.random() < 0.1) addPlank(m);
-    if (m.isMiniBoss && Math.random() < 0.2) addPlank(m, 1 + Math.floor(Math.random() * 2)); // 1-2 Planks
-    if (m.isBoss && Math.random() < 0.4) addPlank(m, 2 + Math.floor(Math.random() * 2)); // 2-3 Planks
+    // Refine materials: Ingot from normal monsters (2.5%), Bar from mini bosses (5%), Alloy from bosses (2%)
+    if (!m.isBoss && !m.isMiniBoss && Math.random() < 0.025) addRefineOre(1, m);
+    // Planks (Tent and Pet House upgrades): normal monsters 5%, mini bosses 10%, bosses 20% per kill
+    if (!m.isBoss && !m.isMiniBoss && Math.random() < 0.05) addPlank(m);
+    if (m.isMiniBoss && Math.random() < 0.1) addPlank(m, 1 + Math.floor(Math.random() * 2)); // 1-2 Planks
+    if (m.isBoss && Math.random() < 0.2) addPlank(m, 2 + Math.floor(Math.random() * 2)); // 2-3 Planks
     if (m.isMiniBoss && Math.random() < 0.05) addRefineOre(2, m);
     if (m.isBoss && Math.random() < 0.02) addRefineOre(3, m);
     // Helmet: only from campaign bosses, chance by the map level (see bossHelmetChance)
