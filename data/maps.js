@@ -12,8 +12,9 @@
 //   player at L - 10           -> usually fails
 // MONSTER_CURVE: [level, unit HP, unit ATK]. Unit = a melee monster at that level. Levels between
 // anchors are interpolated geometrically; below 1 or above 99 the nearest anchor is used.
+// Refit 2026-11-22 for players with the skill tree (sim: level-matched 100%, 5 levels under ~45%).
 const MONSTER_CURVE = [
-    [1, 106, 8], [10, 116, 6.45], [20, 218, 12], [30, 358, 20.25], [40, 554, 52.5], [50, 822, 78], [60, 1144, 166.5], [70, 1445, 307.5], [80, 1765, 414], [90, 1949, 434], [99, 1953, 1405]
+    [1, 106, 8], [10, 146, 10.22], [20, 253, 16.18], [30, 424, 28.43], [40, 599, 61.42], [50, 828, 79.17], [60, 1130, 162.34], [70, 1678, 414.51], [80, 2244, 669.44], [90, 2660, 808.54], [99, 2666, 1405]
 ];
 // Role profile: multipliers on the unit. heal = HP restored per turn as a share of the unit HP.
 const ROLE_CURVE = {
