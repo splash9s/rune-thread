@@ -131,11 +131,11 @@ const SKILL_BRANCHES = [
     { key: 'arc', name: 'Arcane', dir: 'right', color: '#c4b5fd',
       cap: { name: 'Arcane Strike', eff: 'arcaneStrike', val: 10, text: 'Bolt chance +10% for every element. Each bolt still rolls its own chance.' },
       tiers: [
-        [['boltFire', 3], ['int', 1], ['boltDmgPct', 2]],
-        [['boltWater', 3], ['boltEarth', 3], ['boltWind', 3], ['int', 1]],
-        [['boltFire', 3], ['boltWater', 3], ['int', 1], ['boltDmgPct', 2], ['boltEarth', 3], ['boltWind', 3]],
-        [['boltEarth', 3], ['int', 1], ['boltWater', 3], ['boltDmgPct', 2], ['boltWind', 3], ['int', 1]],
-        [['boltFire', 3], ['boltDmgPct', 2], ['int', 1], ['boltDmgPct', 2], ['int', 1], ['boltDmgPct', 2]]
+        [['boltFire', 5], ['int', 1], ['boltDmgPct', 2]],
+        [['boltWater', 5], ['boltEarth', 5], ['boltWind', 5], ['int', 1]],
+        [['boltFire', 5], ['boltWater', 5], ['int', 1], ['boltDmgPct', 2], ['boltEarth', 5], ['boltWind', 5]],
+        [['boltEarth', 5], ['int', 1], ['boltWater', 5], ['boltDmgPct', 2], ['boltWind', 5], ['int', 1]],
+        [['boltFire', 5], ['boltDmgPct', 2], ['int', 1], ['boltDmgPct', 2], ['int', 1], ['boltDmgPct', 2]]
       ] },
     { key: 'mit', name: 'Mithril', dir: 'down', color: '#86efac',
       cap: { name: 'Mithril Hauberk', eff: 'mithrilHauberk', val: 10, text: 'Damage taken -10%. While armor is above 0, a further -10%.' },

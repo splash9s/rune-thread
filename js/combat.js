@@ -1297,6 +1297,7 @@ function jobExpNeed(lv) { return Math.max(40, Math.round(EXP_CURVE_K * 0.67 * Ma
 
 function checkLevelUps() {
     let leveled = false;
+    let baseLeveled = false;
     if (player.baseLv < MAX_BASE_LV && player.baseExp >= player.baseMaxExp) {
         leveled = true;
         player.baseLv++;
@@ -1305,6 +1306,7 @@ function checkLevelUps() {
         player.statPoints += 3;
         logMessage(`[BASE LEVEL UP!] Reached Base Level ${player.baseLv}! Gained 3 Stat Points`, 'levelup');
         playSfx(SFX.levelup);
+        baseLeveled = true;
     }
     if (player.baseLv >= 30 && !guideFlag('lv30')) grantGuideBook();
 
@@ -1315,6 +1317,7 @@ function checkLevelUps() {
         player.jobMaxExp = jobExpNeed(player.jobLv);
         player.jobSp += 1;
         logMessage(`[CLASS LEVEL UP!] Reached Class Level ${player.jobLv}! Gained 1 SP`, 'levelup');
+        if (!baseLeveled) playSfx(SFX.levelup); // same sound as a base level up (played once when both level on one kill)
     }
     if (leveled && typeof playLevelUpFx === 'function') playLevelUpFx();
 }
@@ -1792,7 +1795,7 @@ function monsterTurnTick() {
         if (typeof resetMapRunes === 'function') resetMapRunes();
         logMessage(`[Defeat] You have been defeated... Returning to town`, 'winlose');
         player.deathCount = (player.deathCount || 0) + 1; // total defeats (avatar unlocks)
-        player.hp = getDerivedStats().maxHp;
+        player.hp = 0; // the hero stays at 0 HP on the defeat screen; HP refills when leaving the fight (restoreAfterCombat)
         updateUI();
         const firstDeath = !guideFlag('death'); // first defeat ever: point to the Refining page and teach refining
         if (firstDeath) markGuide('death');
