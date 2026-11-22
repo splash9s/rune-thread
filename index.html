@@ -1857,6 +1857,19 @@
                 #tower-stage { font-family: 'Roboto', 'Noto Sans Thai', sans-serif; }
                 #tower-stage .tw-tab { position: absolute; z-index: 3; height: 58px; padding: 0 10px; border: 0; cursor: pointer; background: url(assets/events/leftmenu_q85.webp) center / 100% 100% no-repeat; color: #2a1a0e; font-size: 30px; font-weight: 800; white-space: nowrap; filter: brightness(.82) saturate(.85); transition: filter .12s, transform .12s; }
                 #tower-stage .tw-tab:hover { filter: brightness(.95); }
+                /* Banner: the shine is a light band that sweeps left to right every few seconds, masked to the banner's own shape */
+                #tower-stage #tw-banner { position: absolute; z-index: 2; pointer-events: none; animation: twBannerGlow 3.2s ease-in-out infinite; }
+                #tower-stage #tw-banner img { width: 100%; height: 100%; display: block; }
+                #tower-stage #tw-banner .tw-shine { position: absolute; inset: 0; mix-blend-mode: screen;
+                    background: linear-gradient(105deg, rgba(255, 248, 220, 0) 44%, rgba(255, 248, 220, .8) 50%, rgba(255, 248, 220, 0) 56%) no-repeat;
+                    background-size: 300% 100%; animation: twBannerShine 4s ease-in-out infinite;
+                    -webkit-mask: url(assets/pages/tower/banner_q85.webp) center / 100% 100% no-repeat; mask: url(assets/pages/tower/banner_q85.webp) center / 100% 100% no-repeat; }
+                @keyframes twBannerShine { 0% { background-position: 100% 0; } 45%, 100% { background-position: 0% 0; } }
+                @keyframes twBannerGlow {
+                    0%, 100% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6)) drop-shadow(0 0 4px rgba(255, 200, 90, .25)); }
+                    50% { filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .6)) drop-shadow(0 0 16px rgba(255, 210, 100, .65)); }
+                }
+                @media (prefers-reduced-motion: reduce) { #tower-stage #tw-banner, #tower-stage #tw-banner .tw-shine { animation: none; } }
                 #tower-stage .tw-tab.tw-on { filter: brightness(1.12) drop-shadow(0 0 8px #f0c050); transform: translateY(-2px); }
                 #tower-stage .tw-tab.tw-locked { filter: grayscale(1) brightness(.6); }
                 #tower-stage .tw-tab.tw-locked::after { content: '🔒'; position: absolute; right: -8px; top: -12px; font-size: 22px; }
@@ -1922,6 +1935,8 @@
                         <img loading="lazy" class="ret-normal" src="assets/cha/button/returnbuttonsmall_q85.webp" alt="">
                         <img loading="lazy" class="ret-press" src="assets/cha/button/returnbuttonpresssmall_q85.webp" alt="">
                     </div>
+                    <!-- Warded Tower banner (top centre) with a light sweep and a soft gold glow -->
+                    <div id="tw-banner" style="left:580px; top:6px; width:760px; height:193px;"><img src="assets/pages/tower/banner_q85.webp" alt="Warded Tower"><div class="tw-shine"></div></div>
                     <button class="tw-tab" data-tab="friend" style="left:60px; top:16px; width:170px;" onclick="setTowerPageTab('friend')">Friend</button>
                     <button class="tw-tab" data-tab="leaderboard" style="left:243px; top:16px; width:225px;" onclick="setTowerPageTab('leaderboard')">Leaderboard</button>
                     <button class="tw-tab" data-diff="normal" style="left:1444px; top:16px; width:150px;" onclick="setTowerDifficulty('normal')">Normal</button>
