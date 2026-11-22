@@ -306,7 +306,20 @@ const LOADING_IMAGES = [
     "assets/pages/mail/bg_q85.webp",
     "assets/pages/setting/bg_q85.webp",
     "assets/pages/skill/bg_q85.webp",
-    "assets/pages/skill/window_q85.webp"
+    "assets/pages/skill/window_q85.webp",
+    "assets/combat/bolt/firebolt_q85.webp",
+    "assets/combat/bolt/icebolt_q85.webp",
+    "assets/combat/bolt/windbolt_q85.webp",
+    "assets/combat/bolt/earthbolt_q85.webp",
+    "assets/combat/bolt/fireexplode1_q85.webp",
+    "assets/combat/bolt/fireexplode2_q85.webp",
+    "assets/combat/bolt/fireexplode3_q85.webp",
+    "assets/combat/bolt/iceexplode1_q85.webp",
+    "assets/combat/bolt/iceexplode2_q85.webp",
+    "assets/combat/bolt/windexplode1_q85.webp",
+    "assets/combat/bolt/windexplode2_q85.webp",
+    "assets/combat/bolt/earthexplode1_q85.webp",
+    "assets/combat/bolt/earthexplode2_q85.webp"
 ];
 
 // Hero art bands are data-URL scripts for file:// pages; web pages load the image files when a pose needs them

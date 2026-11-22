@@ -2022,12 +2022,17 @@ function runCombatTick() {
         ['fireBolt', 'coldBolt', 'thunderBolt', 'rockBolt'].forEach(id => {
             const ch = runeN(id) + skillBonus(BOLT_SKILL[id]);
             if (arcaneCast || (ch > 0 && Math.random() * 100 < ch)) {
+                const boltIdx = monstersList.indexOf(targetEnemy);
+                let landed = 0;
                 for (let b = 0; b < 4; b++) {
                     if (targetEnemy.hp <= 0) break;
                     const bolt = Math.max(1, Math.floor(derived.matk * 0.5 * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element)));
                     targetEnemy.hp -= bolt;
+                    landed++;
                     logMessage(`[Bolt] ${ELEMENTS[BOLT_ELEMENT[id]].name} Bolt hits ${targetEnemy.name} for ${bolt} damage`, 'drop');
                 }
+                // Each bolt falls from the top right onto the monster and explodes (js/bolt-fx.js)
+                if (landed && boltIdx >= 0 && typeof playBoltFx === 'function') playBoltFx(BOLT_ELEMENT[id], `#monsters-lineup-container > div:nth-child(${boltIdx + 1}) img`, landed);
             }
         });
         if (runeN('instantKill') > 0 && targetEnemy.hp > 0 && !targetEnemy.isBoss && !targetEnemy.isMiniBoss && Math.random() < 0.01) {
