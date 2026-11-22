@@ -32,12 +32,6 @@ let stageClearing = false;
 let currentEvent = null; // 'gold' | 'xp' while in an event
 let currentPath = null; // campaign path key while in campaign
 
-// Skills have no effect in the Daily Challenge
-function skillLvl(name) {
-    if (currentMode === 'daily') return 0;
-    return player.skills[name]?.level || 0;
-}
-
 const DAILY_TOTAL_STAGES = 31;
 const DAILY_BOSS_STAGES = [11, 21, 31];
 const BOSS_HP_MULT = 1.75; // was 2.5; cut 30% (ends up 0.7x)
@@ -1473,7 +1467,7 @@ function checkStageClearAfterHeal() {
 // Tank hits: 10% chance to stun the player for at least 2 seconds. Shorter with VIT, and no stun at VIT 70.
 function tankStunPlayer(m) {
     if (Math.random() >= 0.10) return;
-    const vit = Math.max(1, player.stats.vit);
+    const vit = Math.max(1, heroStatsWithSkills().vit); // includes VIT from skill nodes
     const raw = Math.round(1000 * Math.max(0, 1 - vit / 70));
     if (raw <= 0) return;
     const ms = Math.max(2000, raw); // a player stun always lasts at least 2 seconds
@@ -1526,6 +1520,12 @@ function takePlayerDamage(dmg, m, ignoreArmor = false) {
     flashPlayerHurt();
     lastHitBy = m.name;
     dmg = Math.floor(dmg * (1 - skillBonus('dmgReducePct') / 100));
+    // Mithril Hauberk (capstone): less damage taken, and less again while armor is up
+    const hauberk = skillBonus('mithrilHauberk');
+    if (hauberk > 0) {
+        dmg = Math.floor(dmg * (1 - hauberk / 100));
+        if (player.armor > 0 && !ignoreArmor) dmg = Math.floor(dmg * (1 - hauberk / 100));
+    }
     // Element resistance from gear: a negative value means extra damage from that element
     const incomingRes = m && m.element ? (getDerivedStats().elemRes[m.element] || 0) * (m.elemSupport ? 2 : 1) : 0; // Elemental Support doubles the boss's element effect
     dmg = Math.floor(dmg * (1 - incomingRes / 100));
@@ -1922,6 +1922,8 @@ function runCombatTick() {
             if (typeof showBossBalloon === 'function') showBossBalloon('Ice Shield blocks 20%!');
         }
         if (targetEnemy.hp > 0 && targetEnemy.hp <= targetEnemy.maxHp * 0.5) pDmg = Math.floor(pDmg * (1 + skillBonus('lowHpDmgPct') / 100));
+        // Berserker's Vow (capstone): more damage while the hero's HP is below 50%
+        if (skillBonus('berserkerVow') > 0 && player.hp < derived.maxHp * 0.5) pDmg = Math.floor(pDmg * (1 + skillBonus('berserkerVow') / 100));
         if (runeN('giantSlayer') > 0 && (targetEnemy.isBoss || targetEnemy.isMiniBoss)) pDmg = Math.floor(pDmg * (1 + runeN('giantSlayer') / 100));
         if (runeN('monsterHunter') > 0 && !targetEnemy.isBoss && !targetEnemy.isMiniBoss) pDmg = Math.floor(pDmg * (1 + runeN('monsterHunter') / 100));
         if (runeN('sameTarget') > 0) pDmg = Math.floor(pDmg * (1 + 0.1 * sameTargetStreak(targetEnemy))); // Same Target Rune
@@ -1986,6 +1988,12 @@ function runCombatTick() {
         } else {
             targetEnemy.hp -= pDmg;
         }
+        // Skofnung (capstone): a critical hit strikes a second time for part of its damage
+        if (isCrit && skillBonus('skofnungEcho') > 0 && targetEnemy.hp > 0) {
+            const echo = Math.max(1, Math.floor(pDmg * skillBonus('skofnungEcho') / 100));
+            targetEnemy.hp -= echo;
+            logMessage(`[Skofnung] Second strike: ${echo} damage to ${targetEnemy.name}`, 'drop');
+        }
         if (runeN('splash') > 0 && Math.random() < 0.2) {
             const idx = monstersList.indexOf(targetEnemy);
             const behind = monstersList.slice(idx + 1).find(e => e.hp > 0);
@@ -2003,16 +2011,22 @@ function runCombatTick() {
             const casters = getAliveMonsters().filter(m => ['range', 'mage', 'healer'].includes(roleOf(m)) && !m.status);
             if (casters.length) applyStunStatus(casters[Math.floor(Math.random() * casters.length)]);
         }
-        // Bolt runes: 4 bolts of their element, each 50% of MATK (element advantage applies as for other attacks)
+        // Bolts: 4 bolts of their element, each 50% of MATK (element advantage applies as for other attacks).
+        // Chance per element = the bolt rune's chance (10% when picked) + that element's bolt % from Arcane skill nodes.
+        // Arcane Strike (capstone): one shared extra roll per hit; on success all four bolts are cast.
         const BOLT_ELEMENT = { fireBolt: 'fire', coldBolt: 'water', thunderBolt: 'wind', rockBolt: 'earth' };
+        const BOLT_SKILL = { fireBolt: 'boltFire', coldBolt: 'boltWater', thunderBolt: 'boltWind', rockBolt: 'boltEarth' };
+        const arcaneStrike = skillBonus('arcaneStrike');
+        const arcaneCast = arcaneStrike > 0 && Math.random() * 100 < arcaneStrike;
+        if (arcaneCast) logMessage('[Arcane Strike] All four bolts are cast!', 'levelup');
         ['fireBolt', 'coldBolt', 'thunderBolt', 'rockBolt'].forEach(id => {
-            const ch = runeN(id);
-            if (ch > 0 && Math.random() * 100 < ch) {
+            const ch = runeN(id) + skillBonus(BOLT_SKILL[id]);
+            if (arcaneCast || (ch > 0 && Math.random() * 100 < ch)) {
                 for (let b = 0; b < 4; b++) {
                     if (targetEnemy.hp <= 0) break;
                     const bolt = Math.max(1, Math.floor(derived.matk * 0.5 * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element)));
                     targetEnemy.hp -= bolt;
-                    logMessage(`[Bolt] ${RUNE_DEFS[id].name} hits ${targetEnemy.name} for ${bolt} damage`, 'drop');
+                    logMessage(`[Bolt] ${ELEMENTS[BOLT_ELEMENT[id]].name} Bolt hits ${targetEnemy.name} for ${bolt} damage`, 'drop');
                 }
             }
         });

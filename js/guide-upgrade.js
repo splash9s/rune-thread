@@ -23,7 +23,8 @@ function guideUpNeedStat() { return (player.statPoints || 0) > 0 && !guideFlag('
 // Skill points still to spend: points not yet put into a pending skill
 function guideUpNeedSkill() { return ((player.jobSp || 0) - (typeof pendingSkillTotal === 'function' ? pendingSkillTotal() : 0)) > 0 && !guideFlag('upSkUp'); }
 function guideUpStatBtn() { return document.querySelector('#view-character .char-stats-panel button[onclick^="addStat("]:not([disabled])'); }
-function guideUpSkillBtn() { return document.querySelector('#view-skills button[onclick^="upgradeSkill("]:not([disabled])'); }
+// The Learn button in an open node panel, else a node that can be taken now
+function guideUpSkillBtn() { return document.querySelector('#skill-detail.open button[onclick^="upgradeSkill("]:not([disabled])') || document.querySelector('#view-skills .skill-node.can-take'); }
 function guideUpPendingSkills() { return Object.values(pendingAlloc.skills || {}).reduce((a, b) => a + b, 0); }
 
 const GUIDE_UPGRADE_STEPS = [
@@ -53,7 +54,7 @@ const GUIDE_UPGRADE_STEPS = [
         targets: () => [document.querySelector('#view-character .char-skills-btn')]
     },
     {
-        text: 'Tap an upgrade button to learn a skill',
+        text: 'Tap a glowing node, then Learn, to learn a skill',
         visible: () => guideUpSkillsOpen() && guideUpNeedSkill() && !!guideUpSkillBtn(),
         targets: () => [guideUpSkillBtn()]
     },

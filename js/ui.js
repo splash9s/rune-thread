@@ -3267,12 +3267,9 @@ function buyDiamondItem(itemId) {
         player.stats = { str: 1, agi: 1, vit: 1, int: 1, dex: 1, luk: 1 };
         floatSuccessAt(`Stats reset! ${totalSpent} Stat Points refunded`);
     } else if (item.type === 'skill_reset') {
-        let refunded = 0;
-        for (let key in player.skills) {
-            refunded += player.skills[key].level || 0;
-            player.skills[key].level = 0;
-        }
-        player.jobSp += refunded;
+        const refunded = skillTakenList().length;
+        resetSkillTree();
+        if (typeof pendingAlloc !== 'undefined') pendingAlloc.skills = {};
         floatSuccessAt(`Skills reset! ${refunded} Class SP refunded`);
     } else if (item.type === 'bag') {
         player.bagExpansions = (player.bagExpansions || 0) + 1;
@@ -5188,45 +5185,55 @@ let pendingAlloc = { stats: {}, skills: {} };
 function pendingStatTotal() { return Object.values(pendingAlloc.stats).reduce((a, b) => a + b, 0); }
 function pendingSkillTotal() { return Object.values(pendingAlloc.skills).reduce((a, b) => a + b, 0); }
 
-const SKILL_BUILDS = [
-    { key: 'gold', name: 'Freyr (Gold Build)', color: 'text-amber-300', border: 'border-amber-500/40', desc: 'Coins, loot and selling' },
-    { key: 'exp', name: 'Odin (EXP Build)', color: 'text-sky-300', border: 'border-sky-500/40', desc: 'Faster Base and Class levels' },
-    { key: 'attack', name: 'Thor (Attack Build)', color: 'text-rose-300', border: 'border-rose-500/40', desc: 'Damage and critical hits' },
-    { key: 'defense', name: 'Tyr (Defense Build)', color: 'text-emerald-300', border: 'border-emerald-500/40', desc: 'Survive longer' }
-];
-const SKILL_BUILD_MAX_SP = 30;
-
-// Character overview: the builds you have invested in
+// Character overview: points spent per branch, and the capstone if one is taken
 function renderCharacterSkills() {
     const root = document.getElementById('skill-tree-container');
     if (!root) return;
-    const html = SKILL_BUILDS.map(b => {
-        const owned = Object.entries(player.skills).filter(([, s]) => s.build === b.key && s.level > 0);
-        const invested = owned.reduce((a, [, s]) => a + s.level, 0);
-        if (invested <= 0) return '';
-        const lines = owned.map(([, s]) => `<li>${s.name} Lv. ${s.level}/${s.maxLv}: ${s.desc}</li>`).join('');
-        return `<div class="p-2 rounded-lg border ${b.border} bg-slate-950/60">
-            <div class="flex justify-between text-xs"><span class="font-bold ${b.color}">${b.name}</span><span class="text-slate-400">${invested}/${SKILL_BUILD_MAX_SP} SP</span></div>
-            <ul class="text-[10px] text-slate-300 list-disc pl-4 mt-1 flex flex-col gap-0.5">${lines}</ul>
+    const taken = skillTakenList();
+    const html = SKILL_BRANCHES.map(br => {
+        const mine = taken.filter(id => SKILL_NODES[id] && SKILL_NODES[id].branch === br.key);
+        if (!mine.length) return '';
+        const cap = mine.find(id => SKILL_NODES[id].cap);
+        return `<div class="p-2 rounded-lg border border-slate-700 bg-slate-950/60">
+            <div class="flex justify-between text-xs"><span class="font-bold" style="color:${br.color}">${br.name}</span><span class="text-slate-400">${mine.length} pt</span></div>
+            ${cap ? `<div class="text-[10px] text-amber-300 mt-1">${SKILL_NODES[cap].name}: ${SKILL_NODES[cap].text}</div>` : ''}
         </div>`;
     }).join('');
     root.innerHTML = html || '<span class="text-[10px] text-slate-500">No skill points invested yet.</span>';
 }
 
-// Dedicated Skills page: skill nodes placed on the star map (04_psd/pageskill/skilllayout.png marker positions, map 4000x2233).
-// Each build chain runs along its node list; a node needs the one before it (req) at the required level.
+// Skills page: the skill tree on the star map (map 4000x2233). Hub in the centre; Berserker up, Skofnung left,
+// Arcane right, Mithril down. Tier t sits at a set distance from the hub; a tier's nodes spread across the branch.
 const SKILL_MAP = { w: 4000, h: 2233, minS: 0.3, maxS: 1.6 };
-// Center hub node: always on (upgraded look), not clickable. Every build chain starts from a node next to it.
 const SKILL_HUB = [2003, 1106];
-const SKILL_DEFAULT_ZOOM = 1.5;
-// Map positions (layout markers, 4000x2233). Each chain runs in order; a node needs the one before it.
-const SKILL_NODE_POS = {
-    gold:    [[1601, 1116], [1199, 1116], [650, 1116], [374, 1122], [563, 849], [389, 1427]],
-    exp:     [[2003, 1428], [2003, 1779], [2237, 1646], [2192, 1899], [2003, 1994], [1823, 1994]],
-    attack:  [[2003, 818], [2003, 530], [2222, 416], [2124, 274], [1922, 274], [1807, 327]],
-    defense: [[2405, 1106], [2756, 1106], [3200, 1106], [3658, 948], [3769, 1247], [3370, 1358]]
-};
-const SKILL_NODE_SIZE = { normal: [120, 122], locked: [110, 112] };
+const SKILL_DEFAULT_ZOOM = 1.1;
+const SKILL_RADII = { v: [220, 380, 540, 700, 860, 1000], h: [330, 600, 870, 1140, 1410, 1640] }; // tiers 1..5, then capstone
+const SKILL_SPREAD = { v: 200, h: 165 }; // gap between nodes of one tier
+const SKILL_NODE_SIZE = { small: [80, 81], cap: [130, 132] };
+function skillNodePos(id) {
+    const n = SKILL_NODES[id];
+    const br = SKILL_BRANCHES.find(b => b.key === n.branch);
+    const vert = br.dir === 'up' || br.dir === 'down';
+    const r = (vert ? SKILL_RADII.v : SKILL_RADII.h)[n.tier - 1];
+    const count = n.cap ? 1 : br.tiers[n.tier - 1].length;
+    const off = (n.idx - (count - 1) / 2) * (vert ? SKILL_SPREAD.v : SKILL_SPREAD.h);
+    const [hx, hy] = SKILL_HUB;
+    if (br.dir === 'up') return [hx + off, hy - r];
+    if (br.dir === 'down') return [hx + off, hy + r];
+    if (br.dir === 'left') return [hx - r, hy + off];
+    return [hx + r, hy + off];
+}
+// taken: saved; pending: picked on this visit but not confirmed; open: can be picked now; locked: not linked yet
+function skillSets() {
+    const taken = new Set(skillTakenList());
+    const pend = new Set(Object.keys(pendingAlloc.skills || {}).filter(k => pendingAlloc.skills[k] > 0));
+    return { taken, pend, all: new Set([...taken, ...pend]) };
+}
+function skillNodeState(id, sets) {
+    if (sets.taken.has(id)) return 'taken';
+    if (sets.pend.has(id)) return 'pending';
+    return skillCanTake(id, sets.all) ? 'open' : 'locked';
+}
 let skillView = null;
 
 function skillApplyView() {
@@ -5367,33 +5374,35 @@ document.addEventListener('pointerdown', (e) => {
 function renderSkillDetail() {
     const el = document.getElementById('skill-detail');
     if (!el || !skillDetailKey) return;
-    const k = skillDetailKey;
-    const s = player.skills[k];
-    if (!s) return;
-    const build = SKILL_BUILDS.find(b => b.key === s.build);
-    const prev = s.req ? player.skills[s.req] : null;
-    const prevLevel = prev ? prev.level + (pendingAlloc.skills[s.req] || 0) : 0;
-    const locked = !!prev && prevLevel < s.reqLv;
-    const lvl = s.level + (pendingAlloc.skills[k] || 0);
+    const n = SKILL_NODES[skillDetailKey];
+    if (!n) return;
+    const br = SKILL_BRANCHES.find(b => b.key === n.branch);
+    const sets = skillSets();
+    const state = skillNodeState(n.id, sets);
     const spLeft = player.jobSp - pendingSkillTotal();
-    const canUp = !locked && lvl < s.maxLv && spLeft > 0;
-    const reason = locked ? `Requires ${prev.name} Lv. ${s.reqLv}`
-        : lvl >= s.maxLv ? 'Max level'
-        : spLeft <= 0 ? 'No skill points available' : '';
+    const capTaken = [...sets.all].some(id => SKILL_NODES[id] && SKILL_NODES[id].cap);
+    const reason = state === 'locked' ? (n.cap && capTaken ? 'Only one capstone can be taken.' : 'Take a linked node first.')
+        : state === 'open' && spLeft <= 0 ? 'No skill points available' : '';
+    const status = { taken: 'Learned', pending: 'Picked (not confirmed yet)', open: 'Available', locked: 'Locked' }[state];
+    // Small nodes show their effect only; a capstone shows its name and effect
     el.innerHTML = `
         <div class="flex justify-between items-start gap-3">
             <div>
-                <h3 class="text-2xl font-bold mt-1">${s.name}</h3>
+                <div class="text-sm" style="color:${br.color} !important;">${br.name} · ${n.cap ? 'Capstone' : `Tier ${n.tier}`}</div>
+                <h3 class="text-2xl font-bold mt-1">${n.cap ? n.name : skillEffectText(n)}</h3>
             </div>
             <button onclick="skillCloseDetail()" class="px-3 py-1 rounded-lg font-bold cursor-pointer" style="background:#3b2716; color:#fff;">&#10005;</button>
         </div>
-        <p class="mt-4 text-lg">${s.desc}</p>
+        ${n.cap ? `<p class="mt-4 text-lg">${n.text}</p>` : ''}
         <div class="mt-5 text-base flex flex-col gap-2">
-            <div class="flex justify-between"><span>Level</span><strong>${lvl} / ${s.maxLv}</strong></div>
-            <div class="flex justify-between"><span>Requires</span><strong>${prev ? `${prev.name} Lv. ${s.reqLv}` : 'None (start)'}</strong></div>
-            <div class="flex justify-between"><span>Skill points left</span><strong>${spLeft}</strong></div>
+            <div class="flex justify-between"><span>Status</span><strong>${status}</strong></div>
+            <div class="flex justify-between"><span>Cost</span><strong>1 point</strong></div>
+            <div class="flex justify-between"><span>Skill points left</span><strong>${spLeft} / ${skillPointsTotal()}</strong></div>
         </div>
-        <button onclick="upgradeSkill('${k}'); renderSkillDetail();" ${canUp ? '' : 'disabled'} class="mt-6 w-full py-3 rounded-xl font-bold text-lg cursor-pointer disabled:opacity-40" style="background:#b45309; color:#fff8e7;">+1 SP</button>
+        ${state === 'pending'
+            ? `<button onclick="undoSkillNode('${n.id}'); renderSkillDetail();" class="mt-6 w-full py-3 rounded-xl font-bold text-lg cursor-pointer" style="background:#475569; color:#fff;">Undo pick</button>`
+            : state === 'taken' ? ''
+            : `<button onclick="upgradeSkill('${n.id}'); renderSkillDetail();" ${state === 'open' && spLeft > 0 ? '' : 'disabled'} class="mt-6 w-full py-3 rounded-xl font-bold text-lg cursor-pointer disabled:opacity-40" style="background:#b45309; color:#fff8e7;">Learn (1 point)</button>`}
         ${reason ? `<p class="mt-2 text-sm text-center">${reason}</p>` : ''}`;
 }
 
@@ -5403,58 +5412,59 @@ function renderSkillPage() {
     const spEl = document.getElementById('skill-page-sp');
     const spLeft = player.jobSp - pendingSkillTotal();
     if (spEl) spEl.innerText = spLeft;
+    const resetBtn = document.getElementById('skill-reset-btn');
+    if (resetBtn) resetBtn.disabled = skillTakenList().length === 0;
 
     const mapSlot = document.getElementById('skill-map-slot');
     if (mapSlot && !mapSlot.firstChild) {
         mapSlot.innerHTML = '<img class="skill-map" src="assets/pages/skill/skillmap_q85.webp?v=2" alt="">';
     }
 
-    // Node centers per skill key, and lit state of each link (parent -> child)
-    const centers = {};
-    const links = [];
+    const sets = skillSets();
+    const on = id => id === 'hub' || sets.all.has(id);
     let nodesHtml = '';
-    const hubLevel = 1; // hub is always on
-    SKILL_BUILDS.forEach(b => {
-        const chain = Object.entries(player.skills).filter(([, s]) => s.build === b.key);
-        const pos = SKILL_NODE_POS[b.key] || [];
-        let parentPos = SKILL_HUB;
-        let parentOn = hubLevel > 0;
-        chain.forEach(([k, s], i) => {
-            const p = pos[i];
-            if (!p) return;
-            const prev = s.req ? player.skills[s.req] : null;
-            const prevLevel = prev ? prev.level + (pendingAlloc.skills[s.req] || 0) : 0;
-            const locked = !!prev && prevLevel < s.reqLv;
-            const lvl = s.level + (pendingAlloc.skills[k] || 0);
-            const maxed = lvl >= s.maxLv;
-            const clickable = true;
-            const isLocked = locked;
-            const img = lvl > 0 ? 'assets/pages/skill/skillbuttonup.gif'
-                : (isLocked ? 'assets/pages/skill/skillbuttonlock_q85.webp' : 'assets/pages/skill/skillbutton_q85.webp');
-            const [w, h] = isLocked ? SKILL_NODE_SIZE.locked : SKILL_NODE_SIZE.normal;
-            const title = locked && prev ? `Needs ${prev.name} Lv. ${s.reqLv}` : s.desc;
-            centers[k] = p;
-            links.push({ a: parentPos, b: p, lit: lvl > 0 && parentOn });
-            nodesHtml += `<div class="skill-node ${locked ? 'is-off' : ''}" title="${title}" style="left:${p[0] - w / 2}px; top:${p[1] - h / 2}px; width:${w}px; height:${h}px;" onclick="skillNodeClick(event,'${k}')">
-                <img src="${img}" alt="" style="width:${w}px; height:${h}px;">
-                <div class="skill-node-label">${s.name}<br>Lv ${lvl}/${s.maxLv}</div>
-            </div>`;
-            parentPos = p;
-            parentOn = lvl > 0;
-        });
+    Object.values(SKILL_NODES).forEach(n => {
+        const [x, y] = skillNodePos(n.id);
+        const state = skillNodeState(n.id, sets);
+        const [w, h] = n.cap ? SKILL_NODE_SIZE.cap : SKILL_NODE_SIZE.small;
+        const img = state === 'taken' || state === 'pending' ? 'assets/pages/skill/skillbuttonup.gif'
+            : state === 'locked' ? 'assets/pages/skill/skillbuttonlock_q85.webp' : 'assets/pages/skill/skillbutton_q85.webp';
+        const cls = `skill-node ${n.cap ? 'is-cap' : 'is-small'} st-${state}${state === 'open' && spLeft > 0 ? ' can-take' : ''}`;
+        const label = n.cap ? n.name : skillEffectShort(n);
+        nodesHtml += `<div class="${cls}" data-node="${n.id}" title="${(n.cap ? n.name + ': ' : '') + skillEffectText(n)}" style="left:${x - w / 2}px; top:${y - h / 2}px; width:${w}px; height:${h}px;" onclick="skillNodeClick(event,'${n.id}')">
+            <img src="${img}" alt="" style="width:${w}px; height:${h}px;">
+            <div class="skill-node-label" style="top:${h + 4}px;">${label}</div>
+        </div>`;
     });
 
-    // Center hub: upgraded look, not clickable
+    // Centre hub: always on, not clickable
     const hubHtml = `<div class="skill-node is-hub" style="left:${SKILL_HUB[0] - 60}px; top:${SKILL_HUB[1] - 61}px; width:120px; height:122px;"><img src="assets/pages/skill/skillbuttonup.gif" alt=""></div>`;
 
-    // Light paths between linked nodes; lit when the node at the far end is upgraded
-    const lines = links.map(l => `<line x1="${l.a[0]}" y1="${l.a[1]}" x2="${l.b[0]}" y2="${l.b[1]}" class="${l.lit ? 'skill-path-lit' : 'skill-path'}"/>`).join('');
+    // Paths between linked nodes: lit when both ends are learned or picked
+    const P = id => id === 'hub' ? SKILL_HUB : skillNodePos(id);
+    const lines = SKILL_LINKS.map(([a, b]) => {
+        const pa = P(a), pb = P(b);
+        return `<line x1="${pa[0]}" y1="${pa[1]}" x2="${pb[0]}" y2="${pb[1]}" class="${on(a) && on(b) ? 'skill-path-lit' : 'skill-path'}"/>`;
+    }).join('');
     const svg = `<svg id="skill-paths" width="4000" height="2233" viewBox="0 0 4000 2233"><defs><filter id="skill-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines}</svg>`;
 
     nodes.innerHTML = svg + hubHtml + nodesHtml;
     skillEnsureView();
     skillApplyView();
     renderSkillDetail();
+}
+
+// Free respec: give back every point (asks first)
+function confirmResetSkillTree() {
+    const n = skillTakenList().length;
+    if (!n) return;
+    confirmAction('Reset Skill Tree', `Reset all ${n} learned node${n > 1 ? 's' : ''} and get ${n} point${n > 1 ? 's' : ''} back? Resetting is free.`, () => {
+        resetSkillTree();
+        pendingAlloc.skills = {};
+        skillCloseDetail();
+        updateUI();
+        saveGame();
+    });
 }
 
 const STAT_MAX = 99; // each base stat can be raised up to this
@@ -5593,31 +5603,43 @@ async function refreshAccountBar() {
     btns.forEach(b => b.classList.toggle('hidden', !showLink));
 }
 
-function upgradeSkill(skillKey) {
-    const s = player.skills[skillKey];
-    if (!s) return;
-    if (s.req) {
-        const parent = player.skills[s.req];
-        if (parent.level + (pendingAlloc.skills[s.req] || 0) < s.reqLv) {
-            showFloatNotice(`Requires ${parent.name} Lv. ${s.reqLv}!`);
-            return;
-        }
-    }
-    if (s.level + (pendingAlloc.skills[skillKey] || 0) >= s.maxLv) return;
+// Picks one node (pending until confirmed). It must link to the hub or to a learned or picked node.
+function upgradeSkill(id) {
+    const sets = skillSets();
+    if (!SKILL_NODES[id] || sets.all.has(id)) return;
     if (player.jobSp - pendingSkillTotal() <= 0) return;
-    pendingAlloc.skills[skillKey] = (pendingAlloc.skills[skillKey] || 0) + 1;
+    if (!skillCanTake(id, sets.all)) {
+        const n = SKILL_NODES[id];
+        const capTaken = [...sets.all].some(t => SKILL_NODES[t] && SKILL_NODES[t].cap);
+        showFloatNotice(n.cap && capTaken ? 'Only one capstone can be taken!' : 'Take a linked node first!');
+        return;
+    }
+    pendingAlloc.skills[id] = 1;
+    updateUI();
+}
+
+// Takes back one picked node; picked nodes that are no longer linked are dropped too
+function undoSkillNode(id) {
+    if (!pendingAlloc.skills[id]) return;
+    delete pendingAlloc.skills[id];
+    const keep = new Set(skillTakenList());
+    const next = {};
+    Object.keys(pendingAlloc.skills).forEach(k => { if (skillCanTake(k, keep)) { keep.add(k); next[k] = 1; } });
+    pendingAlloc.skills = next;
     updateUI();
 }
 
 function confirmPendingSkills() {
     const total = pendingSkillTotal();
     if (total <= 0) return;
-    const parts = Object.entries(pendingAlloc.skills).filter(([, n]) => n > 0).map(([k, n]) => `${player.skills[k].name} +${n}`).join(', ');
-    confirmAction('Confirm Skill Points', `Spend ${total} SP: ${parts}?`, () => {
-        const t = pendingSkillTotal();
-        if (t <= 0 || t > player.jobSp) { pendingAlloc.skills = {}; updateUI(); return; }
-        for (const k in pendingAlloc.skills) player.skills[k].level += pendingAlloc.skills[k];
-        player.jobSp -= t;
+    const parts = Object.keys(pendingAlloc.skills).map(k => skillEffectShort(SKILL_NODES[k])).join(', ');
+    confirmAction('Confirm Skill Points', `Spend ${total} point${total > 1 ? 's' : ''}: ${parts}?`, () => {
+        const ids = Object.keys(pendingAlloc.skills);
+        if (!ids.length || ids.length > player.jobSp) { pendingAlloc.skills = {}; updateUI(); return; }
+        const tree = player.skillTree || (player.skillTree = defaultSkillTree());
+        const set = new Set(tree.taken);
+        ids.forEach(k => { if (skillCanTake(k, set)) { tree.taken.push(k); set.add(k); } });
+        syncSkillPoints();
         markBeginnerFlag('skill');
         pendingAlloc.skills = {};
         updateUI();
@@ -5644,7 +5666,6 @@ function renderPendingBars() {
     if (kBar) {
         const total = pendingSkillTotal();
         if (total > 0) {
-            const parts = Object.entries(pendingAlloc.skills).filter(([, n]) => n > 0).map(([k, n]) => `${player.skills[k].name} +${n}`).join(', ');
             kBar.innerHTML = `<div class="p-2 rounded-lg bg-purple-500/10 border border-purple-500/40 flex flex-col gap-2 text-[10px]">
                 ${ynButtonsHTML('resetPendingSkills()', 'confirmPendingSkills()', `Confirm ${total} SP`)}</div>`;
         } else {
@@ -6526,7 +6547,8 @@ function updateUI() {
     ['str', 'agi', 'vit', 'int', 'dex', 'luk'].forEach(s => {
         let statEl = document.getElementById(`stat-${s}`);
         const pend = pendingAlloc.stats[s] || 0;
-        if (statEl) statEl.innerText = pend ? `${player.stats[s]} (+${pend})` : player.stats[s];
+        const fromSkill = skillBonus(s); // flat stats from skill nodes
+        if (statEl) statEl.innerText = `${player.stats[s]}${fromSkill ? ` +${fromSkill}` : ''}${pend ? ` (+${pend})` : ''}`;
     });
     renderPendingBars();
 
@@ -6553,23 +6575,6 @@ function updateUI() {
 
     renderCharacterSkills();
     renderSkillPage();
-    let skillContainer = null;
-    if (skillContainer) {
-        skillContainer.innerHTML = '';
-        for (let [sKey, skillObj] of Object.entries(player.skills)) {
-            let isLocked = skillObj.req && (player.skills[skillObj.req].level + (pendingAlloc.skills[skillObj.req] || 0)) < 1;
-            skillContainer.innerHTML += `
-                <div class="flex justify-between items-center bg-slate-900/40 p-2.5 rounded border ${isLocked ? 'border-slate-800 opacity-50' : 'border-slate-700'}">
-                    <div>
-                        <h4 class="font-bold text-slate-200 text-xs">${skillObj.name} (Lv. ${skillObj.level + (pendingAlloc.skills[sKey] || 0)}/${skillObj.maxLv})</h4>
-                        <p class="text-[10px] text-slate-400">${skillObj.desc} ${isLocked ? `<span class="text-red-400 block">Requires ${player.skills[skillObj.req].name} Lv. 1</span>` : ''}</p>
-                    </div>
-                    <button onclick="upgradeSkill('${sKey}')" ${isLocked ? 'disabled' : ''} class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded text-[10px] cursor-pointer disabled:opacity-50">+1 SP</button>
-                </div>
-            `;
-        }
-    }
-
     el = document.getElementById('player-hp-text');
     if (el) el.innerText = `${player.hp} / ${derived.maxHp} HP`;
     player._prevHpNum = player.hp;
