@@ -5480,7 +5480,7 @@ function renderSkillPage() {
 
     const mapSlot = document.getElementById('skill-map-slot');
     if (mapSlot && !mapSlot.firstChild) {
-        mapSlot.innerHTML = '<img class="skill-map" src="assets/pages/skill/skillmap_q85.webp?v=2" alt="">';
+        mapSlot.innerHTML = '<img class="skill-map" src="assets/pages/skill/skillmap_q85.webp?v=3" alt="">';
     }
 
     const sets = skillSets();
