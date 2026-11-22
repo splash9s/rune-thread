@@ -415,6 +415,7 @@ function preloadAll(list, onEach, limit = 6) {
 
 function runPreload() {
     const firstVisit = isFirstVisit();
+    if (window.rtDebug) window.rtDebug(`preload start (first visit: ${firstVisit})`);
     const critical = LOADING_IMAGES.filter(firstVisit ? isFirstScreenImage : isCriticalImage);
     const total = critical.length;
     let done = 0;
@@ -423,6 +424,7 @@ function runPreload() {
         done++;
         setLoading((done / total) * 100, `Loading images: ${src} (${done} / ${total})`);
     }).then(() => {
+        if (window.rtDebug) window.rtDebug(`first images loaded (${total})`);
         if (firstVisit) return; // the town art and hero art load in loadTownArtInBackground
         townArtResolve();
         return heroArtBands('early'); // the hero's early gear art is needed on the town page
@@ -440,7 +442,7 @@ function loadTownArtInBackground() {
     };
     return Promise.all([worker(), worker(), worker()])
         .then(() => heroArtBands('early'))
-        .then(() => townArtResolve(), () => townArtResolve());
+        .then(() => { if (window.rtDebug) window.rtDebug('town art loaded'); townArtResolve(); }, () => townArtResolve());
 }
 
 // Called before the town opens: if the town art is still loading, the loading screen waits for it

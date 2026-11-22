@@ -385,6 +385,7 @@ function signinTermsChanged() {
     });
 }
 function showCharacterPage() {
+    dbg('character screen shown');
     document.getElementById('view-signin')?.classList.add('hidden');
     const modal = document.getElementById('view-name-select');
     if (modal) { modal.classList.remove('hidden'); modal.style.display = ''; }
@@ -412,13 +413,19 @@ function isReservedPlayerName(name) {
 }
 
 let startNameBusy = false;
+let startNameBusyAt = 0; // when the current Begin Journey started; a start stuck for 20 s can be tapped again
+const dbg = msg => { try { if (window.rtDebug) window.rtDebug(msg); } catch (e) { /* debug only */ } };
 // Waits for a promise, but gives up after ms and returns fallback (a stalled network call must not freeze Begin Journey)
 function withTimeout(promise, ms, fallback) {
     return Promise.race([Promise.resolve(promise).catch(() => fallback), new Promise(r => setTimeout(() => r(fallback), ms))]);
 }
 async function startGameWithName() {
-    if (startNameBusy) return;
+    dbg(`Begin tapped (busy: ${startNameBusy})`);
+    if (startNameBusy && Date.now() - startNameBusyAt < 20000) return;
     startNameBusy = true;
+    startNameBusyAt = Date.now();
+    const beginBtn = document.querySelector('button[onclick="startGameWithName()"]');
+    if (beginBtn) beginBtn.style.opacity = '0.6'; // shows the tap was taken while the game gets ready
     try {
         let nameInputEl = document.getElementById('input-player-name');
         let nameInput = nameInputEl ? nameInputEl.value.trim().slice(0, MAX_NAME_LENGTH) : "VanguardHero";
@@ -430,7 +437,10 @@ async function startGameWithName() {
         }
 
         // Player names are unique: a name another player uses is refused and the name window stays open
-        if (nameInput && await withTimeout(cloudNameTaken(nameInput), 6000, null)) {
+        dbg('name check...');
+        const taken = nameInput ? await withTimeout(cloudNameTaken(nameInput), 4000, null) : null;
+        dbg(`name check done (${taken})`);
+        if (taken) {
             floatFailAt(`"${nameInput}" is already taken. Choose a different name.`);
             return;
         }
@@ -438,12 +448,15 @@ async function startGameWithName() {
         if (nameInput) player.name = nameInput;
         player.avatar = START_AVATAR;
         commitCreateStats(); // the stat points chosen on the character select page are spent when the journey begins
-        // First visit: the town art may still be loading. Waits at most 10 s, then the town opens anyway.
+        dbg('stats committed; waiting for town art...');
+        // First visit: the town art may still be loading. Waits at most 4 s, then the town opens anyway (images fill in).
         if (typeof waitForTownArt === 'function') {
-            await withTimeout(waitForTownArt(), 10000, null);
+            const art = await withTimeout(waitForTownArt().then(() => 'ready'), 4000, 'timed out');
+            dbg(`town art: ${art}`);
             if (typeof hideLoading === 'function') hideLoading();
         }
         saveGame();
+        dbg('saved');
         try { if (typeof cloudPushProfile === 'function') cloudPushProfile(); } catch (e) { console.warn('Profile push failed:', e); } // the friend list shows this name at once
 
         let nameSelectModal = document.getElementById('view-name-select');
@@ -452,10 +465,16 @@ async function startGameWithName() {
             nameSelectModal.style.display = 'none';
         }
 
+        dbg('character screen closed');
         logMessage(`[System] Welcome to Haven of Dawn, ${player.name}!`, 'winlose');
         updateUI();
+        dbg('started');
+    } catch (e) {
+        dbg('ERROR ' + (e && e.message));
+        throw e;
     } finally {
         startNameBusy = false;
+        if (beginBtn) beginBtn.style.opacity = '';
     }
 }
 
