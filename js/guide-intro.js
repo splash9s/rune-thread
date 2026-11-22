@@ -116,8 +116,10 @@ function guideIntroTick() {
     if (!guideIntroPending()) { guideIntroClear(); return; }
     // Players who already cleared a map do not need the intro
     if (Object.keys(player.clearedMaps || {}).length) { guideIntroDone(); return; }
-    // Hide the guide while a modal or combat is up
-    if (!document.getElementById('game-modal')?.classList.contains('hidden') || guideViewVisible('view-combat')) { guideIntroClear(); return; }
+    // Hide the guide while a modal or combat is up, and while the sign-in or character screen is open
+    // (its click blockers must never sit over the Begin Journey button)
+    const startScreenOpen = ['view-name-select', 'view-signin'].some(id => { const v = document.getElementById(id); return v && !v.classList.contains('hidden') && v.style.display !== 'none'; });
+    if (startScreenOpen || !document.getElementById('game-modal')?.classList.contains('hidden') || guideViewVisible('view-combat')) { guideIntroClear(); return; }
 
     const idx = GUIDE_INTRO_STEPS.findIndex(s => s.visible());
     if (idx < 0) { guideIntroClear(); return; }

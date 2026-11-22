@@ -1,6 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+    // Shows script errors on screen (tap the box to close it), so a tester's screenshot captures them: phones have no console
+    (function () {
+        function show(msg) {
+            try {
+                var box = document.getElementById('err-box');
+                if (!box) {
+                    box = document.createElement('div');
+                    box.id = 'err-box';
+                    box.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:99999;background:#7f1d1d;color:#fff;font:12px/1.35 monospace;padding:8px;border-radius:8px;max-height:30vh;overflow:auto;white-space:pre-wrap;';
+                    box.onclick = function () { box.remove(); };
+                    (document.body || document.documentElement).appendChild(box);
+                }
+                if (box.childElementCount >= 5) return;
+                var line = document.createElement('div');
+                line.textContent = msg;
+                box.appendChild(line);
+            } catch (e) {}
+        }
+        window.addEventListener('error', function (e) {
+            if (e.target && e.target !== window) return; // a missing image or sound, not a script error
+            if (!e.message || e.message === 'Script error.') return; // other sites' scripts give no details
+            show('Error: ' + e.message + ' @ ' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || ''));
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+            var r = e.reason;
+            show('Error: ' + ((r && (r.message || r)) || 'unknown'));
+        });
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rune Thread - Idle RPG</title>
@@ -2344,11 +2374,11 @@
     <script src="js/combat.js?v=20261122ar"></script>
     <script src="js/crit-fx.js?v=20261118j"></script>
     <script src="js/bolt-fx.js?v=20261122b"></script>
-    <script src="js/ui.js?v=20261122st"></script>
+    <script src="js/ui.js?v=20261122ln"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
     <script src="js/market.js?v=20261121sf"></script>
-    <script src="js/guide-intro.js?v=20261116b"></script>
+    <script src="js/guide-intro.js?v=20261122ln"></script>
     <script src="js/guide-upgrade.js?v=20261122st"></script>
     <script src="js/guide-elem.js?v=20261119c"></script>
     <script src="js/beginner-quest.js?v=20261121bt"></script>

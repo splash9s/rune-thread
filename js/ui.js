@@ -412,6 +412,10 @@ function isReservedPlayerName(name) {
 }
 
 let startNameBusy = false;
+// Waits for a promise, but gives up after ms and returns fallback (a stalled network call must not freeze Begin Journey)
+function withTimeout(promise, ms, fallback) {
+    return Promise.race([Promise.resolve(promise).catch(() => fallback), new Promise(r => setTimeout(() => r(fallback), ms))]);
+}
 async function startGameWithName() {
     if (startNameBusy) return;
     startNameBusy = true;
@@ -426,7 +430,7 @@ async function startGameWithName() {
         }
 
         // Player names are unique: a name another player uses is refused and the name window stays open
-        if (nameInput && await cloudNameTaken(nameInput)) {
+        if (nameInput && await withTimeout(cloudNameTaken(nameInput), 6000, null)) {
             floatFailAt(`"${nameInput}" is already taken. Choose a different name.`);
             return;
         }
@@ -434,9 +438,13 @@ async function startGameWithName() {
         if (nameInput) player.name = nameInput;
         player.avatar = START_AVATAR;
         commitCreateStats(); // the stat points chosen on the character select page are spent when the journey begins
-        if (typeof waitForTownArt === 'function') await waitForTownArt(); // first visit: the town art may still be loading
+        // First visit: the town art may still be loading. Waits at most 10 s, then the town opens anyway.
+        if (typeof waitForTownArt === 'function') {
+            await withTimeout(waitForTownArt(), 10000, null);
+            if (typeof hideLoading === 'function') hideLoading();
+        }
         saveGame();
-        if (typeof cloudPushProfile === 'function') cloudPushProfile(); // the friend list shows this name at once
+        try { if (typeof cloudPushProfile === 'function') cloudPushProfile(); } catch (e) { console.warn('Profile push failed:', e); } // the friend list shows this name at once
 
         let nameSelectModal = document.getElementById('view-name-select');
         if (nameSelectModal) {
