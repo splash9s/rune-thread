@@ -2423,7 +2423,7 @@ function cancelAutoRejoin() {
 function updateAutoRejoinButton() {
     const btn = document.getElementById('combat-rejoin-btn');
     if (!btn) return;
-    btn.classList.toggle('hidden', !isVipActive());
+    btn.classList.toggle('hidden', !isVipActive() || currentMode !== 'campaign'); // campaign maps only
     btn.classList.toggle('on', autoRejoinOn());
     btn.title = 'Auto Rejoin (VIP): ' + (autoRejoinOn() ? 'On' : 'Off');
 }
@@ -2693,6 +2693,8 @@ const TOWER_BOSS_FLOORS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 21];
 // Builds the floor's six monsters in fixed lineup slots (0-5).
 // Slots 1-3 are melee or tank. Boss floors: slot 3 is the boss, slot 4 is any other unit,
 // and slots 5-6 are healers. Other floors: slots 4-6 are ranged or mage.
+// Every Warded Tower monster (regular, healer and boss) gets this much more HP, ATK and heal (2026-11-22: tower was too easy)
+const TOWER_MONSTER_MULT = 2.5;
 function towerSetSixMonsters() {
     const k = towerFloorMult(currentStage) * (typeof towerDiffMonsterMult === 'function' ? towerDiffMonsterMult() : 1); // Hard x2, Hell x4
     const scaledUnit = u => ({
@@ -2731,6 +2733,9 @@ function towerSetSixMonsters() {
         return unit;
     });
     monstersList = slots.filter(Boolean);
+    monstersList.forEach(m => {
+        ['hp', 'maxHp', 'atkMin', 'atkMax', 'heal'].forEach(k => { if (typeof m[k] === 'number') m[k] = Math.floor(m[k] * TOWER_MONSTER_MULT); });
+    });
 }
 
 // Warded Tower: each chosen friend gets a mail with their share of the floors cleared (once per run)
