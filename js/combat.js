@@ -37,14 +37,69 @@ const DAILY_BOSS_STAGES = [11, 21, 31];
 const BOSS_HP_MULT = 1.75; // was 2.5; cut 30% (ends up 0.7x)
 const BOSS_ATK_MULT = 2.4; // 2x the old 1.2
 
-// Helper to play audio effects safely
+// Sound effects play through Web Audio: each file is downloaded and decoded once, then every play reuses it.
+// (A new <audio> element per play asked the server for the file again and started a media player each time,
+// which made combat stutter when several sounds played close together, e.g. a 4-bolt cast.)
+// Until a file has been decoded, or if Web Audio is not available, that play falls back to an <audio> element.
+let sfxCtx = null;
+const sfxBuffers = new Map(); // path -> AudioBuffer once decoded, or 'loading' / 'failed'
+function sfxContext() {
+    if (sfxCtx) return sfxCtx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try { sfxCtx = new AC(); } catch (e) { sfxCtx = null; }
+    return sfxCtx;
+}
+function sfxLoad(path) {
+    if (sfxBuffers.has(path)) return;
+    const ctx = sfxContext();
+    if (!ctx) return;
+    sfxBuffers.set(path, 'loading');
+    fetch(path).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+        .then(data => new Promise((ok, fail) => { const pr = ctx.decodeAudioData(data, ok, fail); if (pr && pr.catch) pr.catch(fail); }))
+        .then(buf => sfxBuffers.set(path, buf))
+        .catch(() => sfxBuffers.set(path, 'failed'));
+}
+// Browsers start audio only after the player touches the page: resume the context on the first touch or key
+['pointerdown', 'touchend', 'keydown'].forEach(ev => window.addEventListener(ev, () => {
+    const ctx = sfxContext();
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+}, { capture: true, passive: true }));
+// Decode the combat sounds ahead of time so the first hit of a battle is not late
+function sfxPreload() {
+    if (typeof SFX === 'undefined') return;
+    const all = [];
+    const walk = v => { if (typeof v === 'string') all.push(v); else if (v && typeof v === 'object') Object.values(v).forEach(walk); };
+    walk(SFX);
+    if (typeof MONSTER_SFX !== 'undefined') walk(MONSTER_SFX);
+    all.forEach(sfxLoad);
+}
+
+// Helper to play audio effects safely. Returns a handle with addEventListener('ended'/'error') and pause().
 function playSound(path, gain = 1) {
     try {
         const vol = sfxVolumeNow();
         if (vol <= 0) return; // Effects off
         if (!pageIsActive) return; // no sound while the game is not on screen
+        const level = Math.min(1, vol * gain);
+        const ctx = sfxContext();
+        const buf = sfxBuffers.get(path);
+        if (ctx && ctx.state === 'running' && buf && typeof buf === 'object') {
+            const src = ctx.createBufferSource();
+            const g = ctx.createGain();
+            src.buffer = buf;
+            g.gain.value = level;
+            src.connect(g).connect(ctx.destination);
+            const handle = new EventTarget();
+            handle.pause = () => { try { src.stop(); } catch (e) {} };
+            src.onended = () => { sfxPlaying.delete(handle); handle.dispatchEvent(new Event('ended')); };
+            sfxPlaying.add(handle);
+            src.start();
+            return handle;
+        }
+        sfxLoad(path); // decode it for next time
         const audio = new Audio(path);
-        audio.volume = Math.min(1, vol * gain);
+        audio.volume = level;
         sfxPlaying.add(audio);
         audio.addEventListener('ended', () => sfxPlaying.delete(audio));
         audio.play().catch(e => { sfxPlaying.delete(audio); console.log("Audio play prevented:", e); });
@@ -215,6 +270,7 @@ const MONSTER_SFX = {
     M088: { attack: MSFX+'queen_hel_attack.mp3', damaged: MSFX+'queen_hel_damaged.mp3', dead: MSFX+'queen_hel_dead.mp3' },  // Queen Hel (boss)
 };
 function monsterSfxOf(m) { return (m && MONSTER_SFX[m.id]) || null; }
+setTimeout(sfxPreload, 1500); // after the page's first paint
 function playSfx(v, gain = 1) {
     const path = Array.isArray(v) ? v[Math.floor(Math.random() * v.length)] : v;
     return playSound(path, gain * (SFX_LEVEL[path] || 1));

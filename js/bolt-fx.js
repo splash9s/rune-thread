@@ -150,3 +150,13 @@ function explodeBolt(inner, art, x, y) {
     };
     show();
 }
+
+// Decode every bolt picture once, shortly after load, so the first cast does not stall while they decode
+setTimeout(() => {
+    Object.values(BOLT_FX_ART).forEach(a => [a.bolt, ...a.frames].forEach(f => {
+        const im = new Image();
+        im.src = f.src;
+        if (im.decode) im.decode().catch(() => {});
+        (window.__boltFxKeep = window.__boltFxKeep || []).push(im); // keep them referenced so they stay decoded
+    }));
+}, 2000);
