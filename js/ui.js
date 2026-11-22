@@ -4997,6 +4997,37 @@ function executeEquipItem(index, targetSlot) {
     return true;
 }
 
+// Auto Equip (bag): for each gear slot, wears the rarest gear the hero can use, if it beats what is worn.
+// Ties: higher refine, then higher level requirement, then more buffs. Pets, costumes and potions are left alone.
+const AUTO_EQUIP_SLOTS = ['weapon', 'shield', 'armor', 'garment', 'footgear', 'hat', 'midHead', 'mouth'];
+function autoEquipRank(it) { return [it.rarity || 1, it.refineLevel || 0, it.levelReq || 1, (it.buffs || []).length]; }
+function autoEquipBetter(a, b) {
+    if (!a) return false;
+    if (!b) return true;
+    const x = autoEquipRank(a), y = autoEquipRank(b);
+    for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] > y[i];
+    return false;
+}
+function autoEquipBest() {
+    const usable = it => it && it.slot && player.baseLv >= (it.levelReq || 1);
+    const bestInBag = itemSlot => {
+        let idx = -1;
+        player.inventory.forEach((it, i) => { if (usable(it) && it.slot === itemSlot && autoEquipBetter(it, idx >= 0 ? player.inventory[idx] : null)) idx = i; });
+        return idx;
+    };
+    let equipped = 0;
+    AUTO_EQUIP_SLOTS.forEach(slot => {
+        if (slot === 'shield' && isTwoHanded(player.equipped.weapon)) return; // no shield with a two-handed weapon
+        const idx = bestInBag(slot);
+        if (idx >= 0 && autoEquipBetter(player.inventory[idx], player.equipped[slot]) && executeEquipItem(idx, slot)) equipped++;
+    });
+    ['ringLeft', 'ringRight'].forEach(rs => {
+        const idx = bestInBag('ring');
+        if (idx >= 0 && autoEquipBetter(player.inventory[idx], player.equipped[rs]) && executeEquipItem(idx, rs)) equipped++;
+    });
+    showFloatNotice(equipped ? `Auto Equip: equipped ${equipped} item${equipped > 1 ? 's' : ''}` : 'You are already wearing your rarest gear');
+}
+
 // Salvaging a pet or costume gives a ticket instead of scraps
 const PET_TICKET_ITEM = { name: 'Pet Ticket', type: 'material', noSell: true, maxStack: 99, desc: 'Ticket from a salvaged pet.', lore: 'A worn token from a pet that has gone home. Keep it for a pet to come.' };
 const COSTUME_TICKET_ITEM = { name: 'Costume Ticket', type: 'material', noSell: true, maxStack: 99, desc: 'Ticket from a salvaged costume.', lore: 'A folded ticket stitched from an old costume. Keep it for a new outfit.' };

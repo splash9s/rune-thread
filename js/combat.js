@@ -1805,16 +1805,25 @@ function monsterTurnTick() {
         const defeatHtml = buildMapSummaryHTML('lose', defeatLabel, firstDeath);
         playPlayerFallAnim(); // the hero falls first, then the result shows
         const failReturn = currentMode === 'tower' ? 'tower' : (currentMode === 'voidtest' || currentMode === 'bossmap') ? 'events' : 'expeditions';
-        setTimeout(() => showModal(isEventMap ? "Event Failed" : "Expedition Failed", '', defeatHtml, () => switchView(failReturn)), PLAYER_FALL_MS);
+        const rejoinCampaign = currentMode === 'campaign', rejoinFinal = currentPath === 'final';
+        setTimeout(() => {
+            showModal(isEventMap ? "Event Failed" : "Expedition Failed", '', defeatHtml, () => switchView(failReturn));
+            if (rejoinCampaign) scheduleAutoRejoin(rejoinFinal); // VIP Auto Rejoin
+        }, PLAYER_FALL_MS);
     }
     updateUI();
 }
-// Battle speed: the base "1x" runs at 1.2x for everyone. The VIP button toggles 1x (1.2x) and 2x. Non-VIP always runs at 1x.
+// Battle speed. Shown as 1x / 1.5x / 2x; real speeds 1.2 / 1.6 / 2.0.
+// Everyone can switch 1x and 1.5x; 2x is VIP only. player.battleSpeed stores the shown value (1, 1.5 or 2).
 const DEFAULT_BATTLE_SPEED = 1.2;
-function combatSpeedMult() {
-    if (!isVipActive()) return DEFAULT_BATTLE_SPEED;
-    return player.battleSpeed === 2 ? 2 : DEFAULT_BATTLE_SPEED; // a saved 1 (old 1x) is the base speed too
+const BATTLE_SPEED_REAL = { 1: DEFAULT_BATTLE_SPEED, 1.5: 1.6, 2: 2 };
+function battleSpeedShown() {
+    const s = player.battleSpeed;
+    if (s === 2 && isVipActive()) return 2;
+    if (s === 1.5 || s === 2) return 1.5; // a saved 2x falls back to 1.5x when VIP runs out
+    return 1;
 }
+function combatSpeedMult() { return BATTLE_SPEED_REAL[battleSpeedShown()]; }
 // Starts the player's attack timer (ASPD) and the monsters' timer; stopCombatTimers clears both
 let combatTimerDerived = null;
 function startCombatTimers(derived) {
@@ -1824,21 +1833,27 @@ function startCombatTimers(derived) {
     combatInterval = setInterval(runCombatTick, Math.max(400, 2000 - (derived.aspd * 10)) / speed);
     monsterInterval = setInterval(monsterTurnTick, COMBAT_MONSTER_MS / speed);
 }
-// The 1x / 2x button: VIP only. Switching during a battle restarts the timers at the new speed.
+// The speed button: 1x -> 1.5x (-> 2x for VIP) -> 1x. Switching during a battle restarts the timers at the new speed.
 function toggleBattleSpeed() {
-    if (!isVipActive()) return;
-    const next = combatSpeedMult() === 2 ? 1 : 2; // 1 stands for the base 1x (1.2x)
+    const cur = battleSpeedShown();
+    const next = cur === 1 ? 1.5 : (cur === 1.5 && isVipActive()) ? 2 : 1;
     player.battleSpeed = next;
     updateSpeedButton();
     if (combatInterval !== null && combatTimerDerived) startCombatTimers(combatTimerDerived);
-    showCombatText('#combat-speed-btn', (next === 2 ? '2' : '1') + 'x'); // default white bold float text
+    showCombatText('#combat-speed-btn', next + 'x'); // default white bold float text
+    saveGame();
 }
 function updateSpeedButton() {
     const btn = document.getElementById('combat-speed-btn');
     if (!btn) return;
-    btn.classList.toggle('hidden', !isVipActive());
+    btn.classList.remove('hidden'); // everyone has 1x / 1.5x
+    const shown = battleSpeedShown();
+    btn.title = 'Battle speed ' + shown + 'x' + (isVipActive() ? '' : ' (2x with VIP)');
     const img = document.getElementById('combat-speed-img');
-    if (img) img.src = combatSpeedMult() === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp'; // the base speed uses the 1x icon
+    const txt = document.getElementById('combat-speed-txt');
+    // 1.5x has no icon yet: it shows as text
+    if (img) { img.style.display = shown === 1.5 ? 'none' : 'block'; img.src = shown === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp'; }
+    if (txt) txt.style.display = shown === 1.5 ? 'flex' : 'none';
 }
 function stopCombatTimers() {
     clearInterval(combatInterval); clearInterval(monsterInterval);
@@ -2188,6 +2203,7 @@ function onStageCleared() {
                 addItemToInventory(rollSetForDrop(reward));
 
                 showModal("Map Cleared!", '', buildMapSummaryHTML('win'), () => switchView('expeditions'));
+                scheduleAutoRejoin(currentPath === 'final'); // VIP Auto Rejoin
                 return;
             }
 
@@ -2378,6 +2394,62 @@ function toggleVipAutoRune() {
     saveGame();
 }
 
+// VIP Auto Rejoin: after a campaign map is cleared or failed, the result stays up for a few seconds
+// (with a countdown and a Stop button), then the same map starts again. Closing the result yourself cancels it.
+const AUTO_REJOIN_SECONDS = 5;
+let autoRejoinTimer = null;
+function autoRejoinOn() { return !!player.vipAutoRejoin && isVipActive(); }
+function toggleAutoRejoin() {
+    if (!isVipActive()) return;
+    player.vipAutoRejoin = !player.vipAutoRejoin;
+    if (!player.vipAutoRejoin) cancelAutoRejoin();
+    updateAutoRejoinButton();
+    showCombatText('#combat-rejoin-btn', player.vipAutoRejoin ? 'Auto Rejoin ON' : 'Auto Rejoin OFF', player.vipAutoRejoin ? 'heal' : 'resoff');
+    saveGame();
+}
+function stopAutoRejoin() {
+    player.vipAutoRejoin = false;
+    cancelAutoRejoin();
+    updateAutoRejoinButton();
+    saveGame();
+}
+function cancelAutoRejoin() {
+    clearInterval(autoRejoinTimer);
+    autoRejoinTimer = null;
+    document.getElementById('auto-rejoin-count')?.remove();
+}
+function updateAutoRejoinButton() {
+    const btn = document.getElementById('combat-rejoin-btn');
+    if (!btn) return;
+    btn.classList.toggle('hidden', !isVipActive());
+    btn.classList.toggle('on', autoRejoinOn());
+    btn.title = 'Auto Rejoin (VIP): ' + (autoRejoinOn() ? 'On' : 'Off');
+}
+function scheduleAutoRejoin(final) {
+    if (!autoRejoinOn()) return;
+    cancelAutoRejoin();
+    const modalEl = document.getElementById('game-modal');
+    const area = document.getElementById('modal-content-area');
+    if (!modalEl || !area) return;
+    let left = AUTO_REJOIN_SECONDS;
+    const box = document.createElement('div');
+    box.id = 'auto-rejoin-count';
+    box.style.cssText = 'display:flex; align-items:center; justify-content:center; gap:12px; margin:0 0 10px; padding:8px 12px; border-radius:10px; background:rgba(16,185,129,.15); border:1px solid #10b981; color:#a7f3d0; font-weight:700;';
+    box.innerHTML = '<span id="auto-rejoin-text"></span><button onclick="stopAutoRejoin()" style="padding:4px 14px; border-radius:8px; background:#7f1d1d; color:#fff; font-weight:800; cursor:pointer;">Stop</button>';
+    area.prepend(box);
+    const render = () => { const t = document.getElementById('auto-rejoin-text'); if (t) t.textContent = `Auto Rejoin: the same map starts in ${left}s`; };
+    render();
+    autoRejoinTimer = setInterval(() => {
+        if (modalEl.classList.contains('hidden')) { cancelAutoRejoin(); return; } // the player closed the result
+        left--;
+        if (left > 0) { render(); return; }
+        cancelAutoRejoin();
+        if (!autoRejoinOn()) return;
+        closeModal(); // the normal return to the Expedition Gates (clean-up), then start again
+        startExpedition('campaign', final ? { final: true } : {});
+    }, 1000);
+}
+
 function toggleCombatPause() {
     if (!isVipActive()) return;
     combatPaused = !combatPaused;
@@ -2393,6 +2465,7 @@ function updatePauseButton() {
     btn.title = combatPaused ? 'Resume' : 'Pause';
     btn.classList.toggle('paused', combatPaused); // press graphic while paused
     updateSpeedButton();
+    updateAutoRejoinButton();
     const ar = document.getElementById('combat-auto-rune-btn');
     if (ar) {
         ar.classList.toggle('hidden', !isVipActive());

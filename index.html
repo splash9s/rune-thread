@@ -219,6 +219,9 @@
         /* Inventory bag: Salvage All and Sell All are round picture buttons; press picture while held */
         .inv-icon-btn { position: relative; display: inline-block; width: 64px; height: 64px; padding: 0; border: 0; background: none; cursor: pointer; }
         .inv-icon-btn img { width: 100%; height: 100%; display: block; }
+        /* Text button in the bag's icon row (until it gets its own art) */
+        .inv-icon-btn.inv-text-btn { border-radius: 12px; border: 2px solid #c09e6a; background: #3b2716; color: #fde68a; font-size: 13px; font-weight: 800; line-height: 1.1; }
+        .inv-icon-btn.inv-text-btn:active { background: #5a3d22; }
         .dd-row .inv-icon-btn { justify-self: center; }
         .inv-icon-btn .cb-press { display: none; position: absolute; inset: 0; }
         .inv-icon-btn:active .cb-normal { display: none; }
@@ -1118,7 +1121,13 @@
         #combat-pause-btn:active, #combat-pause-btn.paused { background-image: url('assets/combat/pause_sign_press.png'); }
         #combat-auto-rune-btn { background-image: url('assets/combat/auto_sign.png'); }
         #combat-auto-rune-btn:active, #combat-auto-rune-btn.on { background-image: url('assets/combat/auto_sign_press.png'); }
-        #combat-pause-btn.hidden, #combat-auto-rune-btn.hidden { display: none !important; }
+        #combat-pause-btn.hidden, #combat-auto-rune-btn.hidden, #combat-rejoin-btn.hidden { display: none !important; }
+        /* Round text buttons (until they get icons): Auto Rejoin, and the 1.5x speed label */
+        .combat-round-btn { padding: 0; border-radius: 50%; border: 3px solid #c09e6a; background: radial-gradient(circle at 50% 35%, #4a3320, #241509); cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.6); }
+        .combat-round-btn.on { border-color: #34d399; box-shadow: 0 0 14px #10b981, 0 3px 8px rgba(0,0,0,.6); }
+        .combat-round-txt { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: #fde68a; font: 900 17px/1.05 'Roboto', sans-serif; text-shadow: 0 1px 2px #000; }
+        .combat-round-btn.on .combat-round-txt { color: #a7f3d0; }
+        #combat-speed-txt { border-radius: 50%; border: 3px solid #c09e6a; background: radial-gradient(circle at 50% 35%, #4a3320, #241509); font-size: 26px; box-sizing: border-box; }
         /* Resurrection label: green "Resurrection ON" when auto-revive is on, red "Resurrection OFF" when off */
         #combat-elixir-btn > span:first-child { color: #4ade80; font-weight: 900; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
         #view-combat #combat-elixir-btn > span:first-child { font-size: 18px; }
@@ -2054,6 +2063,7 @@
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventory Bag</h3>
                         <span id="inventory-count" class="text-xs font-mono text-slate-400 ml-6">0 / 63 slots</span>
                         <div class="inv-top-btns ml-auto flex items-center gap-2">
+                            <button onclick="autoEquipBest()" class="inv-icon-btn inv-text-btn" title="Auto Equip: wear your rarest usable gear" aria-label="Auto Equip">Auto<br>Equip</button>
                             <button onclick="stashOpenOrUnlock()" class="inv-icon-btn" title="Stash" aria-label="Stash"><img loading="lazy" class="cb-normal" src="assets/cha/button/stashbutton_q90.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/button/stashbuttonpress_q90.webp" alt=""></button>
                             <button onclick="startBulkSelect('salvage')" class="inv-icon-btn" title="Select to salvage" aria-label="Select to salvage"><img loading="lazy" class="cb-normal" src="assets/cha/page/btn_salvageall_q85.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/page/btn_salvageallpress_q85.webp" alt=""></button>
                             <button onclick="startBulkSelect('sell')" class="inv-icon-btn" title="Select to sell" aria-label="Select to sell"><img loading="lazy" class="cb-normal" src="assets/cha/page/btn_sellall_q85.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/page/btn_sellallpress_q85.webp" alt=""></button>
@@ -2360,7 +2370,8 @@
                     <!-- Pause (bottom right); Next Stage takes its place once the stage is cleared -->
                     <button id="combat-pause-btn" onclick="toggleCombatPause()" title="Pause" style="position:absolute; left:1733px; top:694px; width:175px; height:178px;" class="hidden combat-slot-btn"></button>
                     <button id="combat-sound-btn" onclick="toggleSoundAll()" title="Sound and effects on / off" style="position:absolute; left:1770px; top:2px; width:66px; height:67px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-sound-img" src="assets/combat/sound/sound_on_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"></button>
-                    <button id="combat-speed-btn" onclick="toggleBattleSpeed()" title="Battle speed (VIP)" class="hidden" style="position:absolute; left:1818px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-speed-img" src="assets/combat/speed/speed_2x_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"></button>
+                    <button id="combat-speed-btn" onclick="toggleBattleSpeed()" title="Battle speed" class="hidden" style="position:absolute; left:1818px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-speed-img" src="assets/combat/speed/speed_1x_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><span id="combat-speed-txt" class="combat-round-txt" style="display:none;">1.5x</span></button>
+                    <button id="combat-rejoin-btn" onclick="toggleAutoRejoin()" title="Auto Rejoin (VIP)" class="hidden combat-round-btn" style="position:absolute; left:1722px; top:592px; width:88px; height:89px;"><span class="combat-round-txt">Auto<br>Rejoin</span></button>
                     <button id="combat-auto-rune-btn" onclick="toggleVipAutoRune()" title="VIP: auto-pick a random rune" class="hidden combat-slot-btn" style="position:absolute; left:1351px; top:890px; width:175px; height:178px;"></button>
                     <button id="next-stage-btn" onclick="proceedToNextStage()" style="position:absolute; left:1733px; top:694px; width:175px; height:178px;" class="hidden bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm transition cursor-pointer shadow">Next Stage</button>
 
@@ -2397,10 +2408,10 @@
     <!-- hero-art.js holds the hero art as data URLs (948 KB); only file:// pages need it, web pages load the image files -->
     <script>if (location.protocol === 'file:') document.write('<script src="js/hero-art.js?v=20261118t"><\/script>');</script>
     <script src="js/hero-body.js?v=20261121lz"></script>
-    <script src="js/combat.js?v=20261122lv"></script>
+    <script src="js/combat.js?v=20261122ae"></script>
     <script src="js/crit-fx.js?v=20261118j"></script>
     <script src="js/bolt-fx.js?v=20261122be"></script>
-    <script src="js/ui.js?v=20261122tg"></script>
+    <script src="js/ui.js?v=20261122ae"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
     <script src="js/market.js?v=20261121sf"></script>
