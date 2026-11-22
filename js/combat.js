@@ -1356,7 +1356,7 @@ function awardKill(m) {
     const homeMul = 1 + (typeof homeBonusPct === 'function' ? homeBonusPct() : 0) / 100;
     if (homeMul > 1) { baseExpGain = Math.floor(baseExpGain * homeMul); jobExpGain = Math.floor(jobExpGain * homeMul); finalGold = Math.floor(finalGold * homeMul); }
     // Warded Tower kills give a small share of the normal gold and EXP (the run's main pay is the floor reward)
-    if (currentMode === 'tower') { finalGold = Math.floor(finalGold * TOWER_KILL_REWARD_MULT); baseExpGain = Math.floor(baseExpGain * TOWER_KILL_REWARD_MULT); jobExpGain = Math.floor(jobExpGain * TOWER_KILL_REWARD_MULT); }
+    if (currentMode === 'tower') { finalGold = Math.floor(finalGold * TOWER_KILL_REWARD_MULT); baseExpGain = 0; jobExpGain = 0; } // Warded Tower kills give no EXP (gold only)
     // Bosses and mini bosses always drop at least one coin (100%), even when the event rules zero the gold.
     if (bossKill && finalGold < 1) finalGold = 1;
 
@@ -2945,6 +2945,11 @@ function towerRenderField() {
     const S = COMBAT_PLAYER_SCALE;
     const footY = combatPlayerAnchor.y + COMBAT_PLAYER_FOOT.y;
     const keep = new Set();
+    // Depth: a friend standing further back (higher on screen) is drawn behind one standing further forward,
+    // including while falling. Friends use layers 4 and up; the hero (TOWER_HERO_LAYER) stays on top.
+    const friendIds = towerParty.order.filter(id => id !== 'hero');
+    const depthYs = friendIds.map(id => towerSlotFeet(id).y).sort((a, b) => a - b);
+    const layerOf = id => 4 + Math.max(0, depthYs.indexOf(towerSlotFeet(id).y));
     towerParty.order.filter(id => id !== 'hero').forEach((id, i) => {
         const m = towerParty.members[id];
         if (!m) return;
@@ -2971,7 +2976,7 @@ function towerRenderField() {
             if (el.dataset.src !== f.src) { el.src = f.src; el.dataset.src = f.src; }
             const fx = f.fx !== undefined ? f.fx : f.w / 2;
             const fy = f.fy !== undefined ? f.fy : f.h;
-            el.style.cssText = `position:absolute;left:${footX - fx * S}px;top:${footY - fy * S}px;width:${f.w * S}px;height:${f.h * S}px;image-rendering:pixelated;z-index:4;pointer-events:none;`;
+            el.style.cssText = `position:absolute;left:${footX - fx * S}px;top:${footY - fy * S}px;width:${f.w * S}px;height:${f.h * S}px;image-rendering:pixelated;z-index:${layerOf(id)};pointer-events:none;`;
         } else {
             // Art still loading: show the avatar until the sprite is ready
             if (!el || el.tagName !== 'DIV') {
@@ -2982,7 +2987,7 @@ function towerRenderField() {
                 el.innerHTML = friendAvatarHTML(m.avatar || '');
                 stage.appendChild(el);
             }
-            el.style.cssText = `position:absolute;left:${footX - 32}px;top:${footY - 70}px;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid #ffd45a;background:#1d1a14;z-index:4;pointer-events:none;`;
+            el.style.cssText = `position:absolute;left:${footX - 32}px;top:${footY - 70}px;width:64px;height:64px;border-radius:8px;overflow:hidden;border:2px solid #ffd45a;background:#1d1a14;z-index:${layerOf(id)};pointer-events:none;`;
         }
         // Fall once when the friend goes down (same animation as the hero)
         if (!alive) { el.classList.add('tower-fall'); m.attackUntil = 0; } // down: the fall plays once, no swing continues
