@@ -96,7 +96,12 @@ function dropOneBolt(inner, art, x, y, dmg, elem, n, cx, cy) {
         { transform: `translate(${BOLT_FX.fromX}px, ${BOLT_FX.fromY}px)`, opacity: 0.5 },
         { transform: 'translate(0, 0)', opacity: 1 }
     ], { duration: BOLT_FX.fallMs, easing: 'cubic-bezier(.5, 0, 1, .6)' }); // speeds up as it falls
-    fall.onfinish = () => { img.remove(); explodeBolt(inner, art, x, y); showBoltDamage(inner, cx, cy, dmg, elem, n); };
+    fall.onfinish = () => {
+        img.remove();
+        explodeBolt(inner, art, x, y);
+        showBoltDamage(inner, cx, cy, dmg, elem, n);
+        if (typeof playSfx === 'function' && SFX.bolt && SFX.bolt[elem]) playSfx(SFX.bolt[elem]); // the element's impact sound
+    };
     fall.oncancel = () => img.remove();
 }
 

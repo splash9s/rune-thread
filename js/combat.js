@@ -87,7 +87,14 @@ const SFX = {
     buttonOk: 'sound/sfx/button/ok.mp3',
     buttonBack: 'sound/sfx/button/back.mp3',
     buttonStart: 'sound/sfx/button/start_battle.mp3',
-    mapWin: 'sound/sfx/map_win.mp3'
+    mapWin: 'sound/sfx/map_win.mp3',
+    // Bolts: each element's own impact sound, played as each bolt lands (keys match the bolt elements; water = Ice)
+    bolt: {
+        fire: 'sound/sfx/combat/bolt/firebolt.mp3',
+        water: 'sound/sfx/combat/bolt/icebolt.mp3',
+        wind: 'sound/sfx/combat/bolt/windbolt.mp3',
+        earth: 'sound/sfx/combat/bolt/earthbolt.mp3'
+    }
 };
 // Loudness of each effect file, matched to the music (measured mean level), applied on top of the Effects volume
 const SFX_LEVEL = {
@@ -96,6 +103,11 @@ const SFX_LEVEL = {
     'sound/sfx/blacksmith.mp3': 1.84,
     'sound/sfx/coin.mp3': 3.55,
     'sound/sfx/levelup.mp3': 0.92,
+    // Bolt impacts, matched to the weapon hit sounds (up to 4 play close together, so a little under that)
+    'sound/sfx/combat/bolt/firebolt.mp3': 0.55,
+    'sound/sfx/combat/bolt/icebolt.mp3': 0.85,
+    'sound/sfx/combat/bolt/windbolt.mp3': 0.5,
+    'sound/sfx/combat/bolt/earthbolt.mp3': 0.5,
     'sound/sfx/map_win.mp3': 2.0,
     'sound/sfx/meow1.mp3': 2.82,
     'sound/sfx/meow2.mp3': 1.91,
