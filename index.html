@@ -96,7 +96,8 @@
         .skill-node.is-off { cursor: default; filter: grayscale(.5) brightness(.85); }
         .skill-node.is-hub { cursor: default; pointer-events: none; }
         #skill-paths { position: absolute; left: 0; top: 0; width: 4000px; height: 2233px; pointer-events: none; overflow: visible; }
-        #skill-paths .skill-path { stroke: rgba(70, 60, 45, .6); stroke-width: 8; stroke-linecap: round; }
+        #skill-paths .skill-path { stroke: rgba(245, 225, 175, .5); stroke-width: 7; stroke-linecap: round; }
+        #skill-paths .skill-path-open { stroke: #fcd34d; stroke-width: 9; stroke-linecap: round; opacity: .9; filter: url(#skill-glow); }
         #skill-paths .skill-path-lit { stroke: #8ff0ff; stroke-width: 12; stroke-linecap: round; stroke-dasharray: 26 16; animation: skillFlow 1.1s linear infinite; filter: url(#skill-glow); }
         /* Pet daily find window (js/pet-finds.js) */
         .pet-find { display: flex; flex-direction: column; gap: 14px; text-align: left; }
@@ -2390,7 +2391,7 @@
     <script src="data/maps.js?v=20261122cv"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script src="js/player.js?v=20261122lv"></script>
+    <script src="js/player.js?v=20261122tg"></script>
     <script src="js/audio.js?v=20261121i1"></script>
     <script src="js/cloud.js?v=20261121lib"></script>
     <!-- hero-art.js holds the hero art as data URLs (948 KB); only file:// pages need it, web pages load the image files -->
@@ -2399,7 +2400,7 @@
     <script src="js/combat.js?v=20261122lv"></script>
     <script src="js/crit-fx.js?v=20261118j"></script>
     <script src="js/bolt-fx.js?v=20261122be"></script>
-    <script src="js/ui.js?v=20261122db"></script>
+    <script src="js/ui.js?v=20261122tg"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
     <script src="js/market.js?v=20261121sf"></script>

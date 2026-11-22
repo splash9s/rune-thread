@@ -5408,7 +5408,11 @@ function renderSkillDetail() {
     const state = skillNodeState(n.id, sets);
     const spLeft = player.jobSp - pendingSkillTotal();
     const capTaken = [...sets.all].some(id => SKILL_NODES[id] && SKILL_NODES[id].cap);
-    const reason = state === 'locked' ? (n.cap && capTaken ? 'Only one capstone can be taken.' : 'Take a linked node first.')
+    const gate = SKILL_TIER_GATE[n.tier], inBranch = skillBranchCount(sets.all, n.branch);
+    const reason = state === 'locked'
+        ? (n.cap && capTaken ? 'Only one capstone can be taken.'
+            : inBranch < gate ? `Needs ${gate} points in ${br.name} (you have ${inBranch}).`
+            : 'Take a linked node first.')
         : state === 'open' && spLeft <= 0 ? 'No skill points available' : '';
     const status = { taken: 'Learned', pending: 'Picked (not confirmed yet)', open: 'Available', locked: 'Locked' }[state];
     // Small nodes show their effect only; a capstone shows its name and effect
@@ -5424,6 +5428,7 @@ function renderSkillDetail() {
         <div class="mt-5 text-base flex flex-col gap-2">
             <div class="flex justify-between"><span>Status</span><strong>${status}</strong></div>
             <div class="flex justify-between"><span>Cost</span><strong>1 point</strong></div>
+            ${gate ? `<div class="flex justify-between"><span>Needs in ${br.name}</span><strong>${Math.min(inBranch, gate)} / ${gate} points</strong></div>` : ''}
             <div class="flex justify-between"><span>Skill points left</span><strong>${spLeft} / ${skillPointsTotal()}</strong></div>
         </div>
         ${state === 'pending'
@@ -5467,11 +5472,15 @@ function renderSkillPage() {
     // Centre hub: always on, not clickable
     const hubHtml = `<div class="skill-node is-hub" style="left:${SKILL_HUB[0] - 60}px; top:${SKILL_HUB[1] - 61}px; width:120px; height:122px;"><img src="assets/pages/skill/skillbuttonup.gif" alt=""></div>`;
 
-    // Paths between linked nodes: lit when both ends are learned or picked
+    // Paths between linked nodes: lit (both ends learned or picked), open (from a learned node to one that can be
+    // taken now) or plain. Plain paths are drawn first so lit and open paths sit on top.
     const P = id => id === 'hub' ? SKILL_HUB : skillNodePos(id);
-    const lines = SKILL_LINKS.map(([a, b]) => {
+    const canNow = id => id !== 'hub' && skillCanTake(id, sets.all);
+    const pathClass = (a, b) => on(a) && on(b) ? 'skill-path-lit' : (on(a) && canNow(b)) || (on(b) && canNow(a)) ? 'skill-path-open' : 'skill-path';
+    const rank = { 'skill-path': 0, 'skill-path-open': 1, 'skill-path-lit': 2 };
+    const lines = SKILL_LINKS.map(([a, b]) => ({ a, b, c: pathClass(a, b) })).sort((x, y) => rank[x.c] - rank[y.c]).map(({ a, b, c }) => {
         const pa = P(a), pb = P(b);
-        return `<line x1="${pa[0]}" y1="${pa[1]}" x2="${pb[0]}" y2="${pb[1]}" class="${on(a) && on(b) ? 'skill-path-lit' : 'skill-path'}"/>`;
+        return `<line x1="${pa[0]}" y1="${pa[1]}" x2="${pb[0]}" y2="${pb[1]}" class="${c}"/>`;
     }).join('');
     const svg = `<svg id="skill-paths" width="4000" height="2233" viewBox="0 0 4000 2233"><defs><filter id="skill-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines}</svg>`;
 
@@ -5638,7 +5647,9 @@ function upgradeSkill(id) {
     if (!skillCanTake(id, sets.all)) {
         const n = SKILL_NODES[id];
         const capTaken = [...sets.all].some(t => SKILL_NODES[t] && SKILL_NODES[t].cap);
-        showFloatNotice(n.cap && capTaken ? 'Only one capstone can be taken!' : 'Take a linked node first!');
+        const gate = SKILL_TIER_GATE[n.tier], inBranch = skillBranchCount(sets.all, n.branch);
+        const brName = SKILL_BRANCHES.find(b => b.key === n.branch).name;
+        showFloatNotice(n.cap && capTaken ? 'Only one capstone can be taken!' : inBranch < gate ? `Needs ${gate} points in ${brName}!` : 'Take a linked node first!');
         return;
     }
     pendingAlloc.skills[id] = 1;

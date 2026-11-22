@@ -197,11 +197,21 @@ function skillPointsTotal() { return Math.max(0, player.jobLv || 0); } // 1 poin
 // Unspent points; kept in player.jobSp too, which the alerts and guides read
 function syncSkillPoints() { player.jobSp = Math.max(0, skillPointsTotal() - skillTakenList().length); return player.jobSp; }
 
-// A node can be taken when it is linked to the hub or to a taken node, and (for a capstone) no capstone is taken yet
+// Tier gates: points already spent in a branch before its next tier opens (index = tier; 6 = capstone).
+// The fastest route to a capstone is 19 points (18 in the branch, then the capstone).
+const SKILL_TIER_GATE = [0, 0, 3, 6, 10, 14, 18];
+function skillBranchCount(set, branch) {
+    let c = 0;
+    set.forEach(id => { const n = SKILL_NODES[id]; if (n && n.branch === branch) c++; });
+    return c;
+}
+// A node can be taken when it is linked to the hub or to a taken node, its branch has enough points for its tier,
+// and (for a capstone) no capstone is taken yet
 function skillCanTake(id, takenSet) {
     const n = SKILL_NODES[id];
     if (!n || takenSet.has(id)) return false;
     if (n.cap && [...takenSet].some(t => SKILL_NODES[t] && SKILL_NODES[t].cap)) return false;
+    if (skillBranchCount(takenSet, n.branch) < SKILL_TIER_GATE[n.tier]) return false;
     return (SKILL_ADJ[id] || []).some(o => o === 'hub' || takenSet.has(o));
 }
 
@@ -232,6 +242,15 @@ function migrateSkills() {
         if (n.cap) { if (capSeen) return false; capSeen = true; }
         return true;
     });
+    // Keep only nodes that are still reachable under the current rules (links and tier gates);
+    // the rest are refunded. Repeated passes, so nodes taken in any order are kept when the build is valid.
+    const want = tree.taken, kept = new Set(), order = [];
+    let changed = true;
+    while (changed) {
+        changed = false;
+        want.forEach(id => { if (!kept.has(id) && skillCanTake(id, kept)) { kept.add(id); order.push(id); changed = true; } });
+    }
+    tree.taken = order;
     // More nodes than points (should not happen): keep the earliest taken
     if (tree.taken.length > skillPointsTotal()) tree.taken = tree.taken.slice(0, skillPointsTotal());
     player.skillTree = tree;
