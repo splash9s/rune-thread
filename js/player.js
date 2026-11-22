@@ -128,7 +128,7 @@ const SKILL_BRANCHES = [
         [['dex', 1], ['critDmgPct', 3], ['agi', 1], ['dex', 1], ['atkPct', 1], ['critPct', 1]]
       ] },
     { key: 'arc', name: 'Arcane', dir: 'right', color: '#c4b5fd',
-      cap: { name: 'Arcane Strike', eff: 'arcaneStrike', val: 10, text: 'Spell chance +10%: one shared roll on each hit casts all four bolts.' },
+      cap: { name: 'Arcane Strike', eff: 'arcaneStrike', val: 10, text: 'Bolt chance +10% for every element. Each bolt still rolls its own chance.' },
       tiers: [
         [['boltFire', 2], ['int', 1], ['agi', 1]],
         [['boltWater', 2], ['boltEarth', 2], ['boltWind', 2], ['int', 1]],

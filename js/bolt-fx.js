@@ -49,8 +49,11 @@ const BOLT_FX = {
     tipY: 0.94          // ...and height: the tip is what lands on the centre
 };
 
+// Gap between two casts that proc on the same hit, so they play one after another (about one cast's length)
+const BOLT_CAST_GAP_MS = 4 * 120 + 300;
 // count: bolts in this cast (one fall and explosion each). element: fire / water (Ice) / wind / earth.
-function playBoltFx(element, selector, count) {
+// delayMs: wait before this cast starts (used when several elements proc on one hit)
+function playBoltFx(element, selector, count, delayMs = 0) {
     const view = document.getElementById('view-combat');
     if (!view || view.classList.contains('hidden')) return;
     const art = BOLT_FX_ART[element === 'water' ? 'ice' : element];
@@ -67,7 +70,7 @@ function playBoltFx(element, selector, count) {
     for (let i = 0; i < Math.max(1, count || 1); i++) {
         const jx = (Math.random() * 2 - 1) * BOLT_FX.jitter;
         const jy = (Math.random() * 2 - 1) * BOLT_FX.jitter;
-        setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy), i * BOLT_FX.staggerMs);
+        setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy), delayMs + i * BOLT_FX.staggerMs);
     }
 }
 

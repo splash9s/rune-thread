@@ -2012,16 +2012,16 @@ function runCombatTick() {
             if (casters.length) applyStunStatus(casters[Math.floor(Math.random() * casters.length)]);
         }
         // Bolts: 4 bolts of their element, each 50% of MATK (element advantage applies as for other attacks).
-        // Chance per element = the bolt rune's chance (10% when picked) + that element's bolt % from Arcane skill nodes.
-        // Arcane Strike (capstone): one shared extra roll per hit; on success all four bolts are cast.
+        // Each element rolls its own chance: the bolt rune's chance (10% when picked) + that element's bolt % from
+        // Arcane skill nodes + Arcane Strike (capstone, added to every element). Bolts that proc on the same hit
+        // are shown one cast after another, never at the same time.
         const BOLT_ELEMENT = { fireBolt: 'fire', coldBolt: 'water', thunderBolt: 'wind', rockBolt: 'earth' };
         const BOLT_SKILL = { fireBolt: 'boltFire', coldBolt: 'boltWater', thunderBolt: 'boltWind', rockBolt: 'boltEarth' };
         const arcaneStrike = skillBonus('arcaneStrike');
-        const arcaneCast = arcaneStrike > 0 && Math.random() * 100 < arcaneStrike;
-        if (arcaneCast) logMessage('[Arcane Strike] All four bolts are cast!', 'levelup');
+        let castsThisHit = 0;
         ['fireBolt', 'coldBolt', 'thunderBolt', 'rockBolt'].forEach(id => {
-            const ch = runeN(id) + skillBonus(BOLT_SKILL[id]);
-            if (arcaneCast || (ch > 0 && Math.random() * 100 < ch)) {
+            const ch = runeN(id) + skillBonus(BOLT_SKILL[id]) + arcaneStrike;
+            if (ch > 0 && Math.random() * 100 < ch) {
                 const boltIdx = monstersList.indexOf(targetEnemy);
                 let landed = 0;
                 for (let b = 0; b < 4; b++) {
@@ -2032,7 +2032,8 @@ function runCombatTick() {
                     logMessage(`[Bolt] ${ELEMENTS[BOLT_ELEMENT[id]].name} Bolt hits ${targetEnemy.name} for ${bolt} damage`, 'drop');
                 }
                 // Each bolt falls from the top right onto the monster and explodes (js/bolt-fx.js)
-                if (landed && boltIdx >= 0 && typeof playBoltFx === 'function') playBoltFx(BOLT_ELEMENT[id], `#monsters-lineup-container > div:nth-child(${boltIdx + 1}) img`, landed);
+                if (landed && boltIdx >= 0 && typeof playBoltFx === 'function') playBoltFx(BOLT_ELEMENT[id], `#monsters-lineup-container > div:nth-child(${boltIdx + 1}) img`, landed, castsThisHit * BOLT_CAST_GAP_MS);
+                if (landed) castsThisHit++;
             }
         });
         if (runeN('instantKill') > 0 && targetEnemy.hp > 0 && !targetEnemy.isBoss && !targetEnemy.isMiniBoss && Math.random() < 0.01) {
