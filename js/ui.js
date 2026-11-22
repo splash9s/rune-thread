@@ -5503,6 +5503,8 @@ function renderSkillPage() {
     // Centre hub: always on, not clickable
     const hubHtml = `<div class="skill-node is-hub" style="left:${SKILL_HUB[0] - 60}px; top:${SKILL_HUB[1] - 61}px; width:120px; height:122px;"><img src="assets/pages/skill/skillbuttonup.gif" alt=""></div>`;
 
+    // The glow filter uses map coordinates (userSpaceOnUse): a box sized from each line would have zero height for a
+    // straight horizontal line (or zero width for a vertical one), and the browser would not draw that line at all.
     // Paths between linked nodes: lit (both ends learned or picked), open (from a learned node to one that can be
     // taken now) or plain. Plain paths are drawn first so lit and open paths sit on top.
     const P = id => id === 'hub' ? SKILL_HUB : skillNodePos(id);
@@ -5513,7 +5515,7 @@ function renderSkillPage() {
         const pa = P(a), pb = P(b);
         return `<line x1="${pa[0]}" y1="${pa[1]}" x2="${pb[0]}" y2="${pb[1]}" class="${c}"/>`;
     }).join('');
-    const svg = `<svg id="skill-paths" width="4000" height="2233" viewBox="0 0 4000 2233"><defs><filter id="skill-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines}</svg>`;
+    const svg = `<svg id="skill-paths" width="4000" height="2233" viewBox="0 0 4000 2233"><defs><filter id="skill-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="4000" height="2233"><feGaussianBlur stdDeviation="7" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines}</svg>`;
 
     nodes.innerHTML = svg + hubHtml + nodesHtml;
     skillEnsureView();
