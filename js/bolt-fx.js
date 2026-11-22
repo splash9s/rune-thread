@@ -46,14 +46,19 @@ const BOLT_FX = {
     frameMs: 120,       // time each explosion frame stays on screen
     fadeMs: 320,        // the last frame holds, grows a little and fades out over this time
     tipX: 0.06,         // the bolt's tip (bottom left of the picture), as a fraction of its width...
-    tipY: 0.94          // ...and height: the tip is what lands on the centre
+    tipY: 0.94,         // ...and height: the tip is what lands on the centre
+    dmgRise: 40,        // a bolt's damage number starts this far above the monster's centre
+    dmgSpreadX: 45,     // ...and this far left (1st, 3rd bolt) or right (2nd, 4th bolt)
+    dmgStepY: 38        // each later bolt's number starts this much higher
 };
 
 // Gap between two casts that proc on the same hit, so they play one after another (about one cast's length)
 const BOLT_CAST_GAP_MS = 4 * 120 + 300;
 // count: bolts in this cast (one fall and explosion each). element: fire / water (Ice) / wind / earth.
 // delayMs: wait before this cast starts (used when several elements proc on one hit)
-function playBoltFx(element, selector, count, delayMs = 0) {
+// damages: each bolt's damage; bolt i shows damages[i] in its element's colour when it explodes
+function playBoltFx(element, selector, count, delayMs = 0, damages = []) {
+    const elem = element === 'water' ? 'water' : element; // CSS colour classes use the element keys (water = Ice)
     const view = document.getElementById('view-combat');
     if (!view || view.classList.contains('hidden')) return;
     const art = BOLT_FX_ART[element === 'water' ? 'ice' : element];
@@ -70,12 +75,13 @@ function playBoltFx(element, selector, count, delayMs = 0) {
     for (let i = 0; i < Math.max(1, count || 1); i++) {
         const jx = (Math.random() * 2 - 1) * BOLT_FX.jitter;
         const jy = (Math.random() * 2 - 1) * BOLT_FX.jitter;
-        setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy), delayMs + i * BOLT_FX.staggerMs);
+        const dmg = damages[i];
+        setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy, dmg, elem, i, cx, cy), delayMs + i * BOLT_FX.staggerMs);
     }
 }
 
 // One bolt: falls from the top right so that its tip lands on (x, y), then explodes there
-function dropOneBolt(inner, art, x, y) {
+function dropOneBolt(inner, art, x, y, dmg, elem, n, cx, cy) {
     const w = art.bolt.w * BOLT_FX.boltScale, h = art.bolt.h * BOLT_FX.boltScale;
     const img = document.createElement('img');
     img.className = 'bolt-fx';
@@ -90,8 +96,21 @@ function dropOneBolt(inner, art, x, y) {
         { transform: `translate(${BOLT_FX.fromX}px, ${BOLT_FX.fromY}px)`, opacity: 0.5 },
         { transform: 'translate(0, 0)', opacity: 1 }
     ], { duration: BOLT_FX.fallMs, easing: 'cubic-bezier(.5, 0, 1, .6)' }); // speeds up as it falls
-    fall.onfinish = () => { img.remove(); explodeBolt(inner, art, x, y); };
+    fall.onfinish = () => { img.remove(); explodeBolt(inner, art, x, y); showBoltDamage(inner, cx, cy, dmg, elem, n); };
     fall.oncancel = () => img.remove();
+}
+
+// The bolt's own damage number, in its element's colour, rising from the monster's centre.
+// n (0-3): the bolt's place in its cast; numbers fan out left/right and step up so the four never overlap.
+function showBoltDamage(inner, x, y, dmg, elem, n = 0) {
+    if (dmg == null) return;
+    const d = document.createElement('div');
+    d.className = `combat-dmg bolt elem-${elem}`;
+    d.textContent = dmg;
+    d.style.left = (x + (n % 2 ? 1 : -1) * BOLT_FX.dmgSpreadX) + 'px';
+    d.style.top = (y - BOLT_FX.dmgRise - n * BOLT_FX.dmgStepY) + 'px';
+    inner.appendChild(d);
+    setTimeout(() => d.remove(), 900);
 }
 
 // Explosion frames centred on (x, y); the last frame holds, grows a little and fades out

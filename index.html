@@ -1050,6 +1050,12 @@
         .combat-dmg.elem-adv.elem-water { color: #38bdf8; --dmg-edge: #0b4a6b; }
         .combat-dmg.elem-adv.elem-wind { color: #5eead4; --dmg-edge: #0f5c52; }
         .combat-dmg.elem-adv.elem-earth { color: #d97706; --dmg-edge: #6b3a00; }
+        /* Bolt damage: one number per bolt, in the bolt's element colour (water = Ice) */
+        .combat-dmg.bolt { z-index: 12; font-size: 44px; }
+        .combat-dmg.bolt.elem-fire { color: #ff6a1a; --dmg-edge: #7a2300; }
+        .combat-dmg.bolt.elem-water { color: #38bdf8; --dmg-edge: #0b4a6b; }
+        .combat-dmg.bolt.elem-wind { color: #5eead4; --dmg-edge: #0f5c52; }
+        .combat-dmg.bolt.elem-earth { color: #d97706; --dmg-edge: #6b3a00; }
         /* Combat buttons, alert boxes and the floating numbers, dodge and regen text use Roboto */
         #view-combat button, #game-modal button, #game-modal, #game-modal #modal-title { font-family: 'Roboto', 'Noto Sans Thai', sans-serif; }
         /* Forged weapon names (forgedWeaponName in js/ui.js): player green, element colour, base name orange */
@@ -2371,9 +2377,9 @@
     <!-- hero-art.js holds the hero art as data URLs (948 KB); only file:// pages need it, web pages load the image files -->
     <script>if (location.protocol === 'file:') document.write('<script src="js/hero-art.js?v=20261118t"><\/script>');</script>
     <script src="js/hero-body.js?v=20261121lz"></script>
-    <script src="js/combat.js?v=20261122ar"></script>
+    <script src="js/combat.js?v=20261122bd"></script>
     <script src="js/crit-fx.js?v=20261118j"></script>
-    <script src="js/bolt-fx.js?v=20261122b"></script>
+    <script src="js/bolt-fx.js?v=20261122be"></script>
     <script src="js/ui.js?v=20261122ln"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
