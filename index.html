@@ -219,6 +219,10 @@
         /* Inventory bag: Salvage All and Sell All are round picture buttons; press picture while held */
         .inv-icon-btn { position: relative; display: inline-block; width: 64px; height: 64px; padding: 0; border: 0; background: none; cursor: pointer; }
         .inv-icon-btn img { width: 100%; height: 100%; display: block; }
+        /* MATK ("Arcane") weapon icons: purple glow and an "M" badge */
+        .matk-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+        .matk-icon > img, .matk-icon > span:first-child { filter: drop-shadow(0 0 4px #a855f7) drop-shadow(0 0 2px #c084fc); }
+        .matk-badge { position: absolute; right: 2px; bottom: 2px; min-width: 18px; height: 18px; padding: 0 3px; border-radius: 9px; background: #7c3aed; border: 1px solid #e9d5ff; color: #fff; font: 900 11px/16px 'Roboto', sans-serif; text-align: center; pointer-events: none; }
         /* Text button in the bag's icon row (until it gets its own art) */
         .inv-icon-btn.inv-text-btn { border-radius: 12px; border: 2px solid #c09e6a; background: #3b2716; color: #fde68a; font-size: 13px; font-weight: 800; line-height: 1.1; }
         .inv-icon-btn.inv-text-btn:active { background: #5a3d22; }
@@ -2402,16 +2406,16 @@
     <script src="data/maps.js?v=20261122cv"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
-    <script src="js/player.js?v=20261122tg"></script>
+    <script src="js/player.js?v=20261122mw"></script>
     <script src="js/audio.js?v=20261121i1"></script>
     <script src="js/cloud.js?v=20261121lib"></script>
     <!-- hero-art.js holds the hero art as data URLs (948 KB); only file:// pages need it, web pages load the image files -->
     <script>if (location.protocol === 'file:') document.write('<script src="js/hero-art.js?v=20261118t"><\/script>');</script>
     <script src="js/hero-body.js?v=20261121lz"></script>
-    <script src="js/combat.js?v=20261122ae"></script>
+    <script src="js/combat.js?v=20261122mw"></script>
     <script src="js/crit-fx.js?v=20261118j"></script>
     <script src="js/bolt-fx.js?v=20261122be"></script>
-    <script src="js/ui.js?v=20261122cm"></script>
+    <script src="js/ui.js?v=20261122mw"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
     <script src="js/market.js?v=20261121sf"></script>

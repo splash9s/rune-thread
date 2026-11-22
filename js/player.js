@@ -430,7 +430,20 @@ function resetMapRunes() {
 // forcedRarity (chests, mail, rewards): the item gets exactly that many buffs minus one.
 // Otherwise the drop source's weights pick a roll, and that roll sets the odds of each buff count.
 function gearRarityFromBuffs(item) { return Math.min(5, ((item && item.buffs) || []).length + 1); }
-function generatePoEItem(baseTemplate, forcedRarity = null, minBuffs = 0, sourceWeights = null) {
+// MATK weapons: a weapon can be an ATK version or a MATK ("Arcane") version with the same number as MATK.
+// The MATK version feeds the hero's MATK (bolts) instead of ATK (normal hits).
+function toMatkWeapon(item) {
+    if (!item || item.slot !== 'weapon' || !item.stats || !item.stats.atk) return item;
+    const stats = { ...item.stats, matk: item.stats.atk };
+    delete stats.atk;
+    return {
+        ...item, stats, weaponKind: 'matk',
+        name: /^Arcane /.test(item.name) ? item.name : 'Arcane ' + item.name,
+        desc: (item.desc || '').replace(/\bAtk \+/i, 'MATK +')
+    };
+}
+// weaponKind: 'atk' or 'matk' to choose the version; otherwise a weapon is 50/50 (drops, chests, rewards).
+function generatePoEItem(baseTemplate, forcedRarity = null, minBuffs = 0, sourceWeights = null, weaponKind = null) {
     let buffCount;
     if (forcedRarity) buffCount = Math.min(4, Math.max(minBuffs, forcedRarity - 1));
     else {
@@ -461,7 +474,12 @@ function generatePoEItem(baseTemplate, forcedRarity = null, minBuffs = 0, source
 
     const element = baseTemplate.element || null;
 
-    return { ...baseTemplate, element, rarity, refineLevel: 0, buffs, debuffs, qty: 1 };
+    let item = { ...baseTemplate, element, rarity, refineLevel: 0, buffs, debuffs, qty: 1 };
+    if (item.slot === 'weapon' && !item.weaponKind && item.stats && item.stats.atk) {
+        const kind = weaponKind || (Math.random() < 0.5 ? 'matk' : 'atk');
+        item = kind === 'matk' ? toMatkWeapon(item) : { ...item, weaponKind: 'atk' };
+    }
+    return item;
 }
 
 // Snapshot of the counters the Max HP runes use, taken at the start of each stage
@@ -503,7 +521,7 @@ function getDerivedStats() {
     let aspd = Math.floor(130 * 0.6 * 0.7 * 0.7) + Math.floor(ST.agi * 0.8) + Math.floor(ST.dex * 0.2);
     let movementSpeed = (player.baseMovementSpeed || 3);
 
-    const extra = { atk: 0, def: 0, hp: 0, flee: 0, hit: 0, crit: 0, aspd: 0, armor: 0, atkPct: 0, hpPct: 0, defPct: 0, res_fire: 0, res_wind: 0, res_earth: 0, res_water: 0 };
+    const extra = { atk: 0, matk: 0, def: 0, hp: 0, flee: 0, hit: 0, crit: 0, aspd: 0, armor: 0, atkPct: 0, hpPct: 0, defPct: 0, res_fire: 0, res_wind: 0, res_earth: 0, res_water: 0 };
     let goldMultiplier = 1;
 
     if (!daily) {
@@ -514,6 +532,7 @@ function getDerivedStats() {
             if (item.stats) {
                 for (const k in item.stats) if (k in extra) extra[k] += item.stats[k];
                 if (item.stats.atk) extra.atk += refBonus * 3;
+                if (item.stats.matk) extra.matk += refBonus * 3; // MATK weapons refine like ATK weapons
                 if (item.stats.def) extra.def += refBonus;
                 if (item.stats.hp) extra.hp += refBonus * 10;
             }
@@ -553,7 +572,7 @@ function getDerivedStats() {
     const elemRes = { fire: extra.res_fire, wind: extra.res_wind, earth: extra.res_earth, water: extra.res_water };
     const finalMaxArmor = rn('glassCannon') > 0 ? 0 : maxArmor;
     if (player.runes.zeroArmor && finalMaxArmor === 0) flee += 10;
-    const matk = 10 + (ST.int * 2); // magic attack: WIS (the int stat) x2, as STR x2 gives ATK
+    const matk = 10 + (ST.int * 2) + extra.matk; // magic attack: WIS (the int stat) x2, plus MATK from gear (MATK weapons)
     return { maxHp, maxArmor: finalMaxArmor, atk, matk, def, hit, flee, crit, aspd, movementSpeed, goldMultiplier, elemRes };
 }
 

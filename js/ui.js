@@ -53,7 +53,12 @@ function avatarMarkup(av, cls) {
 }
 let selectedAvatarChoice = "assets/avatars/man1_q85.webp";
 let currentLanguage = 'en';
-const SHOP_ARMORY_ITEMS = (typeof SHOP_ITEMS !== 'undefined' ? SHOP_ITEMS : []).slice().sort((a, b) => (a.levelReq || 1) - (b.levelReq || 1));
+// Shop gear, by level. Each weapon is listed twice: the ATK version and its MATK ("Arcane") version.
+// Chests draw from this list too, so a chest weapon is ATK or MATK with equal chance.
+const SHOP_ARMORY_ITEMS = (typeof SHOP_ITEMS !== 'undefined' ? SHOP_ITEMS : []).slice().sort((a, b) => (a.levelReq || 1) - (b.levelReq || 1))
+    .flatMap(t => t.slot === 'weapon' && t.stats && t.stats.atk
+        ? [{ ...t, weaponKind: 'atk' }, { ...toMatkWeapon(t), id: (t.id || t.name) + '_m' }]
+        : [t]);
 
 const GOLD_SHOP_CONSUMABLES = [
     { id: 'potion_minor', name: "Minor Healing Potion", price: 100, type: 'potion', heal: 200, desc: "Restores 200 HP", lore: "A small red tonic from the camp healers. Quick to drink in the middle of a fight." },
@@ -4154,7 +4159,7 @@ function unequipItem(slotName) {
     saveGame();
 }
 
-const STAT_LABELS = { atk: 'ATK', def: 'DEF', hp: 'HP', flee: 'FLEE', hit: 'HIT', aspd: 'ASPD', crit: 'CRIT', block: 'Block', mdef: 'MDEF', armor: 'ARMOR', atkPct: 'ATK%' };
+const STAT_LABELS = { atk: 'ATK', matk: 'MATK', def: 'DEF', hp: 'HP', flee: 'FLEE', hit: 'HIT', aspd: 'ASPD', crit: 'CRIT', block: 'Block', mdef: 'MDEF', armor: 'ARMOR', atkPct: 'ATK%' };
 
 function formatStatLine(key, val) {
     const pct = key === 'crit' || key === 'block' || key === 'atkPct' || key.startsWith('res_');
@@ -4312,7 +4317,13 @@ function chestIconHTML(chestType, size = 64) {
     const file = (t === 'costume' || t === 'pet') ? `${t}icon_q85.webp?v=${CHEST_ART_VER}` : `${t}csmall_q85.webp`; // costume and pet have their own item icons
     return `<img src="assets/chest/${t}/${file}" alt="${t} chest" style="width:${size}px;height:${Math.round(size * 0.8)}px;object-fit:contain;" />`;
 }
+// MATK ("Arcane") weapons get a purple glow and a small "M" badge, so they stand apart from the ATK version
 function itemIconHTML(item, size = 70) {
+    const inner = itemIconInnerHTML(item, size);
+    if (!item || item.slot !== 'weapon' || !(item.weaponKind === 'matk' || (item.stats && item.stats.matk))) return inner;
+    return `<span class="matk-icon" style="width:${size}px;height:${size}px;">${inner}<span class="matk-badge">M</span></span>`;
+}
+function itemIconInnerHTML(item, size = 70) {
     const rule = item && item.name ? ITEM_ICON_RULES.find(r => r[0].test(item.name)) : null;
     if (rule) {
         const src = rule[1].includes('/') ? rule[1] : `assets/items/${rule[1]}.png`; // full path, or an items-folder name

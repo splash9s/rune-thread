@@ -1815,6 +1815,8 @@ function monsterTurnTick() {
 }
 // Battle speed. Shown as 1x / 1.5x / 2x; real speeds 1.2 / 1.6 / 2.0.
 // Everyone can switch 1x and 1.5x; 2x is VIP only. player.battleSpeed stores the shown value (1, 1.5 or 2).
+// Each bolt deals this share of MATK (was 0.5; lowered to 0.3 when MATK weapons were added)
+const BOLT_MATK_RATIO = 0.3;
 const DEFAULT_BATTLE_SPEED = 1.2;
 const BATTLE_SPEED_REAL = { 1: DEFAULT_BATTLE_SPEED, 1.5: 1.6, 2: 2 };
 function battleSpeedShown() {
@@ -2029,7 +2031,7 @@ function runCombatTick() {
             const casters = getAliveMonsters().filter(m => ['range', 'mage', 'healer'].includes(roleOf(m)) && !m.status);
             if (casters.length) applyStunStatus(casters[Math.floor(Math.random() * casters.length)]);
         }
-        // Bolts: 4 bolts of their element, each 50% of MATK (element advantage applies as for other attacks).
+        // Bolts: 4 bolts of their element, each BOLT_MATK_RATIO (30%) of MATK (element advantage applies as for other attacks).
         // Each element rolls its own chance: the bolt rune's chance (10% when picked) + that element's bolt % from
         // Arcane skill nodes + Arcane Strike (capstone, added to every element). Bolts that proc on the same hit
         // are shown one cast after another, never at the same time.
@@ -2045,7 +2047,7 @@ function runCombatTick() {
                 const boltDmgs = []; // each bolt's damage, shown as its own number when that bolt explodes
                 for (let b = 0; b < 4; b++) {
                     if (targetEnemy.hp <= 0) break;
-                    const bolt = Math.max(1, Math.floor(derived.matk * 0.5 * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element) * (1 + skillBonus('boltDmgPct') / 100))); // Arcane: Bolt damage nodes
+                    const bolt = Math.max(1, Math.floor(derived.matk * BOLT_MATK_RATIO * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element) * (1 + skillBonus('boltDmgPct') / 100))); // Arcane: Bolt damage nodes
                     targetEnemy.hp -= bolt;
                     landed++;
                     boltDmgs.push(bolt);

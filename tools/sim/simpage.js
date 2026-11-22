@@ -31,12 +31,12 @@
     function bestShopGear(L) {
         const best = {};
         SHOP_ARMORY_ITEMS.forEach(t => {
-            if (!t.slot || (t.levelReq || 1) > L) return;
+            if (!t.slot || (t.levelReq || 1) > L || t.weaponKind === 'matk') return; // reference player: ATK weapons
             const cur = best[t.slot];
             if (!cur || (t.levelReq || 1) >= (cur.levelReq || 1)) best[t.slot] = t;
         });
         const eq = {};
-        Object.entries(best).forEach(([slot, t]) => { const it = generatePoEItem(t, 1, 0); it.buffs = []; it.debuffs = []; it.refineLevel = 0; eq[slot] = it; });
+        Object.entries(best).forEach(([slot, t]) => { const it = generatePoEItem(t, 1, 0, null, 'atk'); it.buffs = []; it.debuffs = []; it.refineLevel = 0; eq[slot] = it; });
         return eq;
     }
 
