@@ -2026,7 +2026,7 @@ function runCombatTick() {
                 let landed = 0;
                 for (let b = 0; b < 4; b++) {
                     if (targetEnemy.hp <= 0) break;
-                    const bolt = Math.max(1, Math.floor(derived.matk * 0.5 * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element)));
+                    const bolt = Math.max(1, Math.floor(derived.matk * 0.5 * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element) * (1 + skillBonus('boltDmgPct') / 100))); // Arcane: Bolt damage nodes
                     targetEnemy.hp -= bolt;
                     landed++;
                     logMessage(`[Bolt] ${ELEMENTS[BOLT_ELEMENT[id]].name} Bolt hits ${targetEnemy.name} for ${bolt} damage`, 'drop');

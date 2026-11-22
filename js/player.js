@@ -101,6 +101,7 @@ const SKILL_EFFECT_TEXT = {
     atkPct: v => `ATK +${v}%`, critPct: v => `CRIT +${v}`, critDmgPct: v => `Crit damage +${v}%`, bossDmgPct: v => `Boss damage +${v}%`,
     lowHpDmgPct: v => `Damage vs enemies below 50% HP +${v}%`, aspd: v => `ASPD +${v}`, fleePct: v => `FLEE +${v}`,
     hpPct: v => `Max HP +${v}%`, defPct: v => `DEF +${v}%`, armorPct: v => `Max armor +${v}%`, dmgReducePct: v => `Damage taken -${v}%`,
+    boltDmgPct: v => `Bolt damage +${v}%`,
     boltFire: v => `Fire bolt chance +${v}%`, boltWater: v => `Ice bolt chance +${v}%`, boltWind: v => `Wind bolt chance +${v}%`, boltEarth: v => `Earth bolt chance +${v}%`
 };
 // Short form shown under a node on the map (the detail panel shows the full text)
@@ -130,11 +131,11 @@ const SKILL_BRANCHES = [
     { key: 'arc', name: 'Arcane', dir: 'right', color: '#c4b5fd',
       cap: { name: 'Arcane Strike', eff: 'arcaneStrike', val: 10, text: 'Bolt chance +10% for every element. Each bolt still rolls its own chance.' },
       tiers: [
-        [['boltFire', 2], ['int', 1], ['agi', 1]],
-        [['boltWater', 2], ['boltEarth', 2], ['boltWind', 2], ['int', 1]],
-        [['boltFire', 2], ['boltWater', 2], ['int', 1], ['agi', 1], ['boltEarth', 2], ['boltWind', 2]],
-        [['boltEarth', 2], ['int', 1], ['boltWater', 2], ['agi', 1], ['boltWind', 2], ['int', 1]],
-        [['boltFire', 2], ['agi', 1], ['int', 1], ['agi', 1], ['int', 1], ['agi', 1]]
+        [['boltFire', 3], ['int', 1], ['boltDmgPct', 2]],
+        [['boltWater', 3], ['boltEarth', 3], ['boltWind', 3], ['int', 1]],
+        [['boltFire', 3], ['boltWater', 3], ['int', 1], ['boltDmgPct', 2], ['boltEarth', 3], ['boltWind', 3]],
+        [['boltEarth', 3], ['int', 1], ['boltWater', 3], ['boltDmgPct', 2], ['boltWind', 3], ['int', 1]],
+        [['boltFire', 3], ['boltDmgPct', 2], ['int', 1], ['boltDmgPct', 2], ['int', 1], ['boltDmgPct', 2]]
       ] },
     { key: 'mit', name: 'Mithril', dir: 'down', color: '#86efac',
       cap: { name: 'Mithril Hauberk', eff: 'mithrilHauberk', val: 10, text: 'Damage taken -10%. While armor is above 0, a further -10%.' },
