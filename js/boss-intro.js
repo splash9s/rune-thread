@@ -1,8 +1,8 @@
 // ==========================================
-// BOSS INTRO: NAME CARD (game juice, presentation only)
+// BOSS INTRO (game juice, presentation only)
 // When a boss stage starts: letterbox bars close in and the music dips, the boss squashes, hops and slams down
-// (dust, screen shake, small flash, deep thump), the hero flinches, then the boss's name slides in from the
-// right in gold with a gold rule under it, holds, and slides off left while the bars open.
+// (dust, screen shake, small flash, deep thump), the hero flinches, then the letterbox bars open again.
+// No name card and no bottom HP bar.
 //
 // Runs on its own presentation clock (requestAnimationFrame + performance.now); it never touches the combat
 // timers, monster stats or any game rule. Timings are in 60 Hz ticks (BI_TICK) or seconds; nothing counts rendered frames.
@@ -40,35 +40,11 @@ const BOSS_INTRO = {
     flashMaxPerSecond: 3,  // never more than this many flashes in any 1 s window
     heroFlinchPx: 6,       // hero steps back this far on the slam
     heroFlinchTicks: 14,
-    nameDelayTicks: 4,     // name starts this long after the slam
-    nameInTicks: 16,       // slides in from the right (biEaseOut)
-    nameFromPx: 520,
-    ruleTicks: 12,         // gold rule grows under the name
-    holdSec: 1.3,          // card holds
-    outTicks: 12,          // card slides off left and fades, bars open
-    outPx: 260,
+    holdSec: 1.3,          // beat held after the slam, before the bars open
+    outTicks: 12,          // bars open
     musicDip: 0.35,        // music volume while the boss arrives (fraction of the set volume)
     thump: { startHz: 70, endHz: 32, sec: 0.42, gain: 0.9, noiseGain: 0.35 },
     presets: { off: 0, subtle: 0.4, medium: 0.7, high: 1 }, // intensity multipliers
-    // Health bar fill (starts after the slam): a 120 x 4 px bar in the floor band under the boss
-    hpBar: {
-        delayTicks: 10,      // after the slam
-        w: 120, h: 4,        // bar size in pixel-art px...
-        px: 4,               // ...drawn at this many screen px per pixel (nearest neighbour), so 480 x 16 on the 1920 stage
-        y: 930,              // top of the bar on the stage (floor band, above the bottom letterbox bar)
-        fillTicks: 60,       // empty to full
-        leadPx: 4,           // gold leading edge, this many bar px ahead of the fill
-        tickEvery: 4,        // tick sound (and a flicker of the leading edge) every 4 ticks
-        pulses: 6,           // the boss swells this many times while the bar fills
-        pulseX: 1.08, pulseY: 0.94,
-        sparkles: 8,         // at the bar's end when full
-        sparkleTicks: 30, sparkleSpreadPx: 70,
-        glossTicks: 16,      // white gloss band sweeps across the full bar
-        glossW: 24,          // gloss band width in bar px
-        fadeTicks: 12,       // bar fades out with the name card
-        tickSound: { hz: 1250, sec: 0.035, gain: 0.18 },
-        chime: { notes: [1318.5, 1975.5, 2637], sec: 0.6, gain: 0.22, stepSec: 0.06 }
-    }
 };
 const JUICE_DEFAULTS = { shake: 100, flash: 'full', reduceMotion: false, intensity: 'high' };
 
@@ -106,8 +82,7 @@ const biClamp = x => Math.max(0, Math.min(1, x));
 
 // ---------- the intro ----------
 let bossIntroRun = null;
-// True while the name card is on screen: combat turns wait for it (js/combat.js).
-// The fight holds only until the card has slid out (freeAt); the bars and HP fill keep playing after that.
+// Combat turns wait for the intro (js/combat.js). The name card and bottom HP bar are removed, so there is no hold.
 function bossIntroRunning() { return !!bossIntroRun && performance.now() < bossIntroRun.freeAt; }
 
 function playBossIntro(boss) {
@@ -123,13 +98,10 @@ function playBossIntro(boss) {
     const root = document.createElement('div');
     root.id = 'boss-intro';
     root.innerHTML = '<div class="bi-bar bi-top"></div><div class="bi-bar bi-bot"></div><div class="bi-flash"></div>'
-        + '<div class="bi-card"><div class="bi-kicker">BOSS</div><div class="bi-name"></div><div class="bi-rule"></div></div>'
-        + '<div class="bi-hp"><div class="bi-hp-name"></div><div class="bi-hp-track"><div class="bi-hp-fill"></div><div class="bi-hp-lead"></div><div class="bi-hp-gloss"></div></div></div>';
-    root.querySelector('.bi-name').textContent = String(boss.name || 'Boss').replace(/\s*\((Mini )?Boss\)\s*$/i, ''); // the BOSS label above says it
-    root.querySelector('.bi-hp-name').textContent = root.querySelector('.bi-name').textContent;
+        ;
     inner.appendChild(root);
     const top = root.querySelector('.bi-top'), bot = root.querySelector('.bi-bot');
-    const flash = root.querySelector('.bi-flash'), card = root.querySelector('.bi-card'), rule = root.querySelector('.bi-rule');
+    const flash = root.querySelector('.bi-flash');
     const barH = Math.round(C.barHeight * Math.max(0.5, I || 0.5));
     top.style.height = bot.style.height = barH + 'px';
 
@@ -143,20 +115,15 @@ function playBossIntro(boss) {
     const hero = document.getElementById('combat-player-sprite');
 
     const slamTick = C.squashStart + C.squashTicks + C.hopTicks + C.fallTicks;
-    const nameStart = slamTick + C.nameDelayTicks;
-    const ruleStart = nameStart + C.nameInTicks;
-    const holdEnd = ruleStart + C.ruleTicks + C.holdSec * 60;
-    const B = C.hpBar;
-    const barStart = slamTick + B.delayTicks, barFull = barStart + B.fillTicks;
-    const endTick = Math.max(holdEnd + C.outTicks, barFull + Math.max(B.glossTicks, B.sparkleTicks) + B.fadeTicks);
+    const holdEnd = slamTick + C.holdSec * 60;
+    const endTick = holdEnd + C.outTicks;
     const start = performance.now();
-    // The fight waits for the card to slide out, with an 8 s cap so a stalled frame can never lock combat
-    const freeAt = start + Math.min((holdEnd + C.outTicks) * BI_TICK, 8000);
+    // The fight is not held: the intro is only the slam and the bars now
+    const freeAt = start;
 
     const run = { start, freeAt, raf: 0, trauma: 0, slamAt: null, dust: [], root, lineup, world, hero, thumped: false, flashed: false, musicDipped: false };
     bossIntroRun = run;
     musicDip(true);
-    const hp = setupHpBar(run, root, idx);
     let lastNow = run.start;
 
     const frame = now => {
@@ -188,14 +155,6 @@ function playBossIntro(boss) {
             y = -C.hopPx * I * (1 - k); sy = C.stretchY + (1 - C.stretchY) * k; op = 0.65;
         }
         if (RM) { sx = sy = 1; y = 0; } else op = 1;
-        // Health bar fill: the boss swells in time with it (reduced motion: brightness-free opacity pulses instead)
-        if (tick >= barStart && tick < barFull) {
-            const p = (tick - barStart) / B.fillTicks;
-            const w = Math.sin(Math.PI * ((p * B.pulses) % 1));
-            if (RM) op = 1 - 0.3 * w;
-            else { sx = 1 + (B.pulseX - 1) * w * I; sy = 1 + (B.pulseY - 1) * w * I; }
-        }
-        updateHpBar(run, hp, tick, barStart, barFull, holdEnd, RM);
         lineup.style.setProperty('--bi-sx', sx.toFixed(3));
         lineup.style.setProperty('--bi-sy', sy.toFixed(3));
         lineup.style.setProperty('--bi-y', Math.round(y) + 'px');
@@ -238,16 +197,6 @@ function playBossIntro(boss) {
 
         // Dust puffs
         updateDust(run, now);
-
-        // Name card: in from the right (reduced motion: fades in place), rule grows, holds, out to the left and fades
-        const nIn = biEaseOut(biClamp((tick - nameStart) / C.nameInTicks));
-        const rIn = biEaseOut(biClamp((tick - ruleStart) / C.ruleTicks));
-        const out = biEaseIn(biClamp((tick - holdEnd) / C.outTicks));
-        const cardOp = tick < nameStart ? 0 : nIn * (1 - out);
-        card.style.opacity = cardOp.toFixed(3);
-        card.style.translate = RM ? '0 0' : `${Math.round(C.nameFromPx * (1 - nIn) - C.outPx * out)}px 0`;
-        if (RM) { rule.style.transform = 'none'; rule.style.opacity = rIn.toFixed(3); }
-        else rule.style.transform = `scaleX(${rIn.toFixed(3)})`;
 
         if (tick >= endTick && run.trauma <= 0.001) { cancelBossIntro(); return; }
         run.raf = requestAnimationFrame(frame);
@@ -369,76 +318,6 @@ function toggleJuiceMotion() { const s = juiceSettings(); s.reduceMotion = !s.re
 function cycleJuiceIntensity() { const s = juiceSettings(), o = ['off', 'subtle', 'medium', 'high']; s.intensity = o[(o.indexOf(s.intensity) + 1) % o.length]; renderJuiceSettings(); juiceSave(); }
 function juiceSave() { if (typeof saveGame === 'function') saveGame(); }
 
-// ---------- boss health bar fill ----------
-function setupHpBar(run, root, idx) {
-    const B = BOSS_INTRO.hpBar;
-    const el = root.querySelector('.bi-hp');
-    const W = B.w * B.px, H = B.h * B.px;
-    // Under the boss: centred on its feet, clamped inside the stage
-    let cx = 1300;
-    const inner = document.querySelector('#combat-stage .ts-inner');
-    const anchor = document.querySelector(`#monsters-lineup-container > div:nth-child(${idx + 1}) img`);
-    if (inner && anchor) {
-        const ib = inner.getBoundingClientRect(), sc = (ib.width / inner.offsetWidth) || 1, b = anchor.getBoundingClientRect();
-        cx = (b.left + b.width / 2 - ib.left) / sc;
-    }
-    const left = Math.round(Math.max(20, Math.min(1900 - W, cx - W / 2)));
-    el.style.left = left + 'px';
-    el.style.top = (B.y - 40) + 'px';
-    el.style.width = W + 'px';
-    const track = el.querySelector('.bi-hp-track');
-    track.style.width = W + 'px';
-    track.style.height = H + 'px';
-    const parts = { el, W, H, left, fill: el.querySelector('.bi-hp-fill'), lead: el.querySelector('.bi-hp-lead'),
-        gloss: el.querySelector('.bi-hp-gloss'), ticks: 0, full: false, fullAt: 0, sparks: [] };
-    parts.lead.style.width = (B.leadPx * B.px) + 'px';
-    parts.gloss.style.width = (B.glossW * B.px) + 'px';
-    return parts;
-}
-function updateHpBar(run, hp, tick, barStart, barFull, holdEnd, RM) {
-    const B = BOSS_INTRO.hpBar;
-    if (tick < barStart) { hp.el.style.opacity = '0'; return; }
-    // Appears empty, then fades out with the name card
-    const fadeOut = biClamp((tick - Math.max(holdEnd, barFull + B.glossTicks)) / B.fadeTicks);
-    hp.el.style.opacity = (biClamp((tick - barStart) / 6) * (1 - fadeOut)).toFixed(3);
-    const p = biClamp((tick - barStart) / B.fillTicks);
-    // Whole bar pixels: the fill steps one pixel-art px at a time
-    const fillPx = Math.round(B.w * p) * B.px;
-    hp.fill.style.width = fillPx + 'px';
-    const leadPx = Math.min(hp.W, fillPx + B.leadPx * B.px);
-    hp.lead.style.left = (leadPx - B.leadPx * B.px) + 'px';
-    hp.lead.style.display = p < 1 ? '' : 'none';
-    // Tick sound every tickEvery ticks; its visual twin is the leading edge flaring white for that tick
-    const n = Math.floor((tick - barStart) / B.tickEvery);
-    if (p < 1 && n >= hp.ticks) { hp.ticks = n + 1; playBarTick(); hp.lead.classList.add('flare'); hp.flareAt = performance.now(); }
-    if (hp.flareAt && performance.now() - hp.flareAt > BI_TICK * 2) hp.lead.classList.remove('flare');
-    // Full: chime + sparkles + gloss sweep (the sparkles and gloss are the chime's visual twin)
-    if (p >= 1 && !hp.full) {
-        hp.full = true; hp.fullAt = tick;
-        playChime();
-        for (let i = 0; i < B.sparkles; i++) {
-            const s = document.createElement('div');
-            s.className = 'bi-spark';
-            hp.el.appendChild(s);
-            const a = (i / B.sparkles) * Math.PI * 2;
-            hp.sparks.push({ el: s, dx: Math.cos(a), dy: Math.sin(a) });
-        }
-    }
-    if (hp.full) {
-        const g = biClamp((tick - hp.fullAt) / B.glossTicks);
-        const gw = B.glossW * B.px;
-        if (RM) { hp.gloss.style.left = '0px'; hp.gloss.style.width = hp.W + 'px'; hp.gloss.style.opacity = (0.6 * Math.sin(Math.PI * g)).toFixed(3); }
-        else { hp.gloss.style.left = Math.round(-gw + (hp.W + gw) * biEaseOut(g)) + 'px'; hp.gloss.style.opacity = g < 1 ? '0.85' : '0'; }
-        const k = biClamp((tick - hp.fullAt) / B.sparkleTicks);
-        const endX = hp.W, endY = 40 + hp.H / 2; // the bar's right end, inside .bi-hp
-        hp.sparks.forEach(sp => {
-            const d = RM ? 0 : B.sparkleSpreadPx * biEaseOut(k) * juiceIntensity();
-            sp.el.style.left = Math.round(endX + sp.dx * d - 4) + 'px';
-            sp.el.style.top = Math.round(endY + sp.dy * d - 4) + 'px';
-            sp.el.style.opacity = ((1 - k) * (RM ? (Math.floor(k * 6) % 2 ? 0.4 : 1) : 1)).toFixed(3);
-        });
-    }
-}
 function biTone(type, freqs, sec, gain, stepSec = 0) {
     try {
         const vol = typeof sfxVolumeNow === 'function' ? sfxVolumeNow() : 0;
@@ -456,5 +335,3 @@ function biTone(type, freqs, sec, gain, stepSec = 0) {
         });
     } catch (e) { /* no sound; the visual twin still shows */ }
 }
-function playBarTick() { const t = BOSS_INTRO.hpBar.tickSound; biTone('square', [t.hz], t.sec, t.gain); }
-function playChime() { const c = BOSS_INTRO.hpBar.chime; biTone('triangle', c.notes, c.sec, c.gain, c.stepSec); }

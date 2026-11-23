@@ -1,7 +1,6 @@
 // ==========================================
 // HEALING CIRCLE (game juice, presentation only)
-// For the big, earned heals in combat (a Potion, and the stage-start regen): the hero hops 6 px and stomps, squashes
-// on landing, kicks up dust, and a healing circle spreads from its feet across the floor (flat ellipse, 4 glyphs
+// For the big, earned heals in combat (a Potion, and the stage-start regen): the hero squashes on landing, kicks up dust, and a healing circle spreads from its feet across the floor (flat ellipse, 4 glyphs
 // orbiting, green motes rising). The heal is then shown as 5 ticks of "+N", one every 20 ticks, and the circle fades.
 //
 // It never changes HP: healPlayer() applies the heal exactly as before. The circle only splits the amount that was
@@ -9,23 +8,24 @@
 // full HP shows "FULL" in a dimmed circle, so a heal that did nothing still reads clearly.
 //
 // Presentation clock (requestAnimationFrame + performance.now); every value in 60 Hz ticks or seconds.
-// Uses the shared Effects settings from js/boss-intro.js. Reduce motion: the hop, squash and spread become fades.
+// Uses the shared Effects settings from js/boss-intro.js. Reduce motion: the squash and spread become fades.
+// Timings are 30% shorter than the first version (all tick values scaled by 0.7).
 // ==========================================
 const HEAL_CIRCLE = {
     sources: ['Potion', 'stage'], // healPlayer sources that get the circle (small rune heals keep the plain number)
     px: 4,                 // stage px per pixel-art px (nearest neighbour)
-    hopPx: 6,              // hop height (pixel-art px)
-    upTicks: 6,            // rise, easeOutQuad
-    downTicks: 5,          // fall, easeInQuad
-    squashX: 1.12, squashY: 0.86, squashTicks: 8,
-    dust: 8, dustTicks: 20, dustSpreadPx: 26,
+    hopPx: 0,              // no jump: the hero does not leave the ground
+    upTicks: 0,            // (no hop phase)
+    downTicks: 0,
+    squashX: 1.12, squashY: 0.86, squashTicks: 6,
+    dust: 8, dustTicks: 14, dustSpreadPx: 26,
     radiusPx: 22,          // circle radius (pixel-art px); drawn flat: height = width / 4
-    spreadTicks: 14,       // spreads out, easeOutBack
-    ringTicks: 18,         // the ring that runs out ahead of it
-    glyphs: ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ'], glyphTurnSec: 2.4, // 4 runes orbit once per glyphTurnSec
-    moteEvery: 5, moteTicks: 36, moteRisePx: 70,
-    tickCount: 5, tickEvery: 20, // heal numbers: 5 of them, 20 ticks apart (the first on landing)
-    fadeTicks: 16,
+    spreadTicks: 10,       // spreads out, easeOutBack
+    ringTicks: 13,         // the ring that runs out ahead of it
+    glyphs: ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ'], glyphTurnSec: 1.7, // 4 runes orbit once per glyphTurnSec
+    moteEvery: 4, moteTicks: 25, moteRisePx: 70,
+    tickCount: 5, tickEvery: 14, // heal numbers: 5 of them, 14 ticks apart (the first on landing)
+    fadeTicks: 11,
     color: '#5cff8a', dark: '#0f6b35',
     tickSound: { notes: [880, 1320], sec: 0.18, gain: 0.12, stepSec: 0.04 }
 };
