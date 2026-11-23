@@ -57,13 +57,18 @@ const BOLT_CAST_GAP_MS = 4 * 120 + 300;
 // count: bolts in this cast (one fall and explosion each). element: fire / water (Ice) / wind / earth.
 // delayMs: wait before this cast starts (used when several elements proc on one hit)
 // damages: each bolt's damage; bolt i shows damages[i] in its element's colour when it explodes
-function playBoltFx(element, selector, count, delayMs = 0, damages = []) {
+// place: which page the bolts play on: the combat stage (default) or the main page (the straw man)
+const BOLT_FX_PLACES = {
+    combat: { view: 'view-combat', inner: '#combat-stage .ts-inner' },
+    town: { view: 'view-town', inner: '#view-town .ts-inner' }
+};
+function playBoltFx(element, selector, count, delayMs = 0, damages = [], place = 'combat') {
     const elem = element === 'water' ? 'water' : element; // CSS colour classes use the element keys (water = Ice)
-    const view = document.getElementById('view-combat');
+    const where = BOLT_FX_PLACES[place] || BOLT_FX_PLACES.combat;
+    const view = document.getElementById(where.view);
     if (!view || view.classList.contains('hidden')) return;
     const art = BOLT_FX_ART[element === 'water' ? 'ice' : element];
-    const stage = document.getElementById('combat-stage');
-    const inner = stage ? stage.querySelector('.ts-inner') : null;
+    const inner = document.querySelector(where.inner);
     const anchor = document.querySelector(selector);
     if (!art || !inner || !anchor) return;
     // Monster centre in the stage's design coordinates (measured now, before the lineup can change)

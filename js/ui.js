@@ -7956,6 +7956,24 @@ function strawHit(hit) {
     showStrawDamage(String(dmg), crit);
     playStrawSlash(crit);
     playSfx(attackSfx(crit));
+    strawBolts();
+}
+// Bolts on the straw man: the same chances as in combat (bolt runes + Arcane bolt nodes + Arcane Strike, each element
+// rolled on its own) and the same damage (30% MATK per bolt, Bolt damage nodes). The straw man has no element.
+function strawBolts() {
+    if (typeof playBoltFx !== 'function') return;
+    const BOLTS = [['fireBolt', 'fire', 'boltFire'], ['coldBolt', 'water', 'boltWater'], ['thunderBolt', 'wind', 'boltWind'], ['rockBolt', 'earth', 'boltEarth']];
+    const strike = skillBonus('arcaneStrike');
+    const d = getDerivedStats();
+    const per = Math.max(1, Math.floor(d.matk * BOLT_MATK_RATIO * (1 + skillBonus('boltDmgPct') / 100)));
+    let casts = 0;
+    BOLTS.forEach(([rune, elem, node]) => {
+        const ch = runeN(rune) + skillBonus(node) + strike;
+        if (ch > 0 && Math.random() * 100 < ch) {
+            playBoltFx(elem, '#town-dummy', 4, casts * BOLT_CAST_GAP_MS, [per, per, per, per], 'town');
+            casts++;
+        }
+    });
 }
 function strawAttack() {
     if (strawBusy) return;
