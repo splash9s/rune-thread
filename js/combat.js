@@ -658,6 +658,7 @@ function startExpedition(mode, opts = {}) {
     player.mhpStart = maxHpCounts();     // counters at the start of the current stage
     player.angelUsedThisRun = false;
     currentMode = mode;
+    document.getElementById('view-combat')?.classList.toggle('tower-mode', mode === 'tower'); // Tower: HP and armor bars sit lower
     currentEvent = mode === 'event' ? opts.kind : null;
     currentPath = null;
     attackCount = 0;
