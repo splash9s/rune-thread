@@ -970,6 +970,7 @@ function whenCombatCoversClear(fn) {
 }
 
 function spawnStageMonsters() {
+    if (typeof cancelBossIntro === 'function') cancelBossIntro(); // a running intro never carries into a new stage
     const stageEl = document.getElementById('combat-stage');
     if (stageEl) stageEl.classList.remove('final-stage');
     // Vignette strength follows the stage: stronger on mini boss and boss stages
@@ -1025,7 +1026,9 @@ function spawnStageMonsters() {
         monstersList.push(dailyScale === 1 ? boss : scaled(boss));
         monstersList[0].lineupSlot = BOSS_LINEUP_SLOT; // boss stands in the 3rd lineup slot
         if (currentMode === 'campaign' || currentMode === 'event') addBossSupport(monstersList[0]);
-        if (typeof showBossBalloon === 'function') showBossBalloon('Boss appeared!');
+        // Boss intro name card (js/boss-intro.js) replaces the "Boss appeared!" balloon; it starts once the boss is drawn
+        if (typeof playBossIntro === 'function') { const b0 = monstersList[0]; setTimeout(() => { if (monstersList[0] === b0) playBossIntro(b0); }, 60); }
+        else if (typeof showBossBalloon === 'function') showBossBalloon('Boss appeared!');
         const supportTxt = boss.elemSupport ? 'Elemental Support (element effects x2), ' : '';
         logMessage(`[Boss] ${boss.name} appears! Skills: ${supportTxt}Enrage (below 35% HP, +50% ATK), ${boss.noHeavyStrike ? '' : 'Heavy Strike (every 4th attack, x2 damage), '}Regeneration (1.5% HP per turn).`, 'winlose');
         if (boss.elemSupport) {

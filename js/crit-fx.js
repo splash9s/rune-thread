@@ -134,7 +134,10 @@ function playCritFx(selector) {
 function playHeavyFx() {
     const stage = document.getElementById('combat-stage');
     if (!stage || document.getElementById('view-combat')?.classList.contains('hidden')) return;
-    restartFxClass(stage, 'heavy-shake');
+    // Screen shake follows the player's shake setting (0-100%, off with reduced motion)
+    const k = typeof juiceShakeScale === 'function' ? juiceShakeScale() : 1;
+    stage.style.setProperty('--shake', String(k));
+    if (k > 0) restartFxClass(stage, 'heavy-shake');
     restartFxClass(critFxLayer(stage), 'heavy-on');
 }
 

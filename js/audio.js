@@ -119,4 +119,5 @@ function refreshAudioUI() {
     setVal('sfx-volume', a.sfxVol);
     setText('sfx-volume-text', a.sfxVol);
     updateSoundButton();
+    if (typeof renderJuiceSettings === 'function') renderJuiceSettings(); // shake / flash / motion settings
 }
