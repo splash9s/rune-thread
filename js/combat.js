@@ -1472,11 +1472,14 @@ function awardKill(m) {
     // Events give no item drops
     if (isEvent) return;
 
-    const pool = typeof GEAR_POOL !== 'undefined' ? (GEAR_POOL[activeMap.dropKey || 'map1'] || GEAR_POOL.map1) : [];
+    // Warded Tower: gear of the level nearest the player's base level, rarity odds by difficulty (towerDropRarity)
+    const inTower = currentMode === 'tower';
+    const dropKey = inTower ? towerDropKey() : (activeMap.dropKey || 'map1');
+    const pool = typeof GEAR_POOL !== 'undefined' ? (GEAR_POOL[dropKey] || GEAR_POOL.map1) : [];
     const itemChance = isVoidTest ? 1 : 0.01;
     if (!m.isBoss && !m.isMiniBoss && pool.length > 0 && Math.random() < Math.min(1, itemChance * (boostActive('drop') ? 2 : 1))) { // 2x Drop Rate doubles the item chance
         const template = pool[Math.floor(Math.random() * pool.length)];
-        const droppedItem = generatePoEItem(template);
+        const droppedItem = generatePoEItem(template, null, 0, inTower ? towerDropRarity().regular : null);
         logMessage(`[Monster Drop] ${m.name} dropped <span style="color: yellow;">${droppedItem.name} (Rarity ${droppedItem.rarity})</span>!`, 'drop');
         addItemToInventory(rollSetForDrop(droppedItem)); showMonsterGroundDrop(m, itemIconHTML(droppedItem, 48));
     }
@@ -1488,7 +1491,7 @@ function awardKill(m) {
     }
     for (let bd = 0; bd < (m.isFinalBoss ? 2 : 1); bd++) if (m.isBoss && pool.length > 0) {
         const template = pool[Math.floor(Math.random() * pool.length)];
-        const droppedItem = generatePoEItem(template, null, 1, BOSS_RARITY_WEIGHTS);
+        const droppedItem = generatePoEItem(template, null, 1, inTower ? towerDropRarity().boss : BOSS_RARITY_WEIGHTS);
         logMessage(`[Boss Drop!] ${m.name} dropped <span style="color: yellow;">${droppedItem.name} (Rarity ${droppedItem.rarity})</span>!`, 'drop');
         addItemToInventory(rollSetForDrop(droppedItem)); showMonsterGroundDrop(m, itemIconHTML(droppedItem, 48));
     }
@@ -2673,6 +2676,24 @@ function towerTimerStop() {
 }
 
 function towerFloorMult(f) { return f <= 1 ? 1 : 1.5 + 0.1 * (f - 1); } // floor 1: normal stats
+// Bosses grow at the same rate as the regular monsters: the floor 2 boss as before, x2.19 on floor 21
+function towerBossFloorMult(f) { return towerFloorMult(Math.max(2, f)) / towerFloorMult(2); }
+
+// Gear drops: the gear level nearest the player's base level (Lv 43 -> Lv 40 gear, Lv 45 -> Lv 50, Lv 95 -> Lv 99)
+const TOWER_GEAR_LEVELS = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 99];
+function towerDropKey() {
+    const lv = (player && player.baseLv) || 1;
+    let best = TOWER_GEAR_LEVELS[0];
+    TOWER_GEAR_LEVELS.forEach(L => { if (Math.abs(lv - L) <= Math.abs(lv - best)) best = L; }); // a tie rounds up
+    return 'map' + best;
+}
+// Rarity odds [common, uncommon, rare, epic, legendary] by difficulty: harder tiers give rarer gear more often
+const TOWER_DROP_RARITY = {
+    normal: { regular: [50, 30, 15, 4, 1],   boss: [5, 20, 25, 30, 20] },   // same as the campaign
+    hard:   { regular: [30, 30, 25, 11, 4],  boss: [2, 12, 24, 34, 28] },
+    hell:   { regular: [15, 25, 30, 20, 10], boss: [0, 5, 20, 40, 35] }
+};
+function towerDropRarity() { return TOWER_DROP_RARITY[typeof towerRunDiff === 'function' ? towerRunDiff() : 'normal'] || TOWER_DROP_RARITY.normal; }
 
 // Floor-clear rewards (draft table). Gold 1,600 per floor number.
 function towerFloorReward(f) {
@@ -2847,7 +2868,14 @@ function towerSetSixMonsters() {
         return scaledUnit(makeUnit(levelScaled(picked, lvl), 1));
     };
     const slots = plan.map((p, i) => {
-        if (p === 'boss') { if (!bossSrc) return null; const boss = makeBoss({ ...bossSrc }); boss.lineupSlot = i; return boss; }
+        if (p === 'boss') {
+            if (!bossSrc) return null;
+            const boss = makeBoss({ ...bossSrc });
+            const g = towerBossFloorMult(currentStage); // bosses get stronger every floor too
+            ['hp', 'maxHp', 'atkMin', 'atkMax'].forEach(k => { if (typeof boss[k] === 'number') boss[k] = Math.floor(boss[k] * g); });
+            boss.lineupSlot = i;
+            return boss;
+        }
         const unit = p === 'front' ? make(Math.random() < 0.5 ? 'melee' : 'tank')
             : p === 'healer' ? make('healer')
             : make(Math.random() < 0.5 ? 'range' : 'mage');
