@@ -3079,7 +3079,7 @@ function vhPlayPet(stage, img, gen) {
     };
     step();
 }
-const VIP_HIGHLIGHT_ITEMS = ['dchest_costume', 'pet_box_ticket', 'vip_pass', 'vip_7d', 'vip_1d', 'res_potion'];
+const VIP_HIGHLIGHT_ITEMS = ['dchest_costume', 'pet_box', 'vip_pass', 'vip_7d', 'vip_1d', 'res_potion'];
 function vipCellHTML(item) {
     return `<div class="vip-cell">
             <button class="vip-slot${vipSelected === item.id ? ' selected' : ''}" title="${escapeHtml(item.name)}" onclick="vipSelect('${item.id}')"><span class="vip-glow"></span>${item.icon ? `<img class="${item.type === 'estone' || item.type === 'bs_rune' || item.type === 'resurrection' ? 'vip-big' : ''}" src="${item.icon}" alt="">` : ''}</button>
@@ -3090,7 +3090,7 @@ function vipHighlightHTML() {
     // A costume card opens the diamond Costume Chest it drops from; the pet card opens the Pet Chest it drops from.
     // Only the card that was clicked is highlighted.
     const cards = VIP_HIGHLIGHT_CARDS.map(c => {
-        const target = c.anim === 'costume' ? 'dchest_costume' : 'pet_box_ticket';
+        const target = c.anim === 'costume' ? 'dchest_costume' : 'pet_box';
         const hasTarget = DIAMOND_SHOP_ITEMS.some(i => i.id === target);
         return `
         <button class="vh-card${vhPick === c.id ? ' selected' : ''}" title="${escapeHtml(c.alt)}" ${hasTarget ? `onclick="vipSelect('${target}','${c.id}')"` : ''}>
