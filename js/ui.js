@@ -6785,7 +6785,8 @@ function updateUI() {
             // Position: a fixed lineup slot (boss stages) or the monster's place in the list
             const hasSlot = typeof m.lineupSlot === 'number';
             const posIdx = hasSlot ? m.lineupSlot : idx;
-            const p = (combatEarthMonsterPos && combatEarthMonsterPos[posIdx]) || (hasSlot ? LINEUP_DEFAULT_POS[posIdx] : null);
+            // A monster past the 6 lineup slots (tower splits, extra spawns) takes the last slot; never the page's corner
+            const p = (combatEarthMonsterPos && combatEarthMonsterPos[posIdx]) || LINEUP_DEFAULT_POS[Math.min(posIdx, LINEUP_DEFAULT_POS.length - 1)];
             let cardStyle = goneAt ? 'display:none' : '';
             if (p) cardStyle += `${cardStyle ? '; ' : ''}left:${p[0]}px; top:${p[1]}px`;
             lineupContainer.innerHTML += `
