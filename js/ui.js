@@ -2213,6 +2213,7 @@ function switchView(viewName) {
     const artViews = ['expeditions', 'events', 'diamond', 'quests', 'setting', 'shop', 'blacksmith', 'character', 'skills', 'combat', 'friend', 'market', 'vip', 'tower'];
     document.documentElement.classList.toggle('art-mode', artViews.includes(viewName));
     document.body.classList.toggle('art-mode', artViews.includes(viewName));
+    document.documentElement.classList.toggle('page-scroll', viewName === 'library'); // the library is the one page that scrolls as a whole (js/touch-lock.js)
 
     if (viewName === 'town') document.getElementById('view-town')?.classList.remove('hidden');
     if (viewName === 'expeditions') {
