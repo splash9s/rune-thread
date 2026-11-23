@@ -5732,9 +5732,7 @@ function confirmPendingSkills() {
         if (!ids.length || ids.length > player.jobSp) { pendingAlloc.skills = {}; updateUI(); return; }
         const tree = player.skillTree || (player.skillTree = defaultSkillTree());
         const set = new Set(tree.taken);
-        const before = tree.taken.length;
         ids.forEach(k => { if (skillCanTake(k, set)) { tree.taken.push(k); set.add(k); } });
-        if (tree.taken.length > before && typeof notifyNewNotice === 'function') notifyNewNotice('skills'); // SKILLS tab dot (js/notify-dot.js)
         syncSkillPoints();
         markBeginnerFlag('skill');
         pendingAlloc.skills = {};
