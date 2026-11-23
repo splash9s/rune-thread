@@ -117,7 +117,7 @@ function playSlashFx(selector, frames, frameMs, scale, screenFx) {
             f++;
             if (f >= frames.length) { img.style.display = 'none'; return; }
             step();
-        }, last ? SLASH_LAST_FRAME_MS : frameMs);
+        }, (typeof fxMs === 'function' ? fxMs : x => x)(last ? SLASH_LAST_FRAME_MS : frameMs)); // slowed in a boss's last-hit slow motion
     };
     step();
 }

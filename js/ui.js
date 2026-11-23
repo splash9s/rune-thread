@@ -959,7 +959,8 @@ function showCombatText(selector, text, variant, delayMs = 0) {
             ? (((b.bottom - ib.top) / sc) + 6) + 'px'
             : (((b.top - ib.top) / sc) - slot * COMBAT_TEXT_STEP) + 'px';
         stage.appendChild(d);
-        setTimeout(() => { d.remove(); freeCombatTextSlot(selector, slot); }, /\bcrit\b|elem-adv/.test(variant || '') ? 1400 : 900); // crit and element-advantage numbers stay 0.5s longer
+        const life = /\bcrit\b|elem-adv/.test(variant || '') ? 1400 : 900;
+        setTimeout(() => { d.remove(); freeCombatTextSlot(selector, slot); }, typeof fxMs === 'function' ? fxMs(life) : life); // crit and element-advantage numbers stay 0.5s longer
     };
     if (delayMs > 0) setTimeout(spawn, delayMs);
     else spawn();
@@ -1468,7 +1469,7 @@ setInterval(() => {
         }
         const deathAt = Number(img.dataset.deathAt) || 0;
         if (deathAt) {
-            const e = now - deathAt;
+            const e = typeof slowmoElapsed === 'function' ? slowmoElapsed(deathAt, now) : now - deathAt; // slowed during a boss's last-hit slow motion
             const total = Number(img.dataset.deathTotal) || COMBAT_DEATH_TOTAL_MS;
             const ms = Number(img.dataset.deathMs) || COMBAT_DEATH_FRAME_MS;
             const dead = img.dataset.deathFrames ? img.dataset.deathFrames.split(',') : COMBAT_SLIME_DEATH_FRAMES;

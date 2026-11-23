@@ -83,13 +83,13 @@ function playBoltFx(element, selector, count, delayMs = 0, damages = [], place =
         const jx = (Math.random() * 2 - 1) * BOLT_FX.jitter;
         const jy = (Math.random() * 2 - 1) * BOLT_FX.jitter;
         const dmg = damages[i];
-        setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy, dmg, elem, i, cx, cy), delayMs + i * BOLT_FX.staggerMs);
+        setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy, dmg, elem, i, cx, cy), (typeof fxMs === 'function' ? fxMs : x => x)(delayMs + i * BOLT_FX.staggerMs));
     }
     // The cast's total, after its last bolt has exploded, above the bolts' own numbers
     const n = Math.max(1, count || 1);
     const sum = damages.slice(0, n).reduce((a, d) => a + (Number(d) || 0), 0);
     if (n > 1 && sum > 0) {
-        setTimeout(() => showBoltTotal(inner, cx, cy, sum, elem, n), delayMs + (n - 1) * BOLT_FX.staggerMs + BOLT_FX.fallMs + BOLT_FX.totalDelayMs);
+        setTimeout(() => showBoltTotal(inner, cx, cy, sum, elem, n), (typeof fxMs === 'function' ? fxMs : x => x)(delayMs + (n - 1) * BOLT_FX.staggerMs + BOLT_FX.fallMs + BOLT_FX.totalDelayMs));
     }
 }
 // The total of one cast: bigger, in the element's colour, above the stack of bolt numbers
@@ -100,7 +100,7 @@ function showBoltTotal(inner, x, y, sum, elem, n) {
     d.style.left = x + 'px';
     d.style.top = (y - BOLT_FX.dmgRise - n * BOLT_FX.dmgStepY - BOLT_FX.totalGap) + 'px';
     inner.appendChild(d);
-    setTimeout(() => d.remove(), 1300);
+    setTimeout(() => d.remove(), (typeof fxMs === 'function' ? fxMs : x => x)(1300));
 }
 
 // One bolt: falls from the top right so that its tip lands on (x, y), then explodes there
@@ -138,7 +138,7 @@ function showBoltDamage(inner, x, y, dmg, elem, n = 0) {
     d.style.left = (x + (n % 2 ? 1 : -1) * BOLT_FX.dmgSpreadX) + 'px';
     d.style.top = (y - BOLT_FX.dmgRise - n * BOLT_FX.dmgStepY) + 'px';
     inner.appendChild(d);
-    setTimeout(() => d.remove(), 900);
+    setTimeout(() => d.remove(), (typeof fxMs === 'function' ? fxMs : x => x)(900));
 }
 
 // Explosion frames centred on (x, y); the last frame holds, grows a little and fades out
@@ -169,7 +169,7 @@ function explodeBolt(inner, art, x, y) {
             return;
         }
         f++;
-        setTimeout(show, BOLT_FX.frameMs);
+        setTimeout(show, (typeof fxMs === 'function' ? fxMs : x => x)(BOLT_FX.frameMs));
     };
     show();
 }

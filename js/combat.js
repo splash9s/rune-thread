@@ -1394,6 +1394,10 @@ const COIN_DROP_CHANCE_NORMAL = 0.6;
 
 function awardKill(m) {
     m.rewarded = true;
+    // Campaign boss, last monster standing: the killing blow plays in slow motion (js/slowmo.js)
+    if (m.isBoss && currentMode === 'campaign' && typeof startBossSlowmo === 'function' && monstersList.every(x => x.hp <= 0)) {
+        startBossSlowmo(monstersList.indexOf(m));
+    }
     if (m.isBoss && activeMap && activeMap.levelReq === 10) updateQuestProgress('bosslv10', 1);
     player.runes.killCount = (player.runes.killCount || 0) + 1;
     if (runeN('reaper') > 0) healPlayer(Math.floor(getDerivedStats().maxHp * runeN('reaper') / 100), 'Reaper');
@@ -2217,7 +2221,8 @@ function onStageCleared() {
     // A boss stays on screen for its damaged and death animations (BOSS_DEATH_STAY_MS); the stage waits for that
     // Every dead monster, the last one included, plays its death animation before the stage ends
     const bossStayLeft = monstersList.reduce((t, x) => (x.hp <= 0)
-        ? Math.max(t, (x._deathAt || Date.now()) + monsterDeathTotalMs(x) - Date.now()) : t, 0);
+        ? Math.max(t, (x._deathAt || Date.now()) + monsterDeathTotalMs(x) - Date.now()) : t, 0)
+        + (typeof slowmoExtraMs === 'function' ? slowmoExtraMs() : 0); // a boss's last-hit slow motion stretches its death
     setTimeout(() => {
         if (sid !== combatSessionId) return; // player left combat before the stage ended
         const proceedNext = () => {
