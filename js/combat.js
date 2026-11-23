@@ -1519,7 +1519,10 @@ function healPlayer(amount, source) {
     const before = player.hp;
     player.hp = Math.min(maxHp, player.hp + amount);
     const gained = player.hp - before;
-    if (gained > 0) { showHealAura('#combat-player-sprite'); showHealNumber('#combat-player-sprite', gained); }
+    // Potion and stage regen: the healing circle shows the heal in 5 ticks (js/heal-circle.js; presentation only)
+    const circle = typeof playHealCircle === 'function' && HEAL_CIRCLE.sources.includes(source) && (gained > 0 || source === 'Potion')
+        && playHealCircle(gained, amount);
+    if (gained > 0 && !circle) { showHealAura('#combat-player-sprite'); showHealNumber('#combat-player-sprite', gained); }
     const over = amount - Math.max(0, gained); // only the part of the heal above full HP
     if (over > 0 && runeN('overflow') > 0) {
         const alive = getAliveMonsters();
