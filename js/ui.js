@@ -6670,6 +6670,8 @@ function updateUI() {
             if (mapEl) mapEl.innerText = derivedValues[k];
         });
     }
+    const combatMatk = document.getElementById('combat-derived-matk'); // combat panel shows MATK where HIT was
+    if (combatMatk) combatMatk.innerText = derived.matk;
 
     el = document.getElementById('weight-text');
     el = document.getElementById('sp-count');
