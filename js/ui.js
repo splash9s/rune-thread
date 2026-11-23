@@ -3087,10 +3087,10 @@ function vipCellHTML(item) {
         </div>`;
 }
 function vipHighlightHTML() {
-    // A costume card opens the diamond Costume Chest it drops from; the pet card opens its own item.
+    // A costume card opens the diamond Costume Chest it drops from; the pet card opens the Pet Chest it drops from.
     // Only the card that was clicked is highlighted.
     const cards = VIP_HIGHLIGHT_CARDS.map(c => {
-        const target = c.anim === 'costume' ? 'dchest_costume' : c.id;
+        const target = c.anim === 'costume' ? 'dchest_costume' : 'pet_box_ticket';
         const hasTarget = DIAMOND_SHOP_ITEMS.some(i => i.id === target);
         return `
         <button class="vh-card${vhPick === c.id ? ' selected' : ''}" title="${escapeHtml(c.alt)}" ${hasTarget ? `onclick="vipSelect('${target}','${c.id}')"` : ''}>
