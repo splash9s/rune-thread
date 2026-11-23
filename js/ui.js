@@ -6769,7 +6769,10 @@ function updateUI() {
             }
             if (m._prevHp !== undefined && m.hp > m._prevHp) {
                 const healSel = `#monsters-lineup-container > div:nth-child(${idx + 1}) img`;
-                setTimeout(() => { showHealAura(healSel); showHealNumber(healSel, m.hp - m._prevHp); }, 0);
+                const gained = m.hp - m._prevHp; // read now: _prevHp is updated below
+                setTimeout(() => {
+                    if (!(typeof playMonsterHealCircle === 'function' && playMonsterHealCircle(healSel, gained))) { showHealAura(healSel); showHealNumber(healSel, gained); }
+                }, 0);
             }
             m._prevHp = m.hp;
             let isDead = m.hp <= 0;

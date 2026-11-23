@@ -37,15 +37,27 @@ const hcEaseOutBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Ma
 const hcClamp = x => Math.max(0, Math.min(1, x));
 
 // gained: HP actually added. asked: the heal amount before the cap.
-function playHealCircle(gained, asked) {
+// sel: the combat sprite that was healed (a monster). Without it, the circle is the hero's (Potion, stage regen).
+function playHealCircle(gained, asked, sel) {
     cancelHealCircle();
     const view = document.getElementById('view-combat');
     const inner = document.querySelector('#combat-stage .ts-inner');
-    const hero = document.getElementById('combat-player-sprite');
+    const hero = sel ? null : document.getElementById('combat-player-sprite');
     const I = typeof juiceIntensity === 'function' ? juiceIntensity() : 1;
-    if (!view || view.classList.contains('hidden') || !inner || !hero || I <= 0) return false;
+    if (!view || view.classList.contains('hidden') || !inner || I <= 0) return false;
+    if (!sel && !hero) return false;
     const C = HEAL_CIRCLE, P = C.px, RM = typeof juiceReduceMotion === 'function' && juiceReduceMotion();
-    const feet = typeof combatHeroFeet === 'function' ? combatHeroFeet() : { x: 515, y: 871 };
+    let feet;
+    if (sel) {
+        // Monster: the circle sits under its feet (stage coordinates, like the other combat effects)
+        const anchor = document.querySelector(sel);
+        if (!anchor) return false;
+        const sc = parseFloat(inner.style.transform.replace(/[^0-9.]/g, '')) || 1;
+        const b = anchor.getBoundingClientRect(), ib = inner.getBoundingClientRect();
+        feet = { x: (b.left + b.width / 2 - ib.left) / sc, y: (b.bottom - ib.top) / sc - 4 };
+    } else {
+        feet = typeof combatHeroFeet === 'function' ? combatHeroFeet() : { x: 515, y: 871 };
+    }
     const R = C.radiusPx * P, W = R * 2, H = Math.round(W / 4);
     const root = document.createElement('div');
     root.id = 'heal-circle';
@@ -63,6 +75,7 @@ function playHealCircle(gained, asked) {
     inner.appendChild(root);
     const run = {
         start: performance.now(), raf: 0, root, hero, inner, feet, R, H, RM, I, gained, asked, full,
+        numSel: sel || '#combat-player-sprite',
         floor: root.querySelector('.hc-floor'), ring: root.querySelector('.hc-ring'), glyphs: [...root.querySelectorAll('.hc-glyph')],
         dust: [], motes: [], landed: false, ticksShown: 0, lastMote: -1
     };
@@ -84,11 +97,13 @@ function playHealCircle(gained, asked) {
             const w = Math.sin(Math.PI * (tick - landTick) / C.squashTicks);
             sx = 1 + (C.squashX - 1) * w * I; sy = 1 + (C.squashY - 1) * w * I;
         }
-        if (RM) { y = 0; sx = sy = 1; hero.style.opacity = op < 1 ? op.toFixed(3) : ''; }
-        else {
-            hero.style.translate = y ? `0 ${Math.round(y)}px` : '';
-            hero.style.transformOrigin = (sx !== 1) ? '50% 100%' : '';
-            hero.style.scale = (sx !== 1) ? `${sx.toFixed(3)} ${sy.toFixed(3)}` : '';
+        if (hero) { // the hop and squash are the hero's alone (a monster's circle does not move it)
+            if (RM) { y = 0; sx = sy = 1; hero.style.opacity = op < 1 ? op.toFixed(3) : ''; }
+            else {
+                hero.style.translate = y ? `0 ${Math.round(y)}px` : '';
+                hero.style.transformOrigin = (sx !== 1) ? '50% 100%' : '';
+                hero.style.scale = (sx !== 1) ? `${sx.toFixed(3)} ${sy.toFixed(3)}` : '';
+            }
         }
         // Landing: dust, circle spreads, first heal tick
         if (tick >= landTick && !run.landed) { run.landed = true; run.landAt = tick; hcDust(run); }
@@ -133,16 +148,16 @@ function cancelHealCircle() {
     cancelAnimationFrame(run.raf);
     run.root.remove();
     run.dust.concat(run.motes).forEach(d => d.el.remove());
-    run.hero.style.translate = run.hero.style.scale = run.hero.style.transformOrigin = run.hero.style.opacity = '';
+    if (run.hero) run.hero.style.translate = run.hero.style.scale = run.hero.style.transformOrigin = run.hero.style.opacity = '';
 }
 
 function hcTick(run, i) {
     const C = HEAL_CIRCLE;
-    if (run.full) { if (i === 0) showCombatText('#combat-player-sprite', 'FULL', 'heal-cap'); return; }
+    if (run.full) { if (i === 0) showCombatText(run.numSel, 'FULL', 'heal-cap'); return; }
     const amt = run.parts[i];
-    if (amt > 0) showCombatText('#combat-player-sprite', '+' + amt, 'heal');
+    if (amt > 0) showCombatText(run.numSel, '+' + amt, 'heal');
     // Over the cap: the last tick also says MAX (the heal was bigger than the missing HP)
-    if (i === C.tickCount - 1 && run.asked > run.gained) showCombatText('#combat-player-sprite', 'MAX', 'heal-cap', 120);
+    if (i === C.tickCount - 1 && run.asked > run.gained) showCombatText(run.numSel, 'MAX', 'heal-cap', 120);
     biToneSafe(); // soft chime; its visual twin is the number
 }
 function biToneSafe() {
@@ -183,3 +198,6 @@ function hcParticles(run, now) {
     run.dust = run.dust.filter(keep);
     run.motes = run.motes.filter(keep);
 }
+
+// A monster that was healed (its HP rose): the same circle under its feet, with the heal in 5 ticks
+function playMonsterHealCircle(sel, gained) { return gained > 0 && playHealCircle(gained, gained, sel); }

@@ -1,8 +1,8 @@
 // ==========================================
-// BOSS INTRO (game juice, presentation only)
+// BOSS INTRO: NAME CARD (game juice, presentation only)
 // When a boss stage starts: letterbox bars close in and the music dips, the boss squashes, hops and slams down
-// (dust, screen shake, small flash, deep thump), the hero flinches, then the letterbox bars open again.
-// No name card and no bottom HP bar.
+// (dust, screen shake, small flash, deep thump), the hero flinches, then the boss's name slides in from the
+// right in gold with a gold rule under it, holds, and slides off left while the bars open.
 //
 // Runs on its own presentation clock (requestAnimationFrame + performance.now); it never touches the combat
 // timers, monster stats or any game rule. Timings are in 60 Hz ticks (BI_TICK) or seconds; nothing counts rendered frames.
@@ -40,8 +40,13 @@ const BOSS_INTRO = {
     flashMaxPerSecond: 3,  // never more than this many flashes in any 1 s window
     heroFlinchPx: 6,       // hero steps back this far on the slam
     heroFlinchTicks: 14,
-    holdSec: 1.3,          // beat held after the slam, before the bars open
-    outTicks: 12,          // bars open
+    nameDelayTicks: 4,     // name starts this long after the slam
+    nameInTicks: 16,       // slides in from the right (biEaseOut)
+    nameFromPx: 520,
+    ruleTicks: 12,         // gold rule grows under the name
+    holdSec: 1.3,          // card holds
+    outTicks: 12,          // card slides off left and fades, bars open
+    outPx: 260,
     musicDip: 0.35,        // music volume while the boss arrives (fraction of the set volume)
     thump: { startHz: 70, endHz: 32, sec: 0.42, gain: 0.9, noiseGain: 0.35 },
     presets: { off: 0, subtle: 0.4, medium: 0.7, high: 1 }, // intensity multipliers
@@ -82,7 +87,8 @@ const biClamp = x => Math.max(0, Math.min(1, x));
 
 // ---------- the intro ----------
 let bossIntroRun = null;
-// Combat turns wait for the intro (js/combat.js). The name card and bottom HP bar are removed, so there is no hold.
+// True while the name card is on screen: combat turns wait for it (js/combat.js).
+// The fight holds only until the card has slid out (freeAt); the bars and HP fill keep playing after that.
 function bossIntroRunning() { return !!bossIntroRun && performance.now() < bossIntroRun.freeAt; }
 
 function playBossIntro(boss) {
@@ -98,10 +104,11 @@ function playBossIntro(boss) {
     const root = document.createElement('div');
     root.id = 'boss-intro';
     root.innerHTML = '<div class="bi-bar bi-top"></div><div class="bi-bar bi-bot"></div><div class="bi-flash"></div>'
-        ;
+        + '<div class="bi-card"><div class="bi-kicker">BOSS</div><div class="bi-name"></div><div class="bi-rule"></div></div>';
+    root.querySelector('.bi-name').textContent = String(boss.name || 'Boss').replace(/\s*\((Mini )?Boss\)\s*$/i, ''); // the BOSS label above says it
     inner.appendChild(root);
     const top = root.querySelector('.bi-top'), bot = root.querySelector('.bi-bot');
-    const flash = root.querySelector('.bi-flash');
+    const flash = root.querySelector('.bi-flash'), card = root.querySelector('.bi-card'), rule = root.querySelector('.bi-rule');
     const barH = Math.round(C.barHeight * Math.max(0.5, I || 0.5));
     top.style.height = bot.style.height = barH + 'px';
 
@@ -115,11 +122,13 @@ function playBossIntro(boss) {
     const hero = document.getElementById('combat-player-sprite');
 
     const slamTick = C.squashStart + C.squashTicks + C.hopTicks + C.fallTicks;
-    const holdEnd = slamTick + C.holdSec * 60;
+    const nameStart = slamTick + C.nameDelayTicks;
+    const ruleStart = nameStart + C.nameInTicks;
+    const holdEnd = ruleStart + C.ruleTicks + C.holdSec * 60;
     const endTick = holdEnd + C.outTicks;
     const start = performance.now();
-    // The fight is not held: the intro is only the slam and the bars now
-    const freeAt = start;
+    // The fight waits for the card to slide out, with an 8 s cap so a stalled frame can never lock combat
+    const freeAt = start + Math.min((holdEnd + C.outTicks) * BI_TICK, 8000);
 
     const run = { start, freeAt, raf: 0, trauma: 0, slamAt: null, dust: [], root, lineup, world, hero, thumped: false, flashed: false, musicDipped: false };
     bossIntroRun = run;
@@ -197,6 +206,16 @@ function playBossIntro(boss) {
 
         // Dust puffs
         updateDust(run, now);
+
+        // Name card: in from the right (reduced motion: fades in place), rule grows, holds, out to the left and fades
+        const nIn = biEaseOut(biClamp((tick - nameStart) / C.nameInTicks));
+        const rIn = biEaseOut(biClamp((tick - ruleStart) / C.ruleTicks));
+        const out = biEaseIn(biClamp((tick - holdEnd) / C.outTicks));
+        const cardOp = tick < nameStart ? 0 : nIn * (1 - out);
+        card.style.opacity = cardOp.toFixed(3);
+        card.style.translate = RM ? '0 0' : `${Math.round(C.nameFromPx * (1 - nIn) - C.outPx * out)}px 0`;
+        if (RM) { rule.style.transform = 'none'; rule.style.opacity = rIn.toFixed(3); }
+        else rule.style.transform = `scaleX(${rIn.toFixed(3)})`;
 
         if (tick >= endTick && run.trauma <= 0.001) { cancelBossIntro(); return; }
         run.raf = requestAnimationFrame(frame);
