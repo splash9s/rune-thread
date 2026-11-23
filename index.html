@@ -291,6 +291,7 @@
 .campaign-btn { position: relative; display: inline-block; width: 200px; height: 48px; padding: 0; border: 0; background: none; cursor: pointer; }
 .campaign-btn img { width: 100%; height: 100%; display: block; }
 .campaign-btn .cb-press { display: none; position: absolute; inset: 0; }
+.campaign-btn::after { content: ''; position: absolute; inset: -16px -12px -14px -120px; } /* bigger touch area than the art (free space to its left) */
 .campaign-btn:active .cb-normal { display: none; }
 .campaign-btn:active .cb-press { display: block; }
 #campaign-panel .campaign-btn .cb-label, .art-dark .expo-panel .campaign-btn .cb-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 800; color: #ffffff !important; text-shadow: 0 1px 2px #000; pointer-events: none; white-space: nowrap; }
@@ -2499,7 +2500,7 @@
     <script src="js/avatar-unlock.js?v=20261123au"></script>
     <script src="js/pet-alert.js?v=20261123pa"></script>
     <script src="js/stamina.js?v=20261123st"></script>
-    <script src="js/touch-lock.js?v=20261124tl"></script>
+    <script src="js/touch-lock.js?v=20261124nb"></script>
     <script src="js/combat.js?v=20261123td"></script>
     <script src="js/crit-fx.js?v=20261123bi"></script>
     <script src="js/landscape.js?v=20261122a"></script>
