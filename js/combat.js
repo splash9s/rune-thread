@@ -1824,6 +1824,19 @@ function monsterAct(m, derived, position = 0) {
 // Monsters always keep at least this hit chance, so FLEE (mostly from AGI) can dodge at most 35% of attacks
 const MON_HIT_MIN = 0.65;
 const MAGE_SPELL_CAST_CHANCE = 0.10;
+// Damage runes that change the physical hit also change a bolt (MATK) hit: giant slayer, monster hunter, hunter's mark,
+// iron fortress, iron stance, dragon's gamble and divine light. Stunning Strike is left out (it counts the first hit).
+function boltRuneDamage(base, target, derived) {
+    let d = base;
+    if (runeN('divineLight') > 0 && attackCount % 3 === 0) d += Math.floor(derived.matk * runeN('divineLight') / 100);
+    if (runeN('giantSlayer') > 0 && (target.isBoss || target.isMiniBoss)) d = Math.floor(d * (1 + runeN('giantSlayer') / 100));
+    if (runeN('monsterHunter') > 0 && !target.isBoss && !target.isMiniBoss) d = Math.floor(d * (1 + runeN('monsterHunter') / 100));
+    if (runeN('sameTarget') > 0) d = Math.floor(d * (1 + 0.1 * sameTargetCount));
+    if (runeN('ironFortress') > 0 && player.armor > 0) d = Math.floor(d * 3);
+    if (runeN('armorStance') > 0 && player.armor > 0) d = Math.floor(d * 1.2);
+    if (runeN('tenfold') > 0 && Math.random() < 0.05) d = d * 10;
+    return d;
+}
 // Mage spells that are bolts, and the element each one uses for its bolt effect
 const MONSTER_BOLT_ELEMENT = { fireBolt: 'fire', iceBolt: 'water', rockBolt: 'earth', thunderBolt: 'wind' };
 function tryMageSpellCast(m) {
@@ -2152,7 +2165,7 @@ function runCombatTick() {
                 const boltDmgs = []; // each bolt's damage, shown as its own number when that bolt explodes
                 for (let b = 0; b < 4; b++) {
                     if (targetEnemy.hp <= 0) break;
-                    const bolt = Math.max(1, Math.floor(derived.matk * BOLT_MATK_RATIO * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element) * (1 + skillBonus('boltDmgPct') / 100))); // Arcane: Bolt damage nodes
+                    const bolt = Math.max(1, boltRuneDamage(Math.floor(derived.matk * BOLT_MATK_RATIO * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element) * (1 + skillBonus('boltDmgPct') / 100)), targetEnemy, derived)); // Arcane: Bolt damage nodes; damage runes apply too
                     targetEnemy.hp -= bolt;
                     targetEnemy._boltDmg = (targetEnemy._boltDmg || 0) + bolt; // bolts show their own numbers, so the hit number leaves them out
                     landed++;
