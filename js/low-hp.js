@@ -2,13 +2,12 @@
 // LOW HEALTH WARNING (game juice, presentation only)
 // The game has an HP bar, not hearts: "one heart left" = HP at or below LOW_HP.threshold of max HP in combat.
 // While low: at 90 bpm (1.5 Hz, well under 3 Hz) each beat plays a lub-dub heartbeat and a soft red pulse on the
-// screen edges, and a '!' sign hovers over the hero. Shape and sound carry the warning too ('!', heartbeat),
-// so it does not rely on red alone. (No heart icon by the HP bar: removed 2026-11-23.)
+// screen edges. Sound and screen colour carry the warning. (No heart icon, no '!' over the hero: removed 2026-11-23.)
 //
 // Presentation clock: requestAnimationFrame + performance.now. Reads HP only; never changes it or any game rule.
 // Uses the shared Effects settings in js/boss-intro.js (shake, flash, reduce motion, intensity).
 //   flash full/reduced/off scales the edge pulse (off: no pulse, the edges hold a faint steady red instead).
-//   reduce motion: the '!' pulses in opacity instead of bobbing.
+//   reduce motion: the red edge pulse holds steady instead of pulsing.
 // The edge pulse is one per beat, 1.5 per second: under the 3-per-second limit, and it only tints the edges.
 // ==========================================
 const LOW_HP = {
@@ -17,7 +16,6 @@ const LOW_HP = {
     beatTicks: 9,         // a beat's pulse lasts this long (60 Hz ticks)
     dubDelaySec: 0.14,    // second thump of the lub-dub
     edge: { full: 0.38, reduced: 0.18, off: 0, steady: 0.12, widthPx: 170 }, // edge pulse peak opacity per flash setting
-    bang: { offsetY: 26, bobPx: 2, fontPx: 46 }, // '!' over the hero
     sound: { lubHz: 62, dubHz: 52, sec: 0.16, gain: 0.55 },
     hpPollMs: 200         // how often HP is read
 };
@@ -34,24 +32,18 @@ function lowHpEls() {
     edge.id = 'lowhp-edge';
     edge.style.setProperty('--lowhp-w', LOW_HP.edge.widthPx + 'px');
     inner.appendChild(edge);
-    const bang = document.createElement('div');
-    bang.id = 'lowhp-bang';
-    bang.textContent = '!';
-    bang.style.fontSize = LOW_HP.bang.fontPx + 'px';
-    inner.appendChild(bang);
     const label = document.createElement('div'); // screen readers
     label.className = 'sr-only';
     label.setAttribute('role', 'status');
     hpRow.parentElement.appendChild(label);
-    lowHpState.els = { edge, bang, label };
+    lowHpState.els = { edge, label };
     return lowHpState.els;
 }
 
 function lowHpHide(els) {
     if (!els) return;
-    els.edge.style.display = els.bang.style.display = 'none';
-    els.bang.style.translate = '';
-    els.bang.style.opacity = els.edge.style.opacity = '';
+    els.edge.style.display = 'none';
+    els.edge.style.opacity = '';
     els.label.textContent = '';
 }
 
@@ -80,31 +72,17 @@ function lowHpFrame(now) {
     const t = now - lowHpState.start;
     const beat = Math.floor(t / period);
     const into = (t % period) / (1000 / 60); // ticks into this beat
-    // One heartbeat sound per beat; its visual twins are the edge pulse and the '!'
+    // One heartbeat sound per beat; its visual twin is the edge pulse
     if (beat !== lowHpState.beat) { lowHpState.beat = beat; lowHpHeartbeat(); }
     const w = into < LOW_HP.beatTicks ? Math.sin(Math.PI * into / LOW_HP.beatTicks) : 0;
-
-    els.bang.style.display = 'block';
 
     // Edge pulse: soft red on the screen edges only (centre stays clear)
     const peak = (LOW_HP.edge[flashMode] ?? 0) * I;
     els.edge.style.display = 'block';
     els.edge.style.opacity = (peak > 0 ? LOW_HP.edge.steady + (peak - LOW_HP.edge.steady) * w : LOW_HP.edge.steady).toFixed(3);
-
-    // '!' over the hero (screen-space; follows the hero's drawn position, not the shake)
-    const hero = document.getElementById('combat-player-sprite');
-    if (hero) {
-        const x = (parseFloat(hero.style.left) || 0) + (parseFloat(hero.style.width) || 95) / 2;
-        const y = (parseFloat(hero.style.top) || 0) - LOW_HP.bang.offsetY;
-        els.bang.style.left = Math.round(x) + 'px';
-        els.bang.style.top = Math.round(y) + 'px';
-        if (RM) { els.bang.style.translate = ''; els.bang.style.opacity = (0.6 + 0.4 * w).toFixed(3); }
-        else { els.bang.style.opacity = ''; els.bang.style.translate = `-50% ${-Math.round(w * LOW_HP.bang.bobPx * I)}px`; }
-        if (RM) els.bang.style.translate = '-50% 0';
-    }
 }
 
-// Lub-dub (synthesised); visual twins: edge pulse and '!'
+// Lub-dub (synthesised); its visual twin is the edge pulse
 function lowHpHeartbeat() {
     try {
         const vol = typeof sfxVolumeNow === 'function' ? sfxVolumeNow() : 0;
