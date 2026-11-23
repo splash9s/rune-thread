@@ -1021,9 +1021,7 @@ function spawnStageMonsters() {
         if (typeof showBossBalloon === 'function') showBossBalloon('Mini Boss appeared!');
     } else if (isBossStage()) {
         const boss = makeBoss(getBossTemplate());
-        // Level 1 map bosses start at 70% of their max HP
-        const isLevel1Map = (currentMode === 'campaign' || currentMode === 'event') ? (activeMap && activeMap.levelReq === 1) : currentMode === 'tower' ? false : currentStage < 10;
-        if (isLevel1Map) boss.hp = Math.floor(boss.maxHp * 0.7);
+        // Every boss starts at full HP
         monstersList.push(dailyScale === 1 ? boss : scaled(boss));
         monstersList[0].lineupSlot = BOSS_LINEUP_SLOT; // boss stands in the 3rd lineup slot
         if (currentMode === 'campaign' || currentMode === 'event') addBossSupport(monstersList[0]);
