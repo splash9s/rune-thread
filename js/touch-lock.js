@@ -6,7 +6,8 @@
 // (a list, a panel), two-finger pinch and double-tap zoom are blocked everywhere.
 // The library page scrolls as a whole: html.page-scroll (set in switchView) turns the lock off there.
 // Easy taps: iPhone drops a tap when the finger moves even a little. A short touch that moved less than
-// TAP_SLOP_PX counts as a tap: the browser's own click is cancelled and the same click is sent at once instead.
+// TAP_SLOP_PX counts as a tap: the browser's own click goes through as normal, and only when the browser sends
+// none (it dropped the tap) is the same click sent shortly after. Never two clicks for one tap.
 // Text fields, dropdowns and disabled buttons keep the browser's own handling.
 // Near misses: the game screen is scaled down on phones, so buttons are small. A tap that lands just outside
 // every button (within NEAR_PX) goes to the nearest button.
@@ -39,6 +40,8 @@
         return null;
     }
     let sx = 0, sy = 0, st = 0, moved = 0, multi = false;
+    let tapSeq = 0, nativeClickSeen = true;
+    document.addEventListener('click', e => { if (e.isTrusted) nativeClickSeen = true; }, true);
     document.addEventListener('touchstart', e => {
         if (e.touches.length === 1) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = performance.now(); moved = 0; multi = false; }
         else multi = true;
@@ -51,16 +54,23 @@
         let el = e.target && e.target.nodeType === 1 ? e.target : e.target && e.target.parentElement;
         if (!el || !el.closest) return;
         if (el.closest('input, textarea, select, [contenteditable], button:disabled, option')) return;
-        let cx = t.clientX, cy = t.clientY;
-        if (!el.closest(CLICKABLE)) {
-            const near = nearestButton(sx, sy);
-            if (near && !near.el.closest('input, textarea, select, [contenteditable]')) { el = near.el; cx = near.x; cy = near.y; }
-        }
-        e.preventDefault(); // no second (browser) click
-        el.dispatchEvent(new MouseEvent('click', {
+        const fire = (target, cx, cy) => target.dispatchEvent(new MouseEvent('click', {
             bubbles: true, cancelable: true, composed: true, view: window, detail: 1,
             clientX: cx, clientY: cy, screenX: t.screenX, screenY: t.screenY
         }));
+        if (!el.closest(CLICKABLE)) {
+            // Near miss: the browser's click would land on nothing, so send it to the nearest button instead
+            const near = nearestButton(sx, sy);
+            if (near && !near.el.closest('input, textarea, select, [contenteditable]')) {
+                e.preventDefault();
+                fire(near.el, near.x, near.y);
+            }
+            return;
+        }
+        // On a button: wait for the browser's own click; send one only if it never comes
+        const id = ++tapSeq;
+        nativeClickSeen = false;
+        setTimeout(() => { if (id === tapSeq && !nativeClickSeen && el.isConnected) fire(el, t.clientX, t.clientY); }, 350);
     }, { passive: false });
     document.addEventListener('touchmove', e => {
         if (document.documentElement.classList.contains('page-scroll')) return;
