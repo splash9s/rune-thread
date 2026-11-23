@@ -933,10 +933,11 @@ function bossElementSupportOn(t) {
     const pathEl = CAMPAIGN_PATHS[currentPath] && CAMPAIGN_PATHS[currentPath].element;
     return !!pathEl && pathEl === t.element;
 }
-// Elemental Support doubles the effect of an element: a x1.25 advantage becomes x1.5, a x0.75 resist becomes x0.5
+// Elemental Support doubles the effect of an element: x1.5 becomes x2, x0.5 becomes x0 -> kept at 10% so a fight
+// can always end (a same-element hit, x0.25, also stays at 10%)
 function supportedElemMult(mult, m) {
     if (!m || !m.elemSupport) return mult;
-    return Math.max(0, 1 + (mult - 1) * 2);
+    return Math.max(0.1, 1 + (mult - 1) * 2);
 }
 
 // Black cover over the combat scene: mini boss and boss stages fade in from black and fade out to black
@@ -2507,10 +2508,14 @@ function goFromResult(view) {
     closeModal();
     switchView(view);
 }
-// VIP auto-rune: when the rune window opens, a random offered rune is picked for the player
+// VIP auto-rune: when the rune window opens, the rarest offered rune is picked for the player
+// (a tie between equally rare runes is picked at random)
 function scheduleVipAutoRune(choices) {
     if (!player.vipAutoRune || !isVipActive() || !choices || choices.length === 0) return;
-    const pick = choices[Math.floor(Math.random() * choices.length)];
+    const rar = id => (RUNE_DEFS[id] && RUNE_DEFS[id].rarity) || 0;
+    const top = Math.max(...choices.map(rar));
+    const rarest = choices.filter(id => rar(id) === top);
+    const pick = rarest[Math.floor(Math.random() * rarest.length)];
     setTimeout(() => { if (isRuneOffered(pick)) selectRuneChoice(pick, window.runeCallback); }, 400);
 }
 function toggleVipAutoRune() {

@@ -309,3 +309,9 @@ SHOP_ITEMS.forEach(i => {
     i.stats = Object.fromEntries(Object.entries(i.stats).map(([k, v]) => [k, Math.max(1, Math.round(v * f))]));
     i.desc = statText(i.stats);
 });
+
+// The shop sells gear up to Lv 50 only; Lv 60-99 gear comes from drops. The Lv 60-90 items stay in
+// SHOP_HIGH_ITEMS so chests can still give them and their sell price stays the same.
+const SHOP_MAX_LEVEL = 50;
+const SHOP_HIGH_ITEMS = SHOP_ITEMS.filter(i => (i.levelReq || 1) > SHOP_MAX_LEVEL);
+for (let i = SHOP_ITEMS.length - 1; i >= 0; i--) if ((SHOP_ITEMS[i].levelReq || 1) > SHOP_MAX_LEVEL) SHOP_ITEMS.splice(i, 1);

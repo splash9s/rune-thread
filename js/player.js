@@ -264,18 +264,27 @@ function resetSkillTree() {
 }
 
 // ---------- ELEMENTS ----------
-// Fire > Wind > Earth > Water > Fire  (key beats value)
+// Ragnarok Online (classic) element table, defence element level 1:
+//   Water > Fire > Earth > Wind > Water  (key beats value)
+// ELEMENT_CHART[attack][defence] is the damage multiplier. Same element 25% (Earth on Earth 100%),
+// strong 150% (Wind on Water 175%), the reverse 50%, anything else 100%.
 // Element icons: in-game pictures from graphic/cha/page/elementingame.png (assets/icons/element_*.webp)
 const ELEMENT_ICON = (k) => `<img class="el-ico" src="assets/icons/element_${k}_q85.webp" alt="">`;
 const ELEMENTS = {
-    fire:  { name: "Fire",  icon: ELEMENT_ICON('fire'),  beats: "wind", color: "text-orange-400" },
-    wind:  { name: "Wind",  icon: ELEMENT_ICON('wind'),  beats: "earth", color: "text-teal-300" },
-    earth: { name: "Earth", icon: ELEMENT_ICON('earth'), beats: "water", color: "text-amber-600" },
-    water: { name: "Ice",   icon: ELEMENT_ICON('water'), beats: "fire", color: "text-sky-400" }
+    fire:  { name: "Fire",  icon: ELEMENT_ICON('fire'),  beats: "earth", color: "text-orange-400" },
+    wind:  { name: "Wind",  icon: ELEMENT_ICON('wind'),  beats: "water", color: "text-teal-300" },
+    earth: { name: "Earth", icon: ELEMENT_ICON('earth'), beats: "wind",  color: "text-amber-600" },
+    water: { name: "Ice",   icon: ELEMENT_ICON('water'), beats: "fire",  color: "text-sky-400" }
 };
 const ELEMENT_KEYS = Object.keys(ELEMENTS);
-const ELEMENT_ADVANTAGE = 1.25;
-const ELEMENT_DISADVANTAGE = 0.75;
+const ELEMENT_CHART = {
+    fire:  { fire: 0.25, water: 0.5,  earth: 1.5, wind: 1   },
+    water: { fire: 1.5,  water: 0.25, earth: 1,   wind: 0.5 },
+    earth: { fire: 0.5,  water: 1,    earth: 1,   wind: 1.5 },
+    wind:  { fire: 1,    water: 1.75, earth: 0.5, wind: 0.25 }
+};
+const ELEMENT_ADVANTAGE = 1.5;    // usual strong multiplier (text only; the chart decides)
+const ELEMENT_DISADVANTAGE = 0.5; // usual weak multiplier (text only)
 
 // ---------- RARITY ----------
 const RARITY_INFO = {
@@ -352,12 +361,12 @@ function rollBossDropRarity() {
 
 
 // attackEl / defEl: element key or null. Returns damage multiplier.
+// No element on either side (Neutral): 100%
 function getElementMultiplier(attackEl, defEl) {
-    if (!attackEl || !defEl || !ELEMENTS[attackEl] || !ELEMENTS[defEl]) return 1;
-    if (ELEMENTS[attackEl].beats === defEl) return ELEMENT_ADVANTAGE;
-    if (ELEMENTS[defEl].beats === attackEl) return ELEMENT_DISADVANTAGE;
-    return 1;
+    if (!attackEl || !defEl || !ELEMENT_CHART[attackEl] || ELEMENT_CHART[attackEl][defEl] === undefined) return 1;
+    return ELEMENT_CHART[attackEl][defEl];
 }
+const elPct = m => Math.round(m * 100) + '%';
 
 // Counts equipped set pieces and sums every bonus that is active
 function getSetBonuses() {

@@ -55,10 +55,13 @@ let selectedAvatarChoice = "assets/avatars/man1_q85.webp";
 let currentLanguage = 'en';
 // Shop gear, by level. Each weapon is listed twice: the ATK version and its MATK ("Arcane") version.
 // Chests draw from this list too, so a chest weapon is ATK or MATK with equal chance.
-const SHOP_ARMORY_ITEMS = (typeof SHOP_ITEMS !== 'undefined' ? SHOP_ITEMS : []).slice().sort((a, b) => (a.levelReq || 1) - (b.levelReq || 1))
+const armoryList = list => list.slice().sort((a, b) => (a.levelReq || 1) - (b.levelReq || 1))
     .flatMap(t => t.slot === 'weapon' && t.stats && t.stats.atk
         ? [{ ...t, weaponKind: 'atk' }, { ...toMatkWeapon(t), id: (t.id || t.name) + '_m' }]
         : [t]);
+const SHOP_ARMORY_ITEMS = armoryList(typeof SHOP_ITEMS !== 'undefined' ? SHOP_ITEMS : []);
+// Shop gear plus the Lv 60-90 gear the shop no longer sells (chests still give it)
+const ALL_ARMORY_ITEMS = armoryList([...(typeof SHOP_ITEMS !== 'undefined' ? SHOP_ITEMS : []), ...(typeof SHOP_HIGH_ITEMS !== 'undefined' ? SHOP_HIGH_ITEMS : [])]);
 
 const GOLD_SHOP_CONSUMABLES = [
     { id: 'potion_minor', name: "Minor Healing Potion", price: 100, type: 'potion', heal: 200, desc: "Restores 200 HP", lore: "A small red tonic from the camp healers. Quick to drink in the middle of a fight." },
@@ -3164,7 +3167,7 @@ function chestDropRatesHTML(chestType) {
         else rows.push('Pets: coming soon');
     }
     if (cfg.items) {
-        const pool = typeof SHOP_ARMORY_ITEMS !== 'undefined' ? SHOP_ARMORY_ITEMS.length : 0;
+        const pool = typeof ALL_ARMORY_ITEMS !== 'undefined' ? ALL_ARMORY_ITEMS.length : 0;
         rows.push(`Gear: ${cfg.items} random item${cfg.items > 1 ? 's' : ''} from ${pool} pieces, each piece equally likely`);
         rows.push(`Gear rarity: equal chance of ${cfg.rarities.join(', ')}`);
     }
@@ -3704,12 +3707,12 @@ function renderBlacksmithChrome() {
 // Which element beats which (each ELEMENTS entry's beats), shown under the stone list
 function elementMatchupHTML() {
     const nm = k => `<span class="fn-el fn-el-${k}">${ELEMENTS[k].name}</span>`;
-    const rows = ELEMENT_KEYS.map(k => `<div class="flex items-center gap-2 text-xs text-slate-200">${ELEMENTS[k].icon} ${nm(k)} <span class="text-slate-400">beats</span> ${ELEMENTS[ELEMENTS[k].beats].icon} ${nm(ELEMENTS[k].beats)}</div>`).join('');
+    const rows = ELEMENT_KEYS.map(k => `<div class="flex items-center gap-2 text-xs text-slate-200">${ELEMENTS[k].icon} ${nm(k)} <span class="text-slate-400">beats</span> ${ELEMENTS[ELEMENTS[k].beats].icon} ${nm(ELEMENTS[k].beats)} <b class="text-slate-200">${elPct(getElementMultiplier(k, ELEMENTS[k].beats))}</b></div>`).join('');
     return `<div class="mt-3 p-3 rounded border border-slate-700 bg-slate-900/70">
         <div class="text-[10px] text-slate-400 mb-2"><span>Element matchup:</span></div>
         ${rows}
-        <div class="text-[10px] text-slate-400 mt-2"><span>Stronger element: deals</span> <b class="text-slate-200">x${ELEMENT_ADVANTAGE}</b> <span>damage</span></div>
-        <div class="text-[10px] text-slate-400"><span>Weaker element: deals</span> <b class="text-slate-200">x${ELEMENT_DISADVANTAGE}</b> <span>damage</span></div>
+        <div class="text-[10px] text-slate-400 mt-2"><span>The other way round:</span> <b class="text-slate-200">50%</b> <span>damage</span></div>
+        <div class="text-[10px] text-slate-400"><span>Same element:</span> <b class="text-slate-200">25%</b> <span>damage (Earth 100%)</span></div>
     </div>`;
 }
 
@@ -4361,7 +4364,8 @@ function elementDetailHTML(el) {
     if (!e) return '';
     const weakKey = Object.keys(ELEMENTS).find(k => ELEMENTS[k].beats === el);
     const nm = k => `<span class="fn-el fn-el-${k}">${ELEMENTS[k].name}</span>`;
-    return `<span class="el-line">${e.icon} ${nm(el)} element: strong vs ${nm(e.beats)}, weak vs ${nm(weakKey)}</span>`;
+    // Damage this element deals: strong vs its target, weak vs the element that beats it, and vs itself
+    return `<span class="el-line">${e.icon} ${nm(el)} element: ${elPct(getElementMultiplier(el, e.beats))} vs ${nm(e.beats)}, ${elPct(getElementMultiplier(el, weakKey))} vs ${nm(weakKey)}, ${elPct(getElementMultiplier(el, el))} vs ${nm(el)}</span>`;
 }
 
 function buffsDetailHTML(buffs, debuffs) {
@@ -4864,6 +4868,7 @@ function getItemBasePrice(item) {
     if (item.price) return item.price;
     const pools = [
         ...(typeof SHOP_ITEMS !== 'undefined' ? SHOP_ITEMS : []),
+        ...(typeof SHOP_HIGH_ITEMS !== 'undefined' ? SHOP_HIGH_ITEMS : []), // Lv 60+ gear keeps its old shop price for selling
         ...(typeof GOLD_SHOP_CONSUMABLES !== 'undefined' ? GOLD_SHOP_CONSUMABLES : [])
     ];
     const found = pools.find(p => p.name === item.name);
@@ -6221,7 +6226,7 @@ function takeChestOpenIsTenth() {
     return player.chestOpens % 10 === 0;
 }
 function chestGearPool() {
-    const all = typeof SHOP_ARMORY_ITEMS !== 'undefined' ? SHOP_ARMORY_ITEMS : [];
+    const all = typeof ALL_ARMORY_ITEMS !== 'undefined' ? ALL_ARMORY_ITEMS : [];
     const lv = (typeof player !== 'undefined' && player && player.baseLv) || 1;
     const inRange = all.filter(t => Math.abs((t.levelReq || 1) - lv) <= 10);
     if (inRange.length) return inRange;
@@ -7226,7 +7231,7 @@ function renderLibraryRules() {
     const elementRows = ELEMENT_KEYS.map(k => {
         const e = ELEMENTS[k];
         const b = ELEMENTS[e.beats];
-        return `<li><span class="${e.color}">${e.icon} ${e.name}</span> beats <span class="${b.color}">${b.icon} ${b.name}</span> (x${ELEMENT_ADVANTAGE} damage). Hitting it with ${b.name} deals x${ELEMENT_DISADVANTAGE}.</li>`;
+        return `<li><span class="${e.color}">${e.icon} ${e.name}</span> beats <span class="${b.color}">${b.icon} ${b.name}</span> (${elPct(getElementMultiplier(k, e.beats))} damage). ${b.name} hitting ${e.name} deals ${elPct(getElementMultiplier(e.beats, k))}. ${e.name} on ${e.name}: ${elPct(getElementMultiplier(k, k))}.</li>`;
     }).join('');
     const rarityRows = [1, 2, 3, 4, 5].map(r => {
         const info = RARITY_INFO[r];
