@@ -651,6 +651,8 @@ function startExpedition(mode, opts = {}) {
         floatFailAt("Map data is not loaded");
         return;
     }
+    // Campaign runs cost 1 stamina (js/stamina.js); with none left the refill window opens instead
+    if (mode === 'campaign' && typeof staminaSpendCampaign === 'function' && !staminaSpendCampaign()) return;
 
     resetMapRunes();
     player.currentRunRunes = [];
