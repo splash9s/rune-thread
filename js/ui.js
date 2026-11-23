@@ -2390,7 +2390,7 @@ function updateFinalMapButton() {
     if (!b) return;
     const ok = isFinalMapUnlocked();
     b.disabled = !ok;
-    b.innerText = ok ? 'World-Eater' : '🔒 World-Eater';
+    b.innerText = ok ? 'Void Colossus' : '🔒 Void Colossus';
     b.className = ok
         ? 'py-3 bg-rose-600 hover:bg-rose-500 text-slate-100 font-bold rounded-xl text-xs transition cursor-pointer shadow'
         : 'py-3 bg-slate-800 text-slate-500 font-bold rounded-xl text-xs border border-slate-700 cursor-not-allowed';

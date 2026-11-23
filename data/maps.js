@@ -254,7 +254,7 @@ const GAME_DATA = {
         },
         finalMap: {
             title: "Final Map Lv. 99", levelReq: 99, campaignStages: 25, miniStage: 0, dropKey: 'map99', finalMap: true, stageGrowth: 0,
-            enemies: [], boss: curveBoss(MONSTERS_DATA.bossWorldEater, 99), miniBoss: null, bossSupport: []
+            enemies: [], boss: curveBoss(MONSTERS_DATA.voidColossus, 99), miniBoss: null, bossSupport: []
         }
     },
     paths: {}

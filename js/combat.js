@@ -678,7 +678,7 @@ function startExpedition(mode, opts = {}) {
         maxStages = activeMap.campaignStages;
         if (tagEl) tagEl.innerText = "Final Map";
         if (titleEl) titleEl.innerText = `${activeMap.title} — Stage ${currentStage} / ${maxStages}`;
-        logMessage(`[Expedition] Entering ${activeMap.title}. The World-Eater awaits.`, 'winlose');
+        logMessage(`[Expedition] Entering ${activeMap.title}. The Void Colossus awaits.`, 'winlose');
     } else if (mode === 'campaign') {
         const [cpk2, cmk2] = document.getElementById('campaign-map-select').value.split(':');
         currentPath = cpk2;
@@ -855,7 +855,7 @@ function spawnFinalStage() {
     const stageEl = document.getElementById('combat-stage');
     if (stageEl) stageEl.classList.toggle('final-stage', currentStage === maxStages);
     if (currentStage === maxStages) {
-        const boss = makeBoss(curveBoss(MONSTERS_DATA.bossWorldEater, 99)); // final boss: top of the level curve, then FINAL_BOSS_MULT
+        const boss = makeBoss(curveBoss(MONSTERS_DATA.voidColossus, 99)); // final boss (Void Colossus): top of the level curve, then FINAL_BOSS_MULT
         const up = v => Math.floor(v * FINAL_BOSS_MULT);
         const finalBoss = { ...boss, hp: up(boss.hp), maxHp: up(boss.maxHp), atkMin: up(boss.atkMin), atkMax: up(boss.atkMax), isFinalBoss: true };
         const escorts = [
@@ -1029,8 +1029,9 @@ function spawnStageMonsters() {
         // Boss intro name card (js/boss-intro.js) replaces the "Boss appeared!" balloon; it starts once the boss is drawn
         if (typeof playBossIntro === 'function') { const b0 = monstersList[0]; setTimeout(() => { if (monstersList[0] === b0) playBossIntro(b0); }, 60); }
         else if (typeof showBossBalloon === 'function') showBossBalloon('Boss appeared!');
+        const uniqueTxt = bossUniqueSkillText(boss) ? bossUniqueSkillText(boss) + ', ' : '';
         const supportTxt = boss.elemSupport ? 'Elemental Support (element effects x2), ' : '';
-        logMessage(`[Boss] ${boss.name} appears! Skills: ${supportTxt}Enrage (below 35% HP, +50% ATK), ${boss.noHeavyStrike ? '' : 'Heavy Strike (every 4th attack, x2 damage), '}Regeneration (1.5% HP per turn).`, 'winlose');
+        logMessage(`[Boss] ${boss.name} appears! Skills: ${uniqueTxt}${supportTxt}Enrage (below 35% HP, +50% ATK), ${boss.noHeavyStrike ? '' : 'Heavy Strike (every 4th attack, x2 damage), '}Regeneration (1.5% HP per turn).`, 'winlose');
         if (boss.elemSupport) {
             logMessage(`[Boss Skill] ${boss.name} casts Elemental Support! Element effects are doubled for its hits and when it is hit, until the map ends.`, 'winlose');
             setTimeout(() => { if (typeof showBossBalloon === 'function' && monstersList[0] === boss) showBossBalloon('Elemental Support! Element effects x2'); }, 3200);
@@ -1079,6 +1080,24 @@ let playerTimedDebuffs = {};
 let playerAspdToggle = false; // Devour: every other player attack tick is skipped while ASPD is down
 let combatRunId = 0; // delayed boss effects from an earlier fight do nothing
 const BOSS_UNIQUE_SKILL = { M008: 'magmaRoar', M012: 'sandstorm', M016: 'undertow', M020: 'ashFeathers', M024: 'devour', M049: 'iceShield', M062: 'lightningSpear', M075: 'swordSweep', M088: 'raiseDead', M104: 'voidPull' };
+// Short text for each unique skill, shown in the "boss appears" log line
+const BOSS_SKILL_TEXT = {
+    magmaRoar: 'Magma Roar (every 5th attack, x2 damage and ATK -25% for 5s)',
+    sandstorm: 'Sandstorm (every 5th attack, HIT -30% for 5s)',
+    undertow: 'Undertow (every 5th attack, heals from its hits for 5s)',
+    ashFeathers: 'Ash Feathers (every 5th attack, FLEE -30% for 5s)',
+    devour: 'Devour (every 5th attack, ASPD -50% for 5s)',
+    iceShield: 'Ice Shield (every 5s, blocks 20% of the next hit)',
+    lightningSpear: 'Lightning Spear (ignores armor, 20% chance to stun 2s)',
+    swordSweep: 'Sword Sweep (every 3rd attack strikes twice)',
+    raiseDead: 'Raise Dead (every 6th attack, a fallen monster rises at 30% HP)',
+    voidPull: 'Void Pull (every 4th attack, -5% max HP per second for 3s)'
+};
+function bossUniqueSkillText(m) {
+    if (BOSS_SKILL_TEXT[BOSS_UNIQUE_SKILL[m.id]]) return BOSS_SKILL_TEXT[BOSS_UNIQUE_SKILL[m.id]];
+    if (m.splitOnDeath) return `Split (splits into ${m.splitOnDeath} slimes when it dies)`;
+    return '';
+}
 function applyPlayerDebuff(kind, pct, ms) { playerTimedDebuffs[kind] = { until: Date.now() + ms, pct }; }
 function playerDebuffPct(kind) { const d = playerTimedDebuffs[kind]; return d && Date.now() < d.until ? d.pct : 0; }
 
