@@ -4056,7 +4056,6 @@ function invDragStart(e, index) {
     invDragFrom = index;
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', String(index)); } catch (_) {}
-    if (typeof invLiftStart === 'function') invLiftStart(e, index); // lifted copy (js/inv-drag.js)
 }
 function invDragOver(e) {
     if (invDragFrom === null) return;
@@ -4067,7 +4066,6 @@ function invDrop(e, to) {
     e.preventDefault();
     const from = invDragFrom;
     invDragFrom = null;
-    if (typeof invLiftLanded === 'function') invLiftLanded(from !== null && from !== to && Array.isArray(player.inventory) && !!player.inventory[from], to);
     if (from === null || from === to || !Array.isArray(player.inventory)) return;
     const a = player.inventory[from];
     const b = player.inventory[to];
@@ -4090,7 +4088,7 @@ function invDrop(e, to) {
     updateUI();
     saveGame();
 }
-function invDragEnd() { invDragFrom = null; if (typeof invLiftEnd === 'function') invLiftEnd(); }
+function invDragEnd() { invDragFrom = null; }
 // Drag an inventory item onto a gear slot to equip it (rings go to the slot dropped on; potions go to the potion slot)
 function eqDragOver(e) {
     if (invDragFrom === null) return;
@@ -4114,7 +4112,6 @@ function eqDrop(e, slot) {
         logMessage(`[Equipment] ${item.name} cannot be equipped in this slot`, 'winlose');
         return;
     }
-    if (typeof invLiftLanded === 'function') invLiftLanded(true, null); // the copy goes away; the equip flash takes over
     if (executeEquipItem(from, slot)) closeInvDetail();
 }
 
