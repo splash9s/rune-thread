@@ -1826,6 +1826,8 @@ function monsterAct(m, derived, position = 0) {
 // Monsters always keep at least this hit chance, so FLEE (mostly from AGI) can dodge at most 35% of attacks
 const MON_HIT_MIN = 0.65;
 const MAGE_SPELL_CAST_CHANCE = 0.10;
+// Mage spells that are bolts, and the element each one uses for its bolt effect
+const MONSTER_BOLT_ELEMENT = { fireBolt: 'fire', iceBolt: 'water', rockBolt: 'earth', thunderBolt: 'wind' };
 function tryMageSpellCast(m) {
     if (!m.spell || (player.hp <= 0 && !towerAnyAlive()) || m.hp <= 0) return;
     if (Math.random() >= MAGE_SPELL_CAST_CHANCE) return;
@@ -1835,6 +1837,9 @@ function tryMageSpellCast(m) {
     logMessage(`[Spell] ${m.name} casts ${def.label} for ${eDmg} damage`, 'combat');
     if (m.spell === 'rockCurse') { playerDebuffs.curseUntil = Date.now() + 3000; logMessage('[Curse] Your attacks are weaker for 3 seconds', 'winlose'); if (typeof showBossBalloon === 'function') showBossBalloon('Curse! ATK -20% (3 seconds)'); }
     if (m.spell === 'freezeTouch') { playerDebuffs.frost = 3; logMessage('[Freeze] Your aim is worse for 3 turns', 'winlose'); if (typeof showBossBalloon === 'function') showBossBalloon('Freeze! HIT -20 (3 turns)'); }
+    // The bolt spells fall on you exactly like your own bolts (same effect, same element colour); the curses have no bolt
+    const spellBolt = MONSTER_BOLT_ELEMENT[m.spell];
+    if (spellBolt && typeof playBoltFx === 'function') playBoltFx(spellBolt, '#combat-player-sprite', 1, 0, [], 'combat');
     takePlayerDamage(eDmg, m);
 }
 
