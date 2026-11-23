@@ -1237,6 +1237,14 @@
         /* Slash lighting: each frame flashes brighter, then settles */
         .crit-slash.slash-lit { animation: slashLight .16s ease-out; }
         .bolt-fx { position: absolute; pointer-events: none; z-index: 11; }
+        /* Low health warning (js/low-hp.js) */
+        #lowhp-heart { position: absolute; left: -42px; top: -10px; display: none; pointer-events: none; image-rendering: pixelated; }
+        #lowhp-heart svg { display: block; filter: drop-shadow(0 2px 0 #000); }
+        #lowhp-edge { position: absolute; inset: 0; z-index: 9; display: none; pointer-events: none; opacity: 0;
+            box-shadow: inset 0 0 var(--lowhp-w, 170px) calc(var(--lowhp-w, 170px) / 4) rgba(200, 0, 20, .9); }
+        #lowhp-bang { position: absolute; z-index: 8; display: none; pointer-events: none; font-family: 'Roboto', sans-serif; font-weight: 900; line-height: 1;
+            color: #ffd23f; -webkit-text-stroke: 3px #000; paint-order: stroke fill; text-shadow: 0 3px 0 #000; translate: -50% 0; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
         /* Boss intro name card (js/boss-intro.js). Screen-space layers: never shaken. */
         #boss-intro { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
         #boss-intro .bi-bar { position: absolute; left: 0; right: 0; background: #000; }
@@ -2481,6 +2489,7 @@
     <script src="js/hero-body.js?v=20261121lz"></script>
     <script src="js/slowmo.js?v=20261123a"></script>
     <script src="js/boss-intro.js?v=20261123hp"></script>
+    <script src="js/low-hp.js?v=20261123b"></script>
     <script src="js/combat.js?v=20261123bi"></script>
     <script src="js/crit-fx.js?v=20261123bi"></script>
     <script src="js/landscape.js?v=20261122a"></script>
