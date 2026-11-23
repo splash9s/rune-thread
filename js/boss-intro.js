@@ -106,6 +106,8 @@ const biClamp = x => Math.max(0, Math.min(1, x));
 
 // ---------- the intro ----------
 let bossIntroRun = null;
+// True while the name card is on screen: combat turns wait for it (js/combat.js)
+function bossIntroRunning() { return !!bossIntroRun; }
 
 function playBossIntro(boss) {
     cancelBossIntro(); // a new intro never stacks on an old one

@@ -17,7 +17,8 @@ const LEVEL_ROLL = {
     sparks: 10, sparkPx: 22, sparkTicks: 18,
     label: { text: 'LEVEL UP', ticks: 60, fadeTicks: 12, offsetY: 36 },
     chime: { hz: [1046.5, 1568, 2093], sec: 0.5, gain: 0.2, stepSec: 0.07 },
-    pollMs: 100
+    pollMs: 100,
+    orbMinXp: 20           // only a gain of at least this much XP shows the orb; small gains show nothing
 };
 
 const levelRollState = { lastBaseLv: null, lastBaseExp: null, lastJobLv: null, polled: 0, last: 0, bound: false };
@@ -156,6 +157,12 @@ function levelRollLabel(cx, bottom, I, RM) {
 }
 
 // Polls the base level and EXP, and reacts only to real changes
+// Loading a save sets the numbers at once: take them as they are, with no roll, ring or orb
+function levelRollResync() {
+    if (typeof player === 'undefined' || !player) return;
+    levelRollState.lastBaseLv = player.baseLv;
+    levelRollState.lastBaseExp = player.baseExp;
+}
 function levelRollPoll(now) {
     if (now - levelRollState.polled < LEVEL_ROLL.pollMs) return;
     levelRollState.polled = now;
@@ -167,7 +174,7 @@ function levelRollPoll(now) {
         const oldLv = S.lastBaseLv;
         S.lastBaseLv = lv;
         levelRollTargets().forEach(el => levelRollNumber(el, String(oldLv), String(lv)));
-    } else if (xp > S.lastBaseExp && levelRollIntensity() > 0 && now - (S.orbAt || 0) > 400) {
+    } else if (xp - S.lastBaseExp >= LEVEL_ROLL.orbMinXp && levelRollIntensity() > 0 && now - (S.orbAt || 0) > 400) {
         S.orbAt = now; // many small kills: at most one orb every 400 ms
         levelRollOrb();
     }

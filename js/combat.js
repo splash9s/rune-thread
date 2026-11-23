@@ -1833,6 +1833,7 @@ const COMBAT_MONSTER_MS = 1620; // = a base-stat character's attack tick (ASPD 3
 let monsterInterval = null;
 function monsterTurnTick() {
     if (combatPaused) return;
+    if (typeof bossIntroRunning === 'function' && bossIntroRunning()) return; // the boss name card first, then the fight
     const derived = getDerivedStats();
     let alive = getAliveMonsters();
     if (alive.length === 0 || (player.hp <= 0 && !towerAnyAlive())) return;
@@ -1942,6 +1943,7 @@ function stopCombatTimers() {
     combatInterval = null; monsterInterval = null;
 }
 function runCombatTick() {
+    if (typeof bossIntroRunning === 'function' && bossIntroRunning()) return; // the boss name card first, then the fight
     if (combatPaused) {
         if (isVipActive()) return;
         combatPaused = false;
