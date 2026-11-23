@@ -1249,6 +1249,14 @@
             -webkit-text-stroke: 3px #3a2400; paint-order: stroke fill; text-shadow: 0 6px 0 #000, 0 0 24px rgba(255, 190, 60, .45); white-space: nowrap; }
         #boss-intro .bi-rule { width: 760px; height: 6px; margin: 12px auto 0; background: linear-gradient(90deg, rgba(255,212,94,0), #ffd45e 20%, #fff1b8 50%, #ffd45e 80%, rgba(255,212,94,0));
             transform: scaleX(0); transform-origin: 50% 50%; box-shadow: 0 2px 0 #000; }
+        #boss-intro .bi-hp { position: absolute; opacity: 0; }
+        #boss-intro .bi-hp-name { height: 34px; margin-bottom: 6px; text-align: right; font-family: 'Roboto', 'Noto Sans Thai', sans-serif; font-weight: 700; font-size: 26px; color: #ffd45e; -webkit-text-stroke: 2px #2a1800; paint-order: stroke fill; text-shadow: 0 3px 0 #000; white-space: nowrap; }
+        #boss-intro .bi-hp-track { position: relative; background: #1a0c0c; outline: 4px solid #000; box-shadow: 0 0 0 8px #5a3a12; overflow: hidden; image-rendering: pixelated; }
+        #boss-intro .bi-hp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(#ff5a4a 0 25%, #d8222a 25% 75%, #8c1018 75%); }
+        #boss-intro .bi-hp-lead { position: absolute; top: 0; bottom: 0; background: #ffd45e; }
+        #boss-intro .bi-hp-lead.flare { background: #fff6d0; }
+        #boss-intro .bi-hp-gloss { position: absolute; top: 0; bottom: 0; left: -100px; background: #fff; opacity: 0; }
+        #boss-intro .bi-spark { position: absolute; width: 8px; height: 8px; background: #fff3b0; box-shadow: 0 0 0 4px rgba(255, 212, 94, .55); }
         #boss-intro .bi-dust { position: absolute; background: #c9b79a; image-rendering: pixelated; }
         #boss-intro .bi-ring { position: absolute; width: 260px; height: 260px; border: 8px solid rgba(255, 230, 170, .9); border-radius: 50%; }
         #monsters-lineup-container.boss-intro-on[data-bi-idx="1"] > div:nth-child(1) img.monster-idle, #monsters-lineup-container.boss-intro-on[data-bi-idx="2"] > div:nth-child(2) img.monster-idle, #monsters-lineup-container.boss-intro-on[data-bi-idx="3"] > div:nth-child(3) img.monster-idle, #monsters-lineup-container.boss-intro-on[data-bi-idx="4"] > div:nth-child(4) img.monster-idle, #monsters-lineup-container.boss-intro-on[data-bi-idx="5"] > div:nth-child(5) img.monster-idle, #monsters-lineup-container.boss-intro-on[data-bi-idx="6"] > div:nth-child(6) img.monster-idle {
@@ -2472,7 +2480,7 @@
     <script>if (location.protocol === 'file:') document.write('<script src="js/hero-art.js?v=20261118t"><\/script>');</script>
     <script src="js/hero-body.js?v=20261121lz"></script>
     <script src="js/slowmo.js?v=20261123a"></script>
-    <script src="js/boss-intro.js?v=20261123b"></script>
+    <script src="js/boss-intro.js?v=20261123hp"></script>
     <script src="js/combat.js?v=20261123bi"></script>
     <script src="js/crit-fx.js?v=20261123bi"></script>
     <script src="js/landscape.js?v=20261122a"></script>
