@@ -3321,7 +3321,7 @@ function buyDiamondItem(itemId) {
         openBoxNow(item.boxType, item.name); // opens at once, nothing goes to the bag
     } else if (item.type === 'costume') {
         const tpl = COSTUME_BOX_POOL.find(c => c.costumeId === item.costumeId);
-        if (tpl) addItemToInventory({ ...tpl, qty: 1, rarity: 1 }); // the costume goes into the bag
+        if (tpl) addItemToInventory({ ...tpl, qty: 1, rarity: boxRarityOf(tpl) }); // the costume goes into the bag
         floatSuccessAt("Purchased!");
     } else if (item.type === 'chest') {
         openChest(item.chestType); // opens at once, nothing goes to the bag
@@ -6206,6 +6206,14 @@ function goldCellHTML(amount) {
 
 // Slots that hold no gear stats (pet and costume): no sell, salvage, refine or stat compare
 const NO_GEAR_SLOTS = ['pet', 'costume'];
+// Costumes and pets have a fixed rarity, the same every time they come out of a box or chest (or the costume shop)
+const BOX_RARITY_BY_NAME = {
+    'Wanderer Samurai Costume': 3, // rare
+    'Christmas Costume': 1,        // common
+    'Orange Stray Cat': 1,         // common
+    'Midnight Stray Cat': 2        // uncommon (every other costume and pet is uncommon too)
+};
+function boxRarityOf(tpl) { return BOX_RARITY_BY_NAME[tpl.name] ?? 2; }
 // Pet and costume boxes give rarity 1 or 2. Every 10th chest or box opened guarantees rarity 2.
 function boxRarityRoll() { return 1 + Math.floor(Math.random() * 2); }
 function takeChestOpenIsTenth() {
@@ -6266,13 +6274,15 @@ function openChest(chestType) {
     }
 
     if (cfg.costume && COSTUME_BOX_POOL.length) {
-        const costume = { ...pickWeighted(COSTUME_BOX_POOL), qty: 1, rarity: tenth ? 2 : boxRarityRoll() };
+        const costumeTpl = pickWeighted(COSTUME_BOX_POOL);
+        const costume = { ...costumeTpl, qty: 1, rarity: boxRarityOf(costumeTpl) };
         addItemToInventory(costume);
         rewardCells.push(rewardCellHTML(costume));
     }
 
     if (cfg.pet && PET_BOX_POOL.length) {
-        const pet = { ...pickWeighted(PET_BOX_POOL), qty: 1, rarity: tenth ? 2 : boxRarityRoll() };
+        const petTpl = pickWeighted(PET_BOX_POOL);
+        const pet = { ...petTpl, qty: 1, rarity: boxRarityOf(petTpl) };
         addItemToInventory(pet);
         rewardCells.push(rewardCellHTML(pet));
     }
@@ -7122,7 +7132,8 @@ function openBoxNow(boxType, title) {
     const pool = boxType === 'costume' ? COSTUME_BOX_POOL : PET_BOX_POOL;
     if (!pool.length) { floatFailAt('Costumes are coming soon'); return false; }
     const tenth = takeChestOpenIsTenth();
-    const reward = { ...pickWeighted(pool), qty: 1, rarity: tenth ? 2 : boxRarityRoll() };
+    const rewardTpl = pickWeighted(pool);
+    const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl) };
     if (countFreeCapacity(reward) < 1) { floatFailAt("Inventory is full!"); return false; }
     placeItemInInventory(reward);
     floatSuccessAt(`You got ${reward.name}!`);
@@ -7136,7 +7147,8 @@ function openBoxFromDetail(index) {
     const pool = item.boxType === 'costume' ? COSTUME_BOX_POOL : PET_BOX_POOL;
     if (!pool.length) { floatFailAt('Costumes are coming soon'); return; }
     const tenth = takeChestOpenIsTenth();
-    const reward = { ...pickWeighted(pool), qty: 1, rarity: tenth ? 2 : boxRarityRoll() };
+    const rewardTpl = pickWeighted(pool);
+    const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl) };
     // A box that is the last one frees its own slot; a stack needs room for the reward
     if ((item.qty || 1) > 1 && countFreeCapacity(reward) < 1) { floatFailAt("Inventory is full!"); return; }
     closeInvDetail();
