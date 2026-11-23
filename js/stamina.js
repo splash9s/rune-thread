@@ -158,14 +158,19 @@ function staminaPillHTML(s) {
     return `${STAMINA_BOLT_SVG}<span class="stamina-val">${s.value}/${STAMINA.max}</span>${s.value < STAMINA.max ? `<span class="stamina-next">${staminaClock(ms)}</span>` : ''}`;
 }
 function staminaEnsurePills() {
-    document.querySelectorAll('.town-money').forEach(box => {
-        if (box.querySelector('.stamina-pill')) return;
+    // Its own row just above gold and diamonds (under the Class EXP bar), styled like those pills
+    document.querySelectorAll('.town-money:not(.town-stamina)').forEach(box => {
+        const prev = box.previousElementSibling;
+        if (prev && prev.classList.contains('town-stamina')) return;
+        const row = document.createElement('div');
+        row.className = 'town-money town-stamina';
         const p = document.createElement('div');
         p.className = 'stamina-pill';
         p.title = staminaT('title');
         p.style.cursor = 'pointer';
         p.onclick = staminaOpen;
-        box.appendChild(p);
+        row.appendChild(p);
+        box.parentElement.insertBefore(row, box);
     });
     const panel = document.querySelector('#campaign-panel .expo-inner');
     if (panel && !panel.querySelector('.stamina-pill')) {
@@ -194,7 +199,6 @@ function staminaRender() {
     const st = document.createElement('style');
     st.textContent = `.stamina-ico { width: 22px; height: 22px; display: block; flex: none; }
 .ts-inner .town-money .stamina-ico { width: 34px; height: 34px; }
-.town-money > .stamina-pill { position: absolute; left: calc(100% + 10px); bottom: 0; }
 .stamina-ico-lg { width: 40px !important; height: 40px !important; }
 .stamina-pill .stamina-val { color: #ffd23a; }
 .stamina-pill .stamina-next { font-size: .7em; color: #cbd5e1; font-weight: 700; }

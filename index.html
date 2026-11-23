@@ -401,6 +401,11 @@
         .town-panel .town-exp .bar { height: 12px; }
         .town-panel .town-money { position: static; margin-top: auto; gap: 12px; }
         .town-panel .town-money > div { padding: 8px 16px; font-size: 26px; border-radius: 12px; }
+        /* Level lines carry their EXP numbers on the right (the "Base EXP" / "Class EXP" labels are gone) */
+        .town-panel .town-lv { display: flex; justify-content: space-between; align-items: baseline; }
+        .town-panel .town-lv .lv-exp { font-family: monospace; font-size: 20px; color: #bfae85; }
+        /* Stamina sits on its own row under the Class EXP bar (js/stamina.js), gold and diamonds stay at the bottom */
+        .town-panel .town-money.town-stamina { margin-top: 10px; }
         .ts-inner .town-money .town-ico { width: 40px; height: 40px; }
         .town-info > * { pointer-events: auto; }
         .town-top { display: flex; gap: 10px; align-items: flex-start; }
@@ -1477,15 +1482,13 @@
                             </div>
                             <div class="town-id">
                                 <h1 class="town-name"><span id="header-player-name">Hero</span><span id="header-vip-badge" class="hidden text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-600/30 border border-purple-400/50 text-purple-200"></span></h1>
-                                <div class="town-lv"><span data-i18n="town.baselv">Base Lv.</span> <strong id="header-base-lv">1</strong></div>
+                                <div class="town-lv"><span><span data-i18n="town.baselv">Base Lv.</span> <strong id="header-base-lv">1</strong></span><span class="lv-exp" id="top-base-exp-text">0 / 50 (0%)</span></div>
                                 <div class="town-exp">
                                     <div class="bar"><div id="top-base-exp-bar" class="fill" style="width: 0%; background:#e0a526"></div></div>
-                                    <div class="row"><span data-i18n="town.baseexp">Base EXP</span><span id="top-base-exp-text">0 / 50 (0%)</span></div>
                                 </div>
-                                <div class="town-lv"><span data-i18n="town.classlv">Class Lv.</span> <strong id="header-job-lv">1</strong></div>
+                                <div class="town-lv"><span><span data-i18n="town.classlv">Class Lv.</span> <strong id="header-job-lv">1</strong></span><span class="lv-exp" id="top-job-exp-text">0 / 40 (0%)</span></div>
                                 <div class="town-exp">
                                     <div class="bar"><div id="top-job-exp-bar" class="fill" style="width: 0%; background:#a06bd6"></div></div>
-                                    <div class="row"><span data-i18n="town.classexp">Class EXP</span><span id="top-job-exp-text">0 / 40 (0%)</span></div>
                                 </div>
                                 <div class="town-money">
                                     <div id="town-gold-pill" onclick="switchView('shop')" style="cursor:pointer;"><img src="assets/icons/goldiconsmall_q85.webp" alt="" class="town-ico"><span id="town-gold">1000 Gold</span></div>
@@ -2354,15 +2357,13 @@
                                         <div id="combat-avatar-c" class="town-avatar"><img loading="lazy" src="assets/avatars/slime_q85.webp" alt="" /></div>
                                         <div class="town-id">
                                             <h1 class="town-name"><span id="header-player-name-c">Hero</span><span id="header-vip-badge-c" class="hidden text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-600/30 border border-purple-400/50 text-purple-200"></span></h1>
-                                            <div class="town-lv">Base Lv. <strong id="header-base-lv-c">1</strong></div>
+                                            <div class="town-lv"><span>Base Lv. <strong id="header-base-lv-c">1</strong></span><span class="lv-exp" id="top-base-exp-text-c">0 / 50 (0%)</span></div>
                                             <div class="town-exp">
                                                 <div class="bar"><div id="top-base-exp-bar-c" class="fill" style="width: 0%; background:#e0a526"></div></div>
-                                                <div class="row"><span>Base EXP</span><span id="top-base-exp-text-c">0 / 50 (0%)</span></div>
                                             </div>
-                                            <div class="town-lv">Class Lv. <strong id="header-job-lv-c">1</strong></div>
+                                            <div class="town-lv"><span>Class Lv. <strong id="header-job-lv-c">1</strong></span><span class="lv-exp" id="top-job-exp-text-c">0 / 40 (0%)</span></div>
                                             <div class="town-exp">
                                                 <div class="bar"><div id="top-job-exp-bar-c" class="fill" style="width: 0%; background:#a06bd6"></div></div>
-                                                <div class="row"><span>Class EXP</span><span id="top-job-exp-text-c">0 / 40 (0%)</span></div>
                                             </div>
                                             <div class="town-money">
                                                 <div><img loading="lazy" src="assets/icons/goldiconsmall_q85.webp" alt="" class="town-ico"><span id="town-gold-c">1000 Gold</span></div>
@@ -2499,7 +2500,7 @@
     <script src="js/level-roll.js?v=20261123fx2"></script>
     <script src="js/avatar-unlock.js?v=20261123au"></script>
     <script src="js/pet-alert.js?v=20261123pa"></script>
-    <script src="js/stamina.js?v=20261123st"></script>
+    <script src="js/stamina.js?v=20261124sr"></script>
     <script src="js/touch-lock.js?v=20261124nc"></script>
     <script src="js/combat.js?v=20261123td"></script>
     <script src="js/crit-fx.js?v=20261123bi"></script>
