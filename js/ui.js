@@ -4546,7 +4546,7 @@ function iconActionButtons(item, isEquip, canSell, salvageCall, sellCall) {
     const sellImg = `<img class="cb-normal" src="assets/cha/page/btn_sellall_q85.webp" alt=""><img class="cb-press" src="assets/cha/page/btn_sellallpress_q85.webp" alt="">`;
     if (isEquip && !item.favorite && (!NO_GEAR_SLOTS.includes(item.slot) || (salvageCall && salvageCall.indexOf('salvage') >= 0))) {
         const rw = salvageRewardOf(item);
-        const short = rw.tpl === SCRAP_ITEM ? `+${rw.qty} Scrap` : `+1 ${rw.tpl.name.replace(' Ticket', '')}`;
+        const short = rw.tpl === SCRAP_ITEM ? `+${rw.qty} Scrap` : `+1 ${rw.tpl.name}`; // full name: "+1 Costume Ticket" / "+1 Pet Ticket"
         out.push(`<span style="display:inline-flex; flex-direction:column; align-items:center; gap:2px;"><button onclick="${salvageCall}" class="inv-icon-btn" title="Salvage for ${salvageRewardText(item)}" aria-label="Salvage for ${salvageRewardText(item)}">${salvageImg}</button><span style="font-size:10px; font-weight:700; color:#fde68a; white-space:nowrap;">${short}</span></span>`);
     }
     if (canSell && !item.favorite) out.push(`<button onclick="${sellCall}" class="inv-icon-btn" title="Sell for ${getSellPrice(item)} Gold" aria-label="Sell">${sellImg}</button>`);
