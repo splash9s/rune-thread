@@ -31,7 +31,8 @@ function audioSettings() {
     return player.audio;
 }
 function musicVolumeNow() { const a = audioSettings(); return a.musicOn ? a.musicVol / 100 : 0; }
-function trackVolumeNow() { return musicVolumeNow() * (MUSIC_GAIN[musicTrack] ?? 1); }
+const MUSIC_MASTER = 0.7; // all background music 30% quieter
+function trackVolumeNow() { return musicVolumeNow() * MUSIC_MASTER * (MUSIC_GAIN[musicTrack] ?? 1); }
 function sfxVolumeNow() { const a = audioSettings(); return a.sfxOn ? a.sfxVol / 100 : 0; }
 
 function getMusicEl() {
