@@ -596,6 +596,7 @@ function loadGame() {
             const parsed = JSON.parse(savedData);
             player = Object.assign(player, parsed);
             if (typeof levelRollResync === 'function') levelRollResync(); // a loaded save is not a level-up (js/level-roll.js)
+            if (typeof avatarUnlockResync === 'function') avatarUnlockResync(!Array.isArray(parsed.avatarsSeen)); // avatars already earned give no popup (js/avatar-unlock.js)
             migrateSkills();
             migrateGear();
             if (typeof baseExpNeed === 'function') player.baseMaxExp = baseExpNeed(player.baseLv || 1);
