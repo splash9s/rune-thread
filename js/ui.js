@@ -1110,7 +1110,7 @@ function alignTorso(f, ref) {
 }
 // The frame of an attack: attack (wind-up), then attack02; critical (wind-up), then critical02
 function combatAttackFrame(attack, elapsed) {
-    const second = elapsed >= COMBAT_PLAYER_WINDUP_MS;
+    const second = elapsed >= (attack.windup || COMBAT_PLAYER_WINDUP_MS);
     const P = combatPose();
     const first = attack.crit ? combatCriFrame(attack) : P.ATTACK;
     if (!second) return first;
@@ -1124,7 +1124,14 @@ function combatDeadFrame() {
 function playPlayerAttackAnim(isCrit) {
     const cri = combatPose().CRI;
     const criCount = Array.isArray(cri) ? cri.length : 1;
-    combatPlayerAttack = { at: Date.now(), crit: !!isCrit, criIdx: Math.floor(Math.random() * criCount) };
+    // Fast attacks (high ASPD, 1.5x / 2x speed) can come sooner than the full animation. Then the whole attack is
+    // shortened to fit before the next one, and the wind-up takes only a third of it, so attack02 / critical02
+    // (the strike) is always seen instead of being cut off by the next attack.
+    const full = isCrit ? COMBAT_PLAYER_CRIT_MS : COMBAT_PLAYER_ATTACK_MS;
+    const gap = (typeof combatPlayerIntervalMs !== 'undefined' && combatPlayerIntervalMs > 0) ? combatPlayerIntervalMs - 20 : full;
+    const dur = Math.max(150, Math.min(full, gap));
+    const windup = Math.min(COMBAT_PLAYER_WINDUP_MS, Math.round(dur / 3));
+    combatPlayerAttack = { at: Date.now(), crit: !!isCrit, criIdx: Math.floor(Math.random() * criCount), dur, windup };
     const el = document.getElementById('combat-player-sprite');
     if (!el) return;
     el.dataset.lungeAt = String(combatPlayerAttack.at);
@@ -1332,9 +1339,10 @@ function playPlayerLunge(el, dx) {
 // Attack movement: draw back during the wind-up, then lunge forward on the strike and return by the end
 function playPlayerAttackLunge(el, crit) {
     if (!el || !el.animate) return;
-    const T = crit ? COMBAT_PLAYER_CRIT_MS : COMBAT_PLAYER_ATTACK_MS;
-    const w = COMBAT_PLAYER_WINDUP_MS / T;
-    const peak = (COMBAT_PLAYER_WINDUP_MS + 90) / T; // the strike reaches its furthest point 90 ms after the wind-up
+    const T = combatPlayerAttack.dur || (crit ? COMBAT_PLAYER_CRIT_MS : COMBAT_PLAYER_ATTACK_MS);
+    const W = combatPlayerAttack.windup || COMBAT_PLAYER_WINDUP_MS;
+    const w = W / T;
+    const peak = Math.min(0.9, (W + 90) / T); // the strike reaches its furthest point 90 ms after the wind-up
     const frames = [
         { transform: 'translateX(0px)', offset: 0, easing: 'ease-out' },
         { transform: `translateX(${COMBAT_PLAYER_WINDUP_PX}px)`, offset: w, easing: 'ease-out' },
@@ -1440,7 +1448,7 @@ setInterval(() => {
                 return;
             }
             const ae = now - combatPlayerAttack.at;
-            if (combatPlayerAttack.at && ae >= 0 && ae < (combatPlayerAttack.crit ? COMBAT_PLAYER_CRIT_MS : COMBAT_PLAYER_ATTACK_MS)) {
+            if (combatPlayerAttack.at && ae >= 0 && ae < (combatPlayerAttack.dur || (combatPlayerAttack.crit ? COMBAT_PLAYER_CRIT_MS : COMBAT_PLAYER_ATTACK_MS))) {
                 // Attack: the attack pose plays and the sprite lunges forward once per attack
                 if (img.dataset.lungeAt !== String(combatPlayerAttack.at)) {
                     img.dataset.lungeAt = String(combatPlayerAttack.at);
@@ -6736,11 +6744,13 @@ function updateUI() {
             if (m._prevHp !== undefined && m.hp < m._prevHp) {
                 m._hitAt = Date.now();
                 m._flashAt = m._hitAt; // red hit flash (CSS) has its own timestamp
-                const dmgNum = m._prevHp - m.hp, dmgCrit = !!m.lastHitCrit;
+                // Bolt damage is shown by the bolts themselves (js/bolt-fx.js), so the hit number is only the rest
+                const dmgNum = Math.max(0, m._prevHp - m.hp - (m._boltDmg || 0)), dmgCrit = !!m.lastHitCrit;
+                m._boltDmg = 0;
                 const dmgElem = m.lastHitElem && ELEMENTS[m.lastHitElem] ? m.lastHitElem : null;
                 m.lastHitCrit = false;
                 m.lastHitElem = null;
-                setTimeout(() => showCombatNumber(`#monsters-lineup-container > div:nth-child(${idx + 1}) img`, dmgNum, dmgCrit, dmgElem), 0);
+                if (dmgNum > 0) setTimeout(() => showCombatNumber(`#monsters-lineup-container > div:nth-child(${idx + 1}) img`, dmgNum, dmgCrit, dmgElem), 0);
                 if (m.hp <= 0) {
                     m._deathAt = Date.now();
                     playSfx(isSlime(m) ? SFX.slimeDead : (monsterSfxOf(m) && monsterSfxOf(m).dead) || SFX.monsterDeath);

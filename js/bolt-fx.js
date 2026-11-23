@@ -49,7 +49,9 @@ const BOLT_FX = {
     tipY: 0.94,         // ...and height: the tip is what lands on the centre
     dmgRise: 40,        // a bolt's damage number starts this far above the monster's centre
     dmgSpreadX: 45,     // ...and this far left (1st, 3rd bolt) or right (2nd, 4th bolt)
-    dmgStepY: 38        // each later bolt's number starts this much higher
+    dmgStepY: 38,       // each later bolt's number starts this much higher
+    totalDelayMs: 150,  // the cast's total appears this long after its last bolt lands
+    totalGap: 30        // ...this far above the highest bolt number
 };
 
 // Gap between two casts that proc on the same hit, so they play one after another (about one cast's length)
@@ -83,6 +85,22 @@ function playBoltFx(element, selector, count, delayMs = 0, damages = [], place =
         const dmg = damages[i];
         setTimeout(() => dropOneBolt(inner, art, cx + jx, cy + jy, dmg, elem, i, cx, cy), delayMs + i * BOLT_FX.staggerMs);
     }
+    // The cast's total, after its last bolt has exploded, above the bolts' own numbers
+    const n = Math.max(1, count || 1);
+    const sum = damages.slice(0, n).reduce((a, d) => a + (Number(d) || 0), 0);
+    if (n > 1 && sum > 0) {
+        setTimeout(() => showBoltTotal(inner, cx, cy, sum, elem, n), delayMs + (n - 1) * BOLT_FX.staggerMs + BOLT_FX.fallMs + BOLT_FX.totalDelayMs);
+    }
+}
+// The total of one cast: bigger, in the element's colour, above the stack of bolt numbers
+function showBoltTotal(inner, x, y, sum, elem, n) {
+    const d = document.createElement('div');
+    d.className = `combat-dmg bolt bolt-total elem-${elem}`;
+    d.textContent = sum;
+    d.style.left = x + 'px';
+    d.style.top = (y - BOLT_FX.dmgRise - n * BOLT_FX.dmgStepY - BOLT_FX.totalGap) + 'px';
+    inner.appendChild(d);
+    setTimeout(() => d.remove(), 1300);
 }
 
 // One bolt: falls from the top right so that its tip lands on (x, y), then explodes there

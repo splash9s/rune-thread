@@ -1896,11 +1896,13 @@ function battleSpeedShown() {
 function combatSpeedMult() { return BATTLE_SPEED_REAL[battleSpeedShown()]; }
 // Starts the player's attack timer (ASPD) and the monsters' timer; stopCombatTimers clears both
 let combatTimerDerived = null;
+let combatPlayerIntervalMs = 0; // time between the hero's attacks (the attack animation is fitted into it)
 function startCombatTimers(derived) {
     stopCombatTimers();
     combatTimerDerived = derived;
     const speed = combatSpeedMult(); // VIP battle turns run faster (the stage walk is already skipped for VIP)
-    combatInterval = setInterval(runCombatTick, Math.max(400, 2000 - (derived.aspd * 10)) / speed);
+    combatPlayerIntervalMs = Math.max(400, 2000 - (derived.aspd * 10)) / speed;
+    combatInterval = setInterval(runCombatTick, combatPlayerIntervalMs);
     monsterInterval = setInterval(monsterTurnTick, COMBAT_MONSTER_MS / speed);
 }
 // The speed button: 1x -> 1.5x (-> 2x for VIP) -> 1x. Switching during a battle restarts the timers at the new speed.
@@ -2117,6 +2119,7 @@ function runCombatTick() {
                     if (targetEnemy.hp <= 0) break;
                     const bolt = Math.max(1, Math.floor(derived.matk * BOLT_MATK_RATIO * getElementMultiplier(BOLT_ELEMENT[id], targetEnemy.element) * (1 + skillBonus('boltDmgPct') / 100))); // Arcane: Bolt damage nodes
                     targetEnemy.hp -= bolt;
+                    targetEnemy._boltDmg = (targetEnemy._boltDmg || 0) + bolt; // bolts show their own numbers, so the hit number leaves them out
                     landed++;
                     boltDmgs.push(bolt);
                     logMessage(`[Bolt] ${ELEMENTS[BOLT_ELEMENT[id]].name} Bolt hits ${targetEnemy.name} for ${bolt} damage`, 'drop');
