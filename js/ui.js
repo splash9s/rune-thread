@@ -1534,8 +1534,10 @@ setInterval(() => {
     const psp = document.getElementById('combat-player-sprite');
     if (pfx && psp) {
         const stunned = Date.now() < playerStunUntil;
-        pfx.style.display = stunned ? '' : 'none';
-        if (stunned) {
+        // Only over the hero once it has a real place on the stage: never at the page's top-left corner
+        const placed = psp.style.left !== '' && psp.style.top !== '' && psp.getClientRects().length > 0;
+        pfx.style.display = stunned && placed ? '' : 'none';
+        if (stunned && placed) {
             const fw = 102, fh = 78;
             const sl = parseFloat(psp.style.left) || 0, st = parseFloat(psp.style.top) || 0, sw = parseFloat(psp.style.width) || 95;
             const shake = Math.round(Math.sin(now / 50) * 4);
