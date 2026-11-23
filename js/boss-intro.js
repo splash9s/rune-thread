@@ -106,8 +106,9 @@ const biClamp = x => Math.max(0, Math.min(1, x));
 
 // ---------- the intro ----------
 let bossIntroRun = null;
-// True while the name card is on screen: combat turns wait for it (js/combat.js)
-function bossIntroRunning() { return !!bossIntroRun; }
+// True while the name card is on screen: combat turns wait for it (js/combat.js).
+// The fight holds only until the card has slid out (freeAt); the bars and HP fill keep playing after that.
+function bossIntroRunning() { return !!bossIntroRun && performance.now() < bossIntroRun.freeAt; }
 
 function playBossIntro(boss) {
     cancelBossIntro(); // a new intro never stacks on an old one
@@ -141,10 +142,6 @@ function playBossIntro(boss) {
         .map(id => document.getElementById(id)).filter(Boolean);
     const hero = document.getElementById('combat-player-sprite');
 
-    const run = { start: performance.now(), raf: 0, trauma: 0, slamAt: null, dust: [], root, lineup, world, hero, thumped: false, flashed: false, musicDipped: false };
-    bossIntroRun = run;
-    musicDip(true);
-
     const slamTick = C.squashStart + C.squashTicks + C.hopTicks + C.fallTicks;
     const nameStart = slamTick + C.nameDelayTicks;
     const ruleStart = nameStart + C.nameInTicks;
@@ -152,6 +149,13 @@ function playBossIntro(boss) {
     const B = C.hpBar;
     const barStart = slamTick + B.delayTicks, barFull = barStart + B.fillTicks;
     const endTick = Math.max(holdEnd + C.outTicks, barFull + Math.max(B.glossTicks, B.sparkleTicks) + B.fadeTicks);
+    const start = performance.now();
+    // The fight waits for the card to slide out, with an 8 s cap so a stalled frame can never lock combat
+    const freeAt = start + Math.min((holdEnd + C.outTicks) * BI_TICK, 8000);
+
+    const run = { start, freeAt, raf: 0, trauma: 0, slamAt: null, dust: [], root, lineup, world, hero, thumped: false, flashed: false, musicDipped: false };
+    bossIntroRun = run;
+    musicDip(true);
     const hp = setupHpBar(run, root, idx);
     let lastNow = run.start;
 

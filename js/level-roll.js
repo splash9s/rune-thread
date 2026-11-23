@@ -1,6 +1,5 @@
 // ==========================================
-// XP AND LEVEL HUD: GOLD ORB AND LEVEL NUMBER FLIP (game juice, presentation only)
-// Base XP gained: a gold orb arcs from the hero card into the base EXP bar.
+// LEVEL HUD: LEVEL NUMBER FLIP (game juice, presentation only)
 // Base level up: the level number rolls in its badge (old number slides up and out, the new one rises from below
 // with easeOutBack), a gold ring grows from the badge, 10 sparks burst, a chime plays and a small LEVEL UP label shows.
 //
@@ -11,14 +10,12 @@
 // ==========================================
 const LEVEL_ROLL = {
     px: 4,
-    orb: { sizePx: 28, ticks: 24, arcPx: 60, colour: '#ffd45e', glow: 'rgba(255,212,94,.7)' },
     rollTicks: 12, rollPx: 14,           // number rises from this far below, easeOutBack
     ring: { fromPx: 4, toPx: 20, ticks: 18, colour: '#ffd45e' },
     sparks: 10, sparkPx: 22, sparkTicks: 18,
     label: { text: 'LEVEL UP', ticks: 60, fadeTicks: 12, offsetY: 36 },
     chime: { hz: [1046.5, 1568, 2093], sec: 0.5, gain: 0.2, stepSec: 0.07 },
-    pollMs: 100,
-    orbMinXp: 20           // only a gain of at least this much XP shows the orb; small gains show nothing
+    pollMs: 100
 };
 
 const levelRollState = { lastBaseLv: null, lastBaseExp: null, lastJobLv: null, polled: 0, last: 0, bound: false };
@@ -26,7 +23,6 @@ const levelRollState = { lastBaseLv: null, lastBaseExp: null, lastJobLv: null, p
 function levelRollIntensity() { return typeof juiceIntensity === 'function' ? juiceIntensity() : 1; }
 function levelRollReduce() { return typeof juiceReduceMotion === 'function' && juiceReduceMotion(); }
 const lrEaseOutBack = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
-const lrEaseInOut = x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
 const lrClamp = x => Math.max(0, Math.min(1, x));
 const lrMs = t => t * 1000 / 60;
 
@@ -34,46 +30,6 @@ const lrMs = t => t * 1000 / 60;
 function levelRollTargets() {
     return ['header-base-lv', 'header-base-lv-c'].map(id => document.getElementById(id))
         .filter(el => el && el.getClientRects().length > 0);
-}
-
-// The EXP bar of the base level (town or combat)
-function levelRollBar() {
-    return ['top-base-exp-bar', 'top-base-exp-bar-c'].map(id => document.getElementById(id))
-        .find(el => el && el.getClientRects().length > 0) || null;
-}
-function levelRollCard(bar) {
-    const el = bar ? bar.closest('.town-lv') || bar.parentElement : null;
-    return el ? el.getBoundingClientRect() : null;
-}
-
-// Gold orb: arcs from the hero card to the end of the base EXP bar
-function levelRollOrb() {
-    const bar = levelRollBar();
-    if (!bar) return;
-    const from = levelRollCard(bar);
-    const to = bar.getBoundingClientRect();
-    if (!from || !to.width) return;
-    const C = LEVEL_ROLL, I = levelRollIntensity(), RM = levelRollReduce();
-    const x0 = from.left + from.width / 2, y0 = from.top + from.height / 2;
-    const x1 = to.right, y1 = to.top + to.height / 2;
-    const orb = document.createElement('div');
-    orb.setAttribute('aria-hidden', 'true');
-    const s = C.orb.sizePx;
-    orb.style.cssText = `position:fixed; left:0; top:0; width:${s}px; height:${s}px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #fff6cf 0%, ${C.orb.colour} 45%, #a86b00 100%); box-shadow:0 0 12px ${C.orb.glow}; pointer-events:none; z-index:9600; margin:${-s / 2}px 0 0 ${-s / 2}px;`;
-    document.body.appendChild(orb);
-    const start = performance.now();
-    const step = now => {
-        const p = lrClamp((now - start) / lrMs(C.orb.ticks));
-        const e = lrEaseInOut(p);
-        const x = x0 + (x1 - x0) * e;
-        const arc = RM ? 0 : -C.orb.arcPx * I * Math.sin(Math.PI * p);
-        const y = y0 + (y1 - y0) * e + arc;
-        orb.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
-        orb.style.opacity = RM ? String((Math.sin(Math.PI * p)).toFixed(3)) : (p > 0.9 ? String(((1 - p) / 0.1).toFixed(3)) : '1');
-        if (p < 1) requestAnimationFrame(step);
-        else orb.remove();
-    };
-    requestAnimationFrame(step);
 }
 
 // The level number rolls: the old one slides up and out, the new one rises from below
@@ -174,9 +130,6 @@ function levelRollPoll(now) {
         const oldLv = S.lastBaseLv;
         S.lastBaseLv = lv;
         levelRollTargets().forEach(el => levelRollNumber(el, String(oldLv), String(lv)));
-    } else if (xp - S.lastBaseExp >= LEVEL_ROLL.orbMinXp && levelRollIntensity() > 0 && now - (S.orbAt || 0) > 400) {
-        S.orbAt = now; // many small kills: at most one orb every 400 ms
-        levelRollOrb();
     }
     S.lastBaseExp = xp;
 }
