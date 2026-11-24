@@ -223,10 +223,19 @@ function skillBonus(effect) {
     return total;
 }
 
-// Base stats plus the flat stats from taken nodes; the derived-stat formulas use these
+// Flat +all-stat bonus from the worn costume, by its rarity (common +1, uncommon +2, rare +4). Off in Daily Challenge.
+const COSTUME_ALL_STAT = { 1: 1, 2: 2, 3: 4 };
+function costumeAllStat() {
+    if (typeof currentMode !== 'undefined' && currentMode === 'daily') return 0;
+    const c = player.equipped && player.equipped.costume;
+    return c ? (COSTUME_ALL_STAT[c.rarity] || 0) : 0;
+}
+
+// Base stats plus the flat stats from taken nodes and the worn costume; the derived-stat formulas use these
 function heroStatsWithSkills() {
     const st = { ...player.stats };
-    ['str', 'agi', 'vit', 'int', 'dex', 'luk'].forEach(k => { st[k] = (st[k] || 0) + skillBonus(k); });
+    const costume = costumeAllStat();
+    ['str', 'agi', 'vit', 'int', 'dex', 'luk'].forEach(k => { st[k] = (st[k] || 0) + skillBonus(k) + costume; });
     return st;
 }
 

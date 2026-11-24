@@ -6719,7 +6719,7 @@ function updateUI() {
     ['str', 'agi', 'vit', 'int', 'dex', 'luk'].forEach(s => {
         let statEl = document.getElementById(`stat-${s}`);
         const pend = pendingAlloc.stats[s] || 0;
-        const fromSkill = skillBonus(s); // flat stats from skill nodes
+        const fromSkill = skillBonus(s) + costumeAllStat(); // flat stats from skill nodes and the worn costume
         if (statEl) statEl.innerText = `${player.stats[s]}${fromSkill ? ` +${fromSkill}` : ''}${pend ? ` (+${pend})` : ''}`;
     });
     renderPendingBars();
