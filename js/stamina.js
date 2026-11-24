@@ -112,14 +112,15 @@ function staminaRefillAd() {
     if (staminaRefillsLeft() <= 0) { if (typeof floatFailAt === 'function') floatFailAt(staminaT('noRefills')); return; }
     staminaAdLeft = STAMINA.adSeconds;
     staminaRender();
-    staminaAdTimer = setInterval(() => {
+    staminaAdTimer = playRewardedAd('stamina-refill', STAMINA.adSeconds, (left, stop) => {
         // The window was closed during the ad: stop without a refill
-        if (!document.getElementById('stamina-modal')) { clearInterval(staminaAdTimer); staminaAdTimer = null; return; }
-        staminaAdLeft--;
-        if (staminaAdLeft > 0) { staminaRender(); return; }
-        clearInterval(staminaAdTimer); staminaAdTimer = null;
+        if (!document.getElementById('stamina-modal')) { stop(); staminaAdTimer = null; return; }
+        staminaAdLeft = left;
+        staminaRender();
+    }, () => {
+        staminaAdTimer = null;
         staminaAddRefill();
-    }, 1000);
+    });
 }
 
 const STAMINA_BOLT_SVG = '<svg viewBox="0 0 24 24" class="stamina-ico" aria-hidden="true"><path d="M13.5 1 4 13.5h6.5L9 23l10-13h-6.8z" fill="#ffd23a" stroke="#5a3a00" stroke-width="1.6" stroke-linejoin="round"/></svg>';
@@ -127,7 +128,7 @@ const STAMINA_BOLT_SVG = '<svg viewBox="0 0 24 24" class="stamina-ico" aria-hidd
 // The refill window (in the game's modal)
 function staminaOpen() {
     if (typeof showModal !== 'function') return;
-    showModal(staminaT('title'), '', '<div id="stamina-modal"></div>' + (typeof adSlotHTML === 'function' ? adSlotHTML('stamina-refill', 300, 60) : ''));
+    showModal(staminaT('title'), '', '<div id="stamina-modal"></div>');
     staminaRender();
 }
 
