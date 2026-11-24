@@ -2510,7 +2510,7 @@ function freeDiamondCardHTML() {
     const overlay = claimed ? '<span style="position:absolute; left:50%; bottom:14px; transform:translateX(-50%); color:#4ade80; font-weight:bold; font-size:16px; background:rgba(0,0,0,.6); padding:4px 14px; border-radius:8px; white-space:nowrap;">Claimed</span>' : '';
     const click = claimed ? '' : ` onclick="watchDiamondAd()" title="Watch an ad to claim 10 diamonds"`;
     const cursor = claimed ? '' : 'cursor:pointer; ';
-    return `<div id="free-diamond-card" class="vip-pack"${click} style="${cursor}position:relative; margin-right:12px;"><img src="assets/diamond/free/free_diamond_ad_q85.webp" alt="Free 10 Diamond - Watch Ad" style="height:540px; width:auto; display:block; border-radius:14px;">${overlay}${alert}</div>`;
+    return `<div id="free-diamond-card" class="vip-pack"${click} style="${cursor}position:relative; margin-right:12px;"><img src="assets/diamond/free/free_diamond_ad_q85.webp" alt="Free 10 Diamond - Watch Ad" style="height:540px; width:auto; display:block; border-radius:14px;">${typeof adSlotHTML === 'function' ? adSlotHTML('free-diamond', 240, 60, 'position:absolute; left:50%; top:14px; transform:translateX(-50%); margin:0;') : ''}${overlay}${alert}</div>`;
 }
 // Watch an ad for the free 20 diamonds: placeholder 5 second countdown on the card, then the claim (no real ad SDK yet)
 const DIAMOND_AD_SECONDS = 5;

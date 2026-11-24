@@ -127,7 +127,7 @@ const STAMINA_BOLT_SVG = '<svg viewBox="0 0 24 24" class="stamina-ico" aria-hidd
 // The refill window (in the game's modal)
 function staminaOpen() {
     if (typeof showModal !== 'function') return;
-    showModal(staminaT('title'), '', '<div id="stamina-modal"></div>');
+    showModal(staminaT('title'), '', '<div id="stamina-modal"></div>' + (typeof adSlotHTML === 'function' ? adSlotHTML('stamina-refill', 300, 60) : ''));
     staminaRender();
 }
 

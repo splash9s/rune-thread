@@ -538,7 +538,7 @@ function showRuneChoices(isNew) {
     const refreshLabel = runeRefreshUsed === 0 ? '↻ Refresh (free)'
         : adRefresh ? '▶ Watch ad to refresh'
         : `↻ Refresh · <img src="assets/icons/diamondiconsmall_q85.webp" alt="" style="width:14px;height:14px;display:inline-block;vertical-align:-2px"> ${refreshCost}`;
-    html += `<button id="rune-refresh-btn" onclick="refreshRuneChoices()" ${canRefresh ? '' : 'disabled'} class="mx-auto w-72 py-2 border border-slate-700 rounded-xl text-xs font-bold ${canRefresh ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer' : 'bg-slate-900 text-slate-600 cursor-not-allowed'} transition">${refreshLabel}</button>`;
+    html += `<button id="rune-refresh-btn" onclick="refreshRuneChoices()" ${canRefresh ? '' : 'disabled'} class="mx-auto w-72 py-2 border border-slate-700 rounded-xl text-xs font-bold ${canRefresh ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer' : 'bg-slate-900 text-slate-600 cursor-not-allowed'} transition">${refreshLabel}</button>` + (typeof adSlotHTML === 'function' ? adSlotHTML('rune-refresh', 300, 50) : '');
     // Edge tab on the right side of the window: opens the list of runes acquired
     html += `<button id="rune-acq-tab" onclick="toggleRuneAcquired(true)">Runes (${acquired.length})</button>`;
     // Slide-out list of acquired runes, overlaying the pick window
