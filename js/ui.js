@@ -4769,6 +4769,12 @@ function ddStatRows(stats) {
     if (!stats || !Object.keys(stats).length) return '';
     return Object.entries(stats).map(([k, v]) => `<span>${formatStatLine(k, v)}</span>`).join('');
 }
+// One line in a costume's detail: the flat all-stat bonus its rarity gives while worn
+function costumeAllStatRow(item) {
+    if (!item || item.slot !== 'costume') return '';
+    const n = COSTUME_ALL_STAT[item.rarity];
+    return n ? `<span class="text-slate-200">+${n} to all stats while worn</span>` : '';
+}
 function showItemDetail(index, refresh = false) {
     const item = player.inventory[index];
     if (!item) { closeInvDetail(); return; }
@@ -4800,7 +4806,7 @@ function showItemDetail(index, refresh = false) {
         source: itemSourceHTML(item),
         name: title,
         meta: `${kind} · ${rarity ? rarity.name : ''}${isEquip && item.slot !== 'pet' ? ` · Requires Lv ${item.levelReq || 1}` : ''}`,
-        stats: isPotion ? `<span>Restores ${potionHealText(item)} · Qty ${item.qty || 1}</span>` : (item.slot === 'pet' ? ddStatRows(item.stats) : ''),
+        stats: isPotion ? `<span>Restores ${potionHealText(item)} · Qty ${item.qty || 1}</span>` : (item.slot === 'pet' ? ddStatRows(item.stats) : costumeAllStatRow(item)),
         compare: isEquip && (!NO_GEAR_SLOTS.includes(item.slot) || item.slot === 'pet') ? compareHTML(item, equippedForCompare(item)) : '', // pets compare with the worn pet
         lore: !isEquip ? (item.lore || item.desc || '') : '',
         price: canSell ? `Sells for <b>${getSellPrice(item)} Gold</b>` : '',
@@ -4831,6 +4837,7 @@ function showEquippedDetail(slot, refresh = false) {
     if (item.element) extra.push(`<span class="dd-note">${elementDetailHTML(item.element)}</span>`);
     if (!isPotion && !NO_GEAR_SLOTS.includes(slot)) extra.push(`<div class="dd-stats">${buffsDetailHTML(item.buffs, item.debuffs)}</div>`);
     if (item.setName) extra.push(setInfoHTML(item.setName));
+    if (slot === 'costume' && costumeAllStatRow(item)) extra.push(`<div class="dd-stats">${costumeAllStatRow(item)}</div>`);
     const unequip = isPotion ? 'unequipPotionFromDetail()' : `unequipFromDetail('${slot}')`;
     const secondary = [];
     if (!isPotion && !NO_GEAR_SLOTS.includes(slot)) secondary.push(`<button onclick="toggleEquippedFavorite('${slot}')" class="dd-btn ghost">${item.favorite ? '★ Unlock' : '☆ Lock'}</button>`);
