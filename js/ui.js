@@ -4658,6 +4658,10 @@ function itemDetailBodyHTML(item) {
         body += `<div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800 flex flex-col gap-0.5">` +
             Object.entries(item.stats).map(([k, v]) => `<span class="text-slate-200">${formatStatLine(k, v)}</span>`).join('') + `</div>`;
     }
+    if (item.slot === 'costume' && COSTUME_ALL_STAT[item.rarity]) {
+        body += `<div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800 flex flex-col gap-0.5">
+            <span class="text-slate-200">+${COSTUME_ALL_STAT[item.rarity]} to all stats while worn</span></div>`;
+    }
     body += '</div>';
 
     return body;
