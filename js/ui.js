@@ -2476,7 +2476,7 @@ function renderArmoryFilterBar(slots, levels) {
 // ---------- DAILY FREE REWARDS (refresh every day) ----------
 const DAILY_FREE_ITEMS = {
     gold: { name: "Free 3000 Gold", desc: "Daily free gift. Refreshes every day.", reward: { gold: 3000 } },
-    diamond: { name: "Free 20 Diamond", desc: "Daily free gift. Refreshes every day.", reward: { diamonds: 20 } }
+    diamond: { name: "Free 10 Diamond", desc: "Daily free gift. Refreshes every day.", reward: { diamonds: 10 } }
 };
 
 function todayKey() {
@@ -2508,9 +2508,9 @@ function freeDiamondCardHTML() {
     const claimed = isDailyFreeClaimed('diamond');
     const alert = claimed ? '' : '<img id="alert-free-diamond" src="assets/page01/alert_q85.webp" alt="" style="position:absolute; right:-8px; top:-8px; width:30px; height:30px; pointer-events:none;">';
     const overlay = claimed ? '<span style="position:absolute; left:50%; bottom:14px; transform:translateX(-50%); color:#4ade80; font-weight:bold; font-size:16px; background:rgba(0,0,0,.6); padding:4px 14px; border-radius:8px; white-space:nowrap;">Claimed</span>' : '';
-    const click = claimed ? '' : ` onclick="watchDiamondAd()" title="Watch an ad to claim 20 diamonds"`;
+    const click = claimed ? '' : ` onclick="watchDiamondAd()" title="Watch an ad to claim 10 diamonds"`;
     const cursor = claimed ? '' : 'cursor:pointer; ';
-    return `<div id="free-diamond-card" class="vip-pack"${click} style="${cursor}position:relative; margin-right:12px;"><img src="assets/diamond/free/free_diamond_ad_q85.webp" alt="Free 20 Diamond - Watch Ad" style="height:540px; width:auto; display:block; border-radius:14px;">${overlay}${alert}</div>`;
+    return `<div id="free-diamond-card" class="vip-pack"${click} style="${cursor}position:relative; margin-right:12px;"><img src="assets/diamond/free/free_diamond_ad_q85.webp" alt="Free 10 Diamond - Watch Ad" style="height:540px; width:auto; display:block; border-radius:14px;">${overlay}${alert}</div>`;
 }
 // Watch an ad for the free 20 diamonds: placeholder 5 second countdown on the card, then the claim (no real ad SDK yet)
 const DIAMOND_AD_SECONDS = 5;
@@ -6245,8 +6245,8 @@ const CHEST_REWARDS = {
     // mats: chance (0-1) per chest to drop one refine material: 1 Ingot, 2 Bar, 3 Alloy (see REFINE_MATERIAL_ITEMS)
     // plank: chance per chest to drop Planks, and the quantity range
     copper: { potion: 'potion_minor', potionMin: 3, potionMax: 5, rarities: [2], items: 1, diamonds: 1, mats: { 1: 0.3 }, plank: { chance: 0.3, min: 1, max: 1 } },
-    silver: { potion: 'potion_med',   potionMin: 3, potionMax: 5, rarities: [3, 4], items: 1, diamonds: 10, mats: { 1: 0.3, 2: 0.1 }, plank: { chance: 0.4, min: 1, max: 2 } },
-    gold:   { potion: 'potion_large', potionMin: 3, potionMax: 5, rarities: [3, 4, 5], items: 2, diamonds: 50, mats: { 1: 0.3, 2: 0.15, 3: 0.05 }, plank: { chance: 0.5, min: 2, max: 3 } },
+    silver: { potion: 'potion_med',   potionMin: 3, potionMax: 5, rarities: [3, 4], items: 1, diamonds: 5,mats: { 1: 0.3, 2: 0.1 }, plank: { chance: 0.4, min: 1, max: 2 } },
+    gold:   { potion: 'potion_large', potionMin: 3, potionMax: 5, rarities: [3, 4, 5], items: 2, diamonds: 25,mats: { 1: 0.3, 2: 0.15, 3: 0.05 }, plank: { chance: 0.5, min: 2, max: 3 } },
     costume: { potion: null, rarities: [], items: 0, costume: true }, // one random costume from COSTUME_BOX_POOL
     pet: { potion: null, rarities: [], items: 0, pet: true } // one random pet from PET_BOX_POOL
 };

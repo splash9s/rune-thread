@@ -80,7 +80,7 @@ const NAMES_TH = {
     'Costs 10 Costume Tickets.': 'ใช้ตั๋วชุดแต่งกาย 10 ใบ', 'Restores 200 HP': 'ฟื้นฟู 200 HP', 'Restores 500 HP': 'ฟื้นฟู 500 HP',
     'Restores 20% of max HP': 'ฟื้นฟู 20% ของ HP สูงสุด',
     'Alloy': 'โลหะผสม', 'Bar': 'แท่ง', 'Ingot': 'แท่งเหล็ก', 'Iron Scraps': 'เศษเหล็ก', 'Plank': 'แผ่นไม้',
-    'Free 20 Diamond': 'เพชรฟรี 20', 'Gold Frenzy': 'ทองคำคลุ้มคลั่ง', 'Wisdom Trial': 'การทดสอบแห่งปัญญา',
+    'Free 10 Diamond': 'เพชรฟรี 10', 'Gold Frenzy': 'ทองคำคลุ้มคลั่ง', 'Wisdom Trial': 'การทดสอบแห่งปัญญา',
     'Asgard': 'แอสการ์ด', 'Fafnir': 'ฟาฟนีร์', 'Fenrir': 'เฟนริร์', 'Freyr': 'เฟรย์', 'Mimir': 'มิมิร์', 'Mjolnir': 'มโยลนีร์',
     'Odin (EXP Build)': 'โอดิน (สาย EXP)', 'Thor (Attack Build)': 'ธอร์ (สายโจมตี)', 'Tyr (Defense Build)': 'ทีร์ (สายป้องกัน)',
     'Shadow Slime': 'สไลม์เงา', 'Void Lord': 'ราชาความว่างเปล่า', 'Boss Helm': 'หมวกบอส', 'Shadow Slime': 'สไลม์เงา',
