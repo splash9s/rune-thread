@@ -669,8 +669,6 @@ function startExpedition(mode, opts = {}) {
     player.hp = derived.maxHp;
     player.armor = derived.maxArmor;
 
-    const nextBtn = document.getElementById('next-stage-btn');
-    if (nextBtn) nextBtn.classList.add('hidden');
     const tagEl = document.getElementById('node-mode-tag');
     const titleEl = document.getElementById('node-title');
 
@@ -1934,16 +1932,16 @@ function monsterTurnTick() {
     }
     updateUI();
 }
-// Battle speed. Shown as 1x / 1.5x / 2x; real speeds 1.2 / 1.6 / 2.0.
-// Everyone can switch 1x and 1.5x; 2x is VIP only. player.battleSpeed stores the shown value (1, 1.5 or 2).
+// Battle speed. Shown as 1x / 1.5x / 2x / 3x; real speeds 1.2 / 1.6 / 2.0 / 3.0.
+// Everyone can switch 1x and 1.5x; 2x and 3x are VIP only. player.battleSpeed stores the shown value (1, 1.5, 2 or 3).
 // Each bolt deals this share of MATK (was 0.5; lowered to 0.3 when MATK weapons were added)
 const BOLT_MATK_RATIO = 0.3;
 const DEFAULT_BATTLE_SPEED = 1.2;
-const BATTLE_SPEED_REAL = { 1: DEFAULT_BATTLE_SPEED, 1.5: 1.6, 2: 2 };
+const BATTLE_SPEED_REAL = { 1: DEFAULT_BATTLE_SPEED, 1.5: 1.6, 2: 2, 3: 3 };
 function battleSpeedShown() {
     const s = player.battleSpeed;
-    if (s === 2 && isVipActive()) return 2;
-    if (s === 1.5 || s === 2) return 1.5; // a saved 2x falls back to 1.5x when VIP runs out
+    if ((s === 2 || s === 3) && isVipActive()) return s;
+    if (s === 1.5 || s === 2 || s === 3) return 1.5; // a saved 2x or 3x falls back to 1.5x when VIP runs out
     return 1;
 }
 function combatSpeedMult() { return BATTLE_SPEED_REAL[battleSpeedShown()]; }
@@ -1961,7 +1959,8 @@ function startCombatTimers(derived) {
 // The speed button: 1x -> 1.5x (-> 2x for VIP) -> 1x. Switching during a battle restarts the timers at the new speed.
 function toggleBattleSpeed() {
     const cur = battleSpeedShown();
-    const next = cur === 1 ? 1.5 : (cur === 1.5 && isVipActive()) ? 2 : 1;
+    const vip = isVipActive();
+    const next = cur === 1 ? 1.5 : (cur === 1.5 && vip) ? 2 : (cur === 2 && vip) ? 3 : 1;
     player.battleSpeed = next;
     updateSpeedButton();
     if (combatInterval !== null && combatTimerDerived) startCombatTimers(combatTimerDerived);
@@ -1973,13 +1972,15 @@ function updateSpeedButton() {
     if (!btn) return;
     btn.classList.remove('hidden'); // everyone has 1x / 1.5x
     const shown = battleSpeedShown();
-    btn.title = 'Battle speed ' + shown + 'x' + (isVipActive() ? '' : ' (2x with VIP)');
+    btn.title = 'Battle speed ' + shown + 'x' + (isVipActive() ? '' : ' (2x and 3x with VIP)');
     const img = document.getElementById('combat-speed-img');
     const press = document.getElementById('combat-speed-press');
+    const badge3 = document.getElementById('combat-speed-3x');
+    if (badge3) badge3.style.display = shown === 3 ? 'block' : 'none';
     // 1.5x has its own picture pair; 1x and 2x keep their pictures (pressed shows the same picture)
     const src = shown === 1.5 ? 'assets/cha/button/btn_speed15x_q85.webp' : shown === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp';
     const pressSrc = shown === 1.5 ? 'assets/cha/button/btn_speed15xpress_q85.webp' : src;
-    if (img) img.src = src;
+    if (img) { img.src = src; img.style.filter = shown === 3 ? 'hue-rotate(150deg) saturate(1.4)' : ''; } // 3x: no picture of its own yet, so the 2x picture is tinted
     if (press) press.src = pressSrc;
 }
 function stopCombatTimers() {
@@ -2283,8 +2284,6 @@ function onStageCleared() {
             // Stage-end regen (10% Max HP) happens when the next round starts, before new monsters appear
             healPlayer(Math.ceil(getDerivedStats().maxHp * 0.1), 'stage');
             showCombatText('#combat-player-sprite', 'REGENERATED', 'heal');
-            const nextBtn = document.getElementById('next-stage-btn');
-            if (nextBtn) nextBtn.classList.add('hidden');
             if (currentMode === 'tower') { grantTowerFloorReward(currentStage); if (typeof reportTowerFloor === 'function') reportTowerFloor(currentStage); }
             currentStage++;
 
@@ -2381,14 +2380,7 @@ function onStageCleared() {
             if (isRuneDueAfter(currentStage) && currentStage < maxStages) {
                 checkRuneSelectionPrompt(proceedNext);
             } else {
-                window.pendingStageProceed = proceedNext;
-                if (isVipActive() || runeN('swiftRun') > 0) { // Swift Feet: move on automatically
-                    proceedToNextStage();
-                    return;
-                }
-                const nextBtn = document.getElementById('next-stage-btn');
-                if (nextBtn) nextBtn.classList.remove('hidden');
-                showNextStageGuide();
+                proceedNext(); // every stage moves on by itself (no Next Stage button)
             }
         };
         if (wasBossStage && currentStage < maxStages && currentMode !== 'tower') { // the Tower shows its result only at the end
@@ -2403,14 +2395,6 @@ function onStageCleared() {
     }, Math.max(stageDelay(), bossStayLeft));
 }
 
-function proceedToNextStage() {
-    removeNextStageGuide();
-    if (window.pendingStageProceed) {
-        const cb = window.pendingStageProceed;
-        window.pendingStageProceed = null;
-        cb();
-    }
-}
 
 // Leaving a battle needs two taps: the first arms it and shows a prompt, the second within 3 seconds confirms
 let combatReturnArmed = null;
@@ -2439,8 +2423,6 @@ function returnToTown() {
     combatPaused = false;
     updatePauseButton();
     if (typeof resetMapRunes === 'function') resetMapRunes();
-    const nextBtn = document.getElementById('next-stage-btn');
-    if (nextBtn) nextBtn.classList.add('hidden');
     // Warded Tower: leaving partway still pays the highest floor cleared (once) and the friends' share
     const leftTower = currentMode === 'tower';
     if (currentMode === 'tower' && towerParty) { grantTowerRunReward(); sendTowerFriendRewards(); }
@@ -3371,30 +3353,6 @@ function guideTipAbove(text, rect, parent) {
     return tip;
 }
 
-// First time the next-stage button appears: dim the stage, light the button, say what it does
-function showNextStageGuide() {
-    if (guideFlag('nextStage')) return;
-    const inner = document.querySelector('#combat-stage .ts-inner');
-    const btn = document.getElementById('next-stage-btn');
-    if (!inner || !btn || btn.classList.contains('hidden')) return;
-    markGuide('nextStage');
-    removeNextStageGuide();
-    const overlay = document.createElement('div');
-    overlay.className = 'guide-next-overlay';
-    overlay.style.cssText = 'position:absolute; inset:0; z-index:50; background:rgba(2,6,15,.72); cursor:not-allowed;';
-    inner.appendChild(overlay);
-    guideGlowOn(btn);
-    const r = btn.getBoundingClientRect();
-    const sr = inner.getBoundingClientRect();
-    const scale = sr.width / 1920;
-    const rect = { left: (r.left - sr.left) / scale, top: (r.top - sr.top) / scale, width: r.width / scale };
-    guideTipAbove('Stage cleared! Tap Next Stage to continue.', rect, inner);
-}
-function removeNextStageGuide() {
-    document.querySelectorAll('.guide-next-overlay, .guide-tip-box').forEach(el => el.remove());
-    const btn = document.getElementById('next-stage-btn');
-    if (btn) guideGlowOff(btn);
-}
 
 // First time a rune pick window opens: glow the first card and say what to do
 function showRuneGuide() {

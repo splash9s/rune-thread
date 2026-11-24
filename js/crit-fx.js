@@ -70,6 +70,7 @@ function critFxLayer(stage) {
 // Plays a slash frame sequence over the monster at selector.
 // screenFx: also shake the screen and show the flash (critical hits only)
 function playSlashFx(selector, frames, frameMs, scale, screenFx) {
+    if (typeof juiceAllFx === 'function' && !juiceAllFx()) return;
     const view = document.getElementById('view-combat');
     if (!view || view.classList.contains('hidden')) return;
     const stage = document.getElementById('combat-stage');
@@ -124,6 +125,7 @@ function playSlashFx(selector, frames, frameMs, scale, screenFx) {
 
 // Critical hit: crit slash with screen shake and flash
 function playCritFx(selector) {
+    if (typeof juiceCritFx === 'function' && !juiceCritFx()) return; // Settings: critical effect off
     playSlashFx(selector, CRIT_SLASH_FRAMES, CRIT_SLASH_FRAME_MS, CRIT_SLASH_SCALE, true);
     // 3D Earth art: a quick camera push-in on crits
     const stage = document.getElementById('combat-stage');
@@ -132,6 +134,7 @@ function playCritFx(selector) {
 
 // Boss Heavy Strike: dark vignette and a screen shake
 function playHeavyFx() {
+    if (typeof juiceAllFx === 'function' && !juiceAllFx()) return;
     const stage = document.getElementById('combat-stage');
     if (!stage || document.getElementById('view-combat')?.classList.contains('hidden')) return;
     // Screen shake follows the player's shake setting (0-100%, off with reduced motion)

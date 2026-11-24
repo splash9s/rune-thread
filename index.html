@@ -985,7 +985,6 @@
         /* Campaign Dungeons: each node shows only its own element's maps, so the element tabs are hidden */
         #campaign-path-list { display: none !important; }
         /* Combat stage (layout: 01_layout/combatlayout.png) */
-        #combat-stage:has(#next-stage-btn:not(.hidden)) #combat-pause-btn { display: none; }
         /* Potion and resurrection slot buttons: slot graphics, swapped to the press graphic while pressed */
         /* Combat page: larger text for the HUD boxes and buttons */
         #view-combat .combat-box .text-xs { font-size: 17px !important; }
@@ -1351,8 +1350,6 @@
         #view-character #char-panel-left .char-stats-close.dd-x { width: 48px; height: 48px; padding: 0 !important; display: flex; align-items: center; justify-content: center; font-size: 26px !important; line-height: 1; border-radius: 10px; border: 2px solid #26344f; background: #1b2740 !important; color: #e9edf5 !important; top: 14px; right: 14px; }
     </style>
 </head>
-
-
 <body class="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
     <!-- LOADING SCREEN: shown while images and sounds are preloaded (see js/loader.js) -->
     <div id="loading-screen" style="position:fixed; inset:0; z-index:200; background:linear-gradient(rgba(5,10,20,.35), rgba(5,10,20,.55)), url(assets/page/loadscreen02_q85.webp) center / cover no-repeat #050a14; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; color:#e2e8f0; font-family:sans-serif; transition:opacity .4s;">
@@ -1363,8 +1360,6 @@
         <div id="loading-percent" style="font-size:12px; font-family:monospace; color:#fbbf24;">0%</div>
         <div id="loading-text" style="font-size:12px; color:#cbd5e1; min-height:16px; max-width:80vw; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Starting...</div>
     </div>
-
-
     <!-- TOP HEADER / HUD -->
     <header id="app-header" class="hidden bg-slate-950/80 border-b border-slate-800/80 backdrop-blur sticky top-0 z-40 px-4 py-2 flex justify-end items-center gap-3">
         <div id="account-bar" class="mr-auto flex items-center gap-3 min-w-0 text-xs text-slate-300">
@@ -1632,6 +1627,17 @@
                     </div>
                     <div class="art-panel" style="left:441px; top:182px; width:1038px; height:707px;">
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 grid grid-cols-1 gap-3">
+                <div class="px-5 py-4 bg-slate-800 rounded-xl text-slate-200">
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <span class="w-56 font-bold text-xl">Effect intensity</span>
+                        <div class="flex gap-3 flex-1">
+                            <button id="juice-int-0" onclick="setJuiceIntensityStop(0)" class="flex-1 py-2 px-3 bg-slate-700 hover:bg-slate-600 font-bold rounded-lg cursor-pointer text-lg">Off</button>
+                            <button id="juice-int-1" onclick="setJuiceIntensityStop(1)" class="flex-1 py-2 px-3 bg-slate-700 hover:bg-slate-600 font-bold rounded-lg cursor-pointer text-lg">Low</button>
+                            <button id="juice-int-2" onclick="setJuiceIntensityStop(2)" class="flex-1 py-2 px-3 bg-slate-700 hover:bg-slate-600 font-bold rounded-lg cursor-pointer text-lg">Normal</button>
+                        </div>
+                    </div>
+                    <p id="juice-intensity-desc" class="mt-3 text-base text-slate-400 leading-relaxed"></p>
+                </div>
                 <button onclick="toggleLanguage()" data-i18n="set.lang" class="px-6 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xl transition cursor-pointer text-left">🌐 Language: English</button>
                 <button onclick="openFeedbackForm()" data-i18n="set.feedback" class="px-6 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xl transition cursor-pointer text-left">💬 Send Feedback</button>
                 <button onclick="manualSaveGame()" data-i18n="set.save" class="px-6 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xl transition cursor-pointer text-left">💾 Save Game</button>
@@ -1645,17 +1651,8 @@
                     <input id="sfx-volume" type="range" min="0" max="100" step="5" value="20" class="flex-1 cursor-pointer" oninput="setSfxVolume(this.value)" onchange="saveAudioSettings()">
                     <span id="sfx-volume-text" class="w-12 text-right font-mono text-xl">20</span>
                 </div>
-                <div class="px-5 py-3 bg-slate-800 rounded-xl text-slate-200 flex flex-wrap items-center gap-3">
-                    <span class="w-56 font-bold text-xl">📳 Screen shake</span>
-                    <input id="juice-shake" type="range" min="0" max="100" step="5" value="100" class="flex-1 cursor-pointer" aria-label="Screen shake" oninput="setJuiceShake(this.value)" onchange="juiceSave()">
-                    <span id="juice-shake-text" class="w-16 text-right font-mono text-xl">100%</span>
-                </div>
-                <div class="px-5 py-3 bg-slate-800 rounded-xl text-slate-200 grid grid-cols-3 gap-3">
-                    <button id="juice-flash-btn" onclick="cycleJuiceFlash()" class="py-2 px-3 bg-slate-700 hover:bg-slate-600 font-bold rounded-lg cursor-pointer text-lg">Screen flash: Full</button>
-                    <button id="juice-motion-btn" onclick="toggleJuiceMotion()" class="py-2 px-3 bg-slate-700 hover:bg-slate-600 font-bold rounded-lg cursor-pointer text-lg">Reduce motion: Off</button>
-                    <button id="juice-intensity-btn" onclick="cycleJuiceIntensity()" class="py-2 px-3 bg-slate-700 hover:bg-slate-600 font-bold rounded-lg cursor-pointer text-lg">Effect intensity: High</button>
-                </div>
-                <button id="library-dev-btn" onclick="switchView('library')" class="hidden px-6 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xl transition cursor-pointer text-left">📚 Library (Dev)</button>
+                
+                    <button id="library-dev-btn" onclick="switchView('library')" class="hidden px-6 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xl transition cursor-pointer text-left">📚 Library (Dev)</button>
                 <button id="send-mail-btn" onclick="openSendMailForm()" data-i18n="set.mail" class="hidden px-6 py-5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-xl text-xl transition cursor-pointer text-left">✉️ Send Mail</button>
                 <div id="account-status" class="px-5 py-4 bg-slate-800 rounded-xl text-slate-200 text-lg leading-relaxed"></div>
                 <button id="bind-email-btn" onclick="bindGmail()" class="hidden p-0 bg-transparent border-0 cursor-pointer self-start" aria-label="Bind Gmail"><img loading="lazy" src="assets/cha/page/link_gmail_q85.webp" alt="Bind Gmail" style="width:280px; max-width:100%; height:auto; display:block;"></button>
@@ -2074,8 +2071,6 @@
                 </div>
             </div>
         </div>
-
-
                 <!-- VIEW: CHARACTER & EQUIPMENT (layout: 04_psd/pagecharacter) -->
         <div id="view-character" class="hidden art-screen art-dark stats-hidden">
             <div id="friend-visit-name" aria-live="polite"></div>
@@ -2160,8 +2155,6 @@
                             <div class="col-span-2 flex justify-between p-2 bg-slate-950/80 rounded-lg border border-slate-800"><span class="text-slate-400">Armor</span><strong id="derived-armor" class="text-slate-100">0</strong></div>
                         </div>
                     </div>
-                        
-                    
                         <div id="char-element-stats" class="flex flex-col gap-2"></div>
                     </div>
                     <div id="char-panel-mid" class="art-panel" style="left:93px; top:77px; width:602px; height:992px; overflow:visible; padding:0;">
@@ -2210,8 +2203,6 @@
                 </div>
             </div>
         </div>
-
-
         <!-- VIEW: FORGE & SHOP -->
         <div id="view-shop" class="hidden art-screen art-dark">
             <div id="shop-stage" class="town-stage" data-w="1920" data-h="1080">
@@ -2482,14 +2473,12 @@
                         <span>Potion</span>
                         <span id="player-potions" class="font-mono text-[10px]">None</span>
                     </button>
-
-                    <!-- Pause (bottom right); Next Stage takes its place once the stage is cleared -->
+                    <!-- Pause (bottom right) -->
                     <button id="combat-pause-btn" onclick="toggleCombatPause()" title="Pause" style="position:absolute; left:1733px; top:694px; width:175px; height:178px;" class="hidden combat-slot-btn"></button>
                     <button id="combat-sound-btn" onclick="toggleSoundAll()" title="Sound and effects on / off" style="position:absolute; left:1770px; top:2px; width:66px; height:67px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-sound-img" src="assets/combat/sound/sound_on_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"></button>
-                    <button id="combat-speed-btn" onclick="toggleBattleSpeed()" title="Battle speed" class="hidden combat-img-btn" style="position:absolute; left:1818px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-speed-img" class="cb-normal" src="assets/combat/speed/speed_1x_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><img id="combat-speed-press" class="cb-press" src="assets/cha/button/btn_speed15xpress_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain;"></button>
+                    <button id="combat-speed-btn" onclick="toggleBattleSpeed()" title="Battle speed" class="hidden combat-img-btn" style="position:absolute; left:1818px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-speed-img" class="cb-normal" src="assets/combat/speed/speed_1x_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><img id="combat-speed-press" class="cb-press" src="assets/cha/button/btn_speed15xpress_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain;"><span id="combat-speed-3x" style="display:none; position:absolute; right:4px; bottom:2px; font:900 20px/1 'Roboto', sans-serif; color:#fde68a; text-shadow:0 2px 0 #000, 0 0 6px #000; pointer-events:none;">3x</span></button>
                     <button id="combat-rejoin-btn" onclick="toggleAutoRejoin()" title="Auto Rejoin (VIP)" class="hidden combat-img-btn" style="position:absolute; left:1722px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img class="cb-normal" src="assets/cha/button/btn_autorejoin_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><img class="cb-press" src="assets/cha/button/btn_autorejoinpress_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain;"></button>
                     <button id="combat-auto-rune-btn" onclick="toggleVipAutoRune()" title="VIP: auto-pick a random rune" class="hidden combat-slot-btn" style="position:absolute; left:1351px; top:890px; width:175px; height:178px;"></button>
-                    <button id="next-stage-btn" onclick="proceedToNextStage()" style="position:absolute; left:1733px; top:694px; width:175px; height:178px;" class="hidden bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm transition cursor-pointer shadow">Next Stage</button>
 
                     <!-- Return (top right) -->
         <div id="combat-return-btn" class="ui char-return" style="left:1846px; top:2px; width:66px; height:67px;" onclick="combatReturnClick()">
@@ -2524,10 +2513,10 @@
     <!-- hero-art.js holds the hero art as data URLs (948 KB); only file:// pages need it, web pages load the image files -->
     <script>if (location.protocol === 'file:') document.write('<script src="js/hero-art.js?v=20261118t"><\/script>');</script>
     <script src="js/hero-body.js?v=20261121lz"></script>
-    <script src="js/slowmo.js?v=20261123a"></script>
-    <script src="js/boss-intro.js?v=20261123fx4"></script>
-    <script src="js/low-hp.js?v=20261123eo"></script>
-    <script src="js/heal-circle.js?v=20261123fx4"></script>
+    <script src="js/slowmo.js?v=20261124ef"></script>
+    <script src="js/boss-intro.js?v=20261124ef5"></script>
+    <script src="js/low-hp.js?v=20261124ef"></script>
+    <script src="js/heal-circle.js?v=20261124ef"></script>
     <script src="js/inv-hover.js?v=20261123a"></script>
     <script src="js/level-roll.js?v=20261123fx2"></script>
     <script src="js/avatar-unlock.js?v=20261123au"></script>
@@ -2535,12 +2524,12 @@
     <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261124sr"></script>
     <script src="js/touch-lock.js?v=20261124nd"></script>
-    <script src="js/combat.js?v=20261124s2"></script>
-    <script src="js/crit-fx.js?v=20261123bi"></script>
+    <script src="js/combat.js?v=20261124s4"></script>
+    <script src="js/crit-fx.js?v=20261124ef"></script>
     <script src="js/landscape.js?v=20261122a"></script>
-    <script src="js/bolt-fx.js?v=20261123sm"></script>
-    <script src="js/ui.js?v=20261124s3"></script>
-    <script src="js/equip-flash.js?v=20261123a"></script>
+    <script src="js/bolt-fx.js?v=20261124ef"></script>
+    <script src="js/ui.js?v=20261124ef"></script>
+    <script src="js/equip-flash.js?v=20261124ef"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
     <script src="js/market.js?v=20261121sf"></script>

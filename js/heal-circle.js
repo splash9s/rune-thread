@@ -44,7 +44,7 @@ function playHealCircle(gained, asked, sel) {
     const inner = document.querySelector('#combat-stage .ts-inner');
     const hero = sel ? null : document.getElementById('combat-player-sprite');
     const I = typeof juiceIntensity === 'function' ? juiceIntensity() : 1;
-    if (!view || view.classList.contains('hidden') || !inner || I <= 0) return false;
+    if (!view || view.classList.contains('hidden') || !inner || I <= 0 || (typeof juiceAllFx === 'function' && !juiceAllFx())) return false;
     if (!sel && !hero) return false;
     const C = HEAL_CIRCLE, P = C.px, RM = typeof juiceReduceMotion === 'function' && juiceReduceMotion();
     let feet;

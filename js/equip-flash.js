@@ -29,7 +29,7 @@ function eqFlashReduce() { return typeof juiceReduceMotion === 'function' && jui
 // Equip: slot name (e.g. 'weapon'), the stat before and after
 function equipFlashPlay(slot, before, after) {
     const I = eqFlashIntensity();
-    if (I <= 0) return;
+    if (I <= 0 || (typeof juiceAllFx === 'function' && !juiceAllFx())) return;
     const RM = eqFlashReduce();
     const el = document.querySelector(`#view-character [data-eq="${slot}"], [data-eq="${slot}"]`);
     if (el) slotFlash(el, I, RM);

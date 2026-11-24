@@ -52,6 +52,7 @@ function lowHpFrame(now) {
     const view = document.getElementById('view-combat');
     const els = lowHpEls();
     if (!els) return;
+    if (typeof juiceAllFx === 'function' && !juiceAllFx()) { lowHpHide(els); return; } // All effects off: no red edge or heartbeat
     if (!view || view.classList.contains('hidden') || document.hidden) { lowHpHide(els); lowHpState.low = false; return; }
     if (now - lowHpState.lastPoll > LOW_HP.hpPollMs) {
         lowHpState.lastPoll = now;

@@ -65,6 +65,7 @@ const BOLT_FX_PLACES = {
     town: { view: 'view-town', inner: '#view-town .ts-inner' }
 };
 function playBoltFx(element, selector, count, delayMs = 0, damages = [], place = 'combat') {
+    if (typeof juiceAllFx === 'function' && !juiceAllFx()) return;
     const elem = element === 'water' ? 'water' : element; // CSS colour classes use the element keys (water = Ice)
     const where = BOLT_FX_PLACES[place] || BOLT_FX_PLACES.combat;
     const view = document.getElementById(where.view);

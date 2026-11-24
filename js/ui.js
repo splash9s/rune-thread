@@ -94,9 +94,9 @@ const DIAMOND_SHOP_ITEMS = [
     { id: 'topup_usd_29', name: "30,000 Diamonds", desc: "Top up 30,000 diamonds for $29.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 29, diamonds: 30000, payLink: 'https://buy.stripe.com/00w4gAbbIbfM6Emd8N0Fi04', icon: 'assets/icons/diamondiconsmall_q85.webp' },
     { id: 'gold_usd_1', name: "30,000 Gold", desc: "Top up 30,000 gold for $1.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 1, gold: 30000, creditTag: 'gold', payLink: 'https://buy.stripe.com/dRm9AU4Nkfw20fYgkZ0Fi05', icon: 'assets/icons/goldpile_q85.webp' },
     { id: 'gold_usd_2_9', name: "100,000 Gold", desc: "Top up 100,000 gold for $2.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 2.9, gold: 100000, creditTag: 'gold', payLink: 'https://buy.stripe.com/5kQcN6bbI83AaUC7Ot0Fi06', icon: 'assets/icons/goldpile_q85.webp' },
-    { id: 'vip_pass', name: "VIP Pass (30 days)", desc: "Auto stage, 2x battle speed, Get Resurrection Potion everyday.", price: 4000, type: 'vip', days: 30, icon: 'assets/shop/diamond/vip31.png' },
-    { id: 'vip_7d', name: "VIP Pass (7 days)", desc: "Auto stage, 2x battle speed, Get Resurrection Potion everyday.", price: 1200, type: 'vip', days: 7, icon: 'assets/shop/diamond/vip7.png' },
-    { id: 'vip_1d', name: "VIP Pass (1 day)", desc: "Auto stage, 2x battle speed, Get Resurrection Potion everyday.", price: 200, type: 'vip', days: 1, icon: 'assets/shop/diamond/vip1.png' },
+    { id: 'vip_pass', name: "VIP Pass (30 days)", desc: "Auto stage, 3x battle speed, Get Resurrection Potion everyday.", price: 4000, type: 'vip', days: 30, icon: 'assets/shop/diamond/vip31.png' },
+    { id: 'vip_7d', name: "VIP Pass (7 days)", desc: "Auto stage, 3x battle speed, Get Resurrection Potion everyday.", price: 1200, type: 'vip', days: 7, icon: 'assets/shop/diamond/vip7.png' },
+    { id: 'vip_1d', name: "VIP Pass (1 day)", desc: "Auto stage, 3x battle speed, Get Resurrection Potion everyday.", price: 200, type: 'vip', days: 1, icon: 'assets/shop/diamond/vip1.png' },
     { id: 'pet_loyal_slime', name: "Orange Stray Cat", desc: "ATK +2%, HP +100 (Thank you for your support!)", price: 500, type: 'pet', stats: { hp: 100, atkPct: 2 }, icon: 'assets/shop/diamond/ocatpet_q85.webp' },
     { id: 'res_potion', name: "Resurrection Potion", price: 10, type: 'resurrection', desc: "Auto-revives you with full HP on death.", lore: "A charm of old magic that glows faintly. It pulls you back from death with full HP.", icon: 'assets/shop/diamond/resurrectionpotion.png' },
     { id: 'ref_stone_bundle', name: "Refining Stone Bundle (x5)", price: 80, type: 'material', qty: 5, desc: "Gain 5 Refining Stones for upgrading equipment.", icon: 'assets/shop/diamond/refiningstone.png' },
@@ -9316,6 +9316,7 @@ function levelUpFxAnchor() {
     return null;
 }
 function playLevelUpFx() {
+    if (typeof juiceAllFx === 'function' && !juiceAllFx()) return;
     levelUpFxTimers.forEach(clearTimeout);
     levelUpFxTimers = [];
     const old = document.getElementById('levelup-fx');

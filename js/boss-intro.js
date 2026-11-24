@@ -51,34 +51,42 @@ const BOSS_INTRO = {
     thump: { startHz: 70, endHz: 32, sec: 0.42, gain: 0.9, noiseGain: 0.35 },
     presets: { off: 0, subtle: 0.4, medium: 0.7, high: 1 }, // intensity multipliers
 };
-const JUICE_DEFAULTS = { shake: 100, flash: 'full', reduceMotion: false, intensity: 'high' };
+const JUICE_DEFAULTS = { shake: 100, flash: 'full', reduceMotion: false, intensity: 'high', critFx: true, allFx: true };
 
 // ---------- settings ----------
 function juiceSettings() {
     if (typeof player === 'undefined') return { ...JUICE_DEFAULTS };
     if (!player.juice) player.juice = {};
     Object.keys(JUICE_DEFAULTS).forEach(k => { if (player.juice[k] === undefined) player.juice[k] = JUICE_DEFAULTS[k]; });
-    return player.juice;
+    // Settings now has only Effect intensity: shake, flash and motion are fixed (old saves are overridden here)
+    const s = player.juice;
+    s.shake = 100; s.flash = 'full'; s.reduceMotion = false; s.critFx = true; s.allFx = true;
+    return s;
 }
+// Reduce motion follows the system setting only (prefers-reduced-motion)
 function juiceReduceMotion() {
-    const sys = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-    return !!(juiceSettings().reduceMotion || sys);
+    return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
 function juiceIntensity() { return BOSS_INTRO.presets[juiceSettings().intensity] ?? 1; }
+// Master switch (Settings > Effects > All effects): off stops every visual effect, screen shake and flash.
+// Critical effect switch: off stops the critical-hit slash, its shake and flash. Numbers, notices and the menu dots stay.
+function juiceAllFx() { return juiceIntensity() > 0; } // Effect intensity Off = every effect off
+function juiceCritFx() { return juiceAllFx(); }
 // Multiplier for every screen shake in the game (0 when reduced motion is on)
 function juiceShakeScale() {
-    if (juiceReduceMotion()) return 0;
+    if (juiceReduceMotion() || !juiceAllFx()) return 0;
     return Math.max(0, Math.min(100, Number(juiceSettings().shake) || 0)) / 100 * juiceIntensity();
 }
 // Flash rate limit: at most flashMaxPerSecond in any 1 s window
 const juiceFlashTimes = [];
 function juiceFlashAllowed(now = performance.now()) {
+    if (!juiceAllFx()) return false;
     while (juiceFlashTimes.length && now - juiceFlashTimes[0] > 1000) juiceFlashTimes.shift();
     if (juiceFlashTimes.length >= BOSS_INTRO.flashMaxPerSecond) return false;
     juiceFlashTimes.push(now);
     return true;
 }
-function juiceFlashOpacity() { const I = juiceIntensity(); return I > 0 ? (BOSS_INTRO.flashOpacity[juiceSettings().flash] ?? 0) * Math.max(0.5, I) : 0; }
+function juiceFlashOpacity() { const I = juiceIntensity(); return I > 0 && juiceAllFx() ? (BOSS_INTRO.flashOpacity[juiceSettings().flash] ?? 0) * Math.max(0.5, I) : 0; }
 
 // ---------- easing ----------
 const biEaseOut = x => 1 - Math.pow(1 - x, 3);
@@ -93,6 +101,7 @@ function bossIntroRunning() { return !!bossIntroRun && performance.now() < bossI
 
 function playBossIntro(boss) {
     cancelBossIntro(); // a new intro never stacks on an old one
+    if (!juiceAllFx()) return; // All effects off: no name card, bars or dust
     const view = document.getElementById('view-combat');
     const inner = document.querySelector('#combat-stage .ts-inner');
     const lineup = document.getElementById('monsters-lineup-container');
@@ -322,19 +331,29 @@ function musicDip(on) {
 
 // ---------- settings UI (Settings page) ----------
 function renderJuiceSettings() {
-    const s = juiceSettings();
-    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-    const sl = document.getElementById('juice-shake');
-    if (sl) sl.value = s.shake;
-    set('juice-shake-text', s.shake + '%');
-    set('juice-flash-btn', 'Screen flash: ' + ({ full: 'Full', reduced: 'Reduced', off: 'Off' })[s.flash]);
-    set('juice-motion-btn', 'Reduce motion: ' + (s.reduceMotion ? 'On' : 'Off'));
-    set('juice-intensity-btn', 'Effect intensity: ' + s.intensity[0].toUpperCase() + s.intensity.slice(1));
+    const stop = intensityStopIndex(juiceSettings().intensity);
+    [0, 1, 2].forEach(i => {
+        const b = document.getElementById('juice-int-' + i);
+        if (!b) return;
+        const on = i === stop;
+        b.classList.toggle('bg-amber-600', on);
+        b.classList.toggle('text-slate-950', on);
+        b.classList.toggle('bg-slate-700', !on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    const d = document.getElementById('juice-intensity-desc');
+    if (d) d.textContent = INTENSITY_DESC[stop];
 }
-function setJuiceShake(v) { juiceSettings().shake = Math.max(0, Math.min(100, Math.round(Number(v) || 0))); renderJuiceSettings(); }
-function cycleJuiceFlash() { const s = juiceSettings(), o = ['full', 'reduced', 'off']; s.flash = o[(o.indexOf(s.flash) + 1) % o.length]; renderJuiceSettings(); juiceSave(); }
-function toggleJuiceMotion() { const s = juiceSettings(); s.reduceMotion = !s.reduceMotion; renderJuiceSettings(); juiceSave(); }
-function cycleJuiceIntensity() { const s = juiceSettings(), o = ['off', 'subtle', 'medium', 'high']; s.intensity = o[(o.indexOf(s.intensity) + 1) % o.length]; renderJuiceSettings(); juiceSave(); }
+const INTENSITY_DESC = [
+    'Off: no screen shake, no flashes, no effects. Damage numbers, notices and the red dots still show.',
+    'Low: softer screen shake and effects, with smaller flashes.',
+    'Normal: full screen shake and all effects, as the game was designed.'
+];
+function setJuiceIntensityStop(i) { juiceSettings().intensity = INTENSITY_STOPS[Math.max(0, Math.min(2, Number(i) || 0))]; renderJuiceSettings(); juiceSave(); }
+// Effect intensity slider: Off / Low / Normal. Old saves with 'medium' sit on Low.
+const INTENSITY_STOPS = ['off', 'subtle', 'high'];
+function intensityStopIndex(v) { return v === 'high' ? 2 : (v === 'subtle' || v === 'medium') ? 1 : 0; }
+function juiceSaveIntensity() { juiceSave(); }
 function juiceSave() { if (typeof saveGame === 'function') saveGame(); }
 
 function biTone(type, freqs, sec, gain, stepSec = 0) {

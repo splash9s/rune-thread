@@ -54,6 +54,7 @@ function slowmoExtraMs() {
 function startBossSlowmo(idx) {
     const view = document.getElementById('view-combat');
     if (!view || view.classList.contains('hidden')) return;
+    if (typeof juiceAllFx === 'function' && !juiceAllFx()) return;
     slowmoAt = Date.now();
     // Hero: the strike pose stays up through the slowed part
     if (typeof combatPlayerAttack !== 'undefined' && combatPlayerAttack.at) {
