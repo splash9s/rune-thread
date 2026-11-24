@@ -2406,7 +2406,7 @@ const COSTUME_SETS = {
   blue_samurai: {
       attack: { src: 'assets/costume/blue_samurai/attack_v1_q90.webp', w: 358, h: 399, fx: 62.0, fy: 397.0, tx: 184.6 },
       critical: { src: 'assets/costume/blue_samurai/critical_v1_q90.webp', w: 464, h: 385, fx: 272.1, fy: 383.0, tx: 335.2 },
-      base: { src: 'assets/costume/blue_samurai/base3_3_v1_q90.webp', w: 420, h: 408, fx: 334.9, fy: 406.0, tx: 289.5 }, // animation 3 base pose
+      base: { src: 'assets/costume/blue_samurai/base3_3_v1_q90.webp?v=20261125', w: 420, h: 408, fx: 334.9, fy: 406.0, tx: 289.5 }, // animation 3 base pose
       block: { src: 'assets/costume/blue_samurai/block_v1_q90.webp', w: 420, h: 367, fx: 113.6, fy: 365.0, tx: 162.7 },
       attack02: { src: 'assets/costume/blue_samurai/attack02_v1_q90.webp', w: 451, h: 384, fx: 114.7, fy: 382.0, tx: 191.7 },
       fall: { src: 'assets/costume/blue_samurai/fall_v1_q90.webp', w: 366, h: 317, fx: 281.2, fy: 315.0, tx: 151.0 },
@@ -2424,7 +2424,7 @@ const COSTUME_SETS = {
   yellow_samurai: {
       attack: { src: 'assets/costume/yellow_samurai/attack_v1_q90.webp', w: 412, h: 399, fx: 119.2, fy: 397.0, tx: 244.6 },
       critical: { src: 'assets/costume/yellow_samurai/critical_v1_q90.webp', w: 392, h: 391, fx: 203.8, fy: 389.0, tx: 261.4 },
-      base: { src: 'assets/costume/yellow_samurai/base_v1_q90.webp', w: 417, h: 408, fx: 331.6, fy: 406.0, tx: 283.3 },
+      base: { src: 'assets/costume/yellow_samurai/base_v1_q90.webp?v=20261125', w: 417, h: 408, fx: 331.6, fy: 406.0, tx: 283.3 },
       block: { src: 'assets/costume/yellow_samurai/block_v1_q90.webp', w: 337, h: 367, fx: 140.9, fy: 365.0, tx: 166.0 },
       attack02: { src: 'assets/costume/yellow_samurai/attack02_v1_q90.webp', w: 458, h: 378, fx: 116.6, fy: 376.0, tx: 178.7 },
       fall: { src: 'assets/costume/yellow_samurai/fall_v1_q90.webp', w: 346, h: 316, fx: 211.4, fy: 314.0, tx: 148.1 },
