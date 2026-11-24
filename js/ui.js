@@ -3217,6 +3217,8 @@ function chestDropRatesHTML(chestType) {
     if (!cfg) return '';
     const rows = [];
     if (cfg.costume) {
+        const left = opensToTenth();
+        rows.push(left === 1 ? 'Next open: rare costume (10th open)' : `${left} more opens until a rare costume (10th open)`);
         const n = COSTUME_BOX_POOL.length;
         const total = COSTUME_BOX_POOL.reduce((a, c) => a + (c.weight || 1), 0);
         if (n) COSTUME_BOX_POOL.forEach(c => rows.push(`${escapeHtml(c.name)}: ${((c.weight || 1) / total * 100).toFixed(2).replace(/\.?0+$/, '')}%`));
@@ -6354,7 +6356,7 @@ function openChest(chestType) {
     }
 
     if (cfg.costume && COSTUME_BOX_POOL.length) {
-        const costumeTpl = pickWeighted(COSTUME_BOX_POOL);
+        const costumeTpl = pickBoxReward(COSTUME_BOX_POOL, tenth);
         const costume = { ...costumeTpl, qty: 1, rarity: boxRarityOf(costumeTpl, tenth) };
         addItemToInventory(costume);
         rewardCells.push(rewardCellHTML(costume));
@@ -7209,12 +7211,22 @@ function pickWeighted(pool) {
     for (const c of pool) { r -= (c.weight || 1); if (r < 0) return c; }
     return pool[pool.length - 1];
 }
+// The 10th open (every 10th chest or box) gives a rare costume: the pick is made from the rare costumes only
+function pickBoxReward(pool, tenth) {
+    if (tenth && pool === COSTUME_BOX_POOL) {
+        const rare = pool.filter(c => BOX_RARITY_BY_NAME[c.name] === 3);
+        if (rare.length) return pickWeighted(rare);
+    }
+    return pickWeighted(pool);
+}
+// Opens left until the next 10th open (1 means the next open is the 10th)
+function opensToTenth() { return 10 - ((player.chestOpens || 0) % 10); }
 // Opens a box at once: a random reward from its pool goes into the bag
 function openBoxNow(boxType, title) {
     const pool = boxType === 'costume' ? COSTUME_BOX_POOL : PET_BOX_POOL;
     if (!pool.length) { floatFailAt('Costumes are coming soon'); return false; }
     const tenth = takeChestOpenIsTenth();
-    const rewardTpl = pickWeighted(pool);
+    const rewardTpl = pickBoxReward(pool, tenth);
     const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl, tenth) };
     if (countFreeCapacity(reward) < 1) { floatFailAt("Inventory is full!"); return false; }
     placeItemInInventory(reward);
@@ -7229,7 +7241,7 @@ function openBoxFromDetail(index) {
     const pool = item.boxType === 'costume' ? COSTUME_BOX_POOL : PET_BOX_POOL;
     if (!pool.length) { floatFailAt('Costumes are coming soon'); return; }
     const tenth = takeChestOpenIsTenth();
-    const rewardTpl = pickWeighted(pool);
+    const rewardTpl = pickBoxReward(pool, tenth);
     const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl, tenth) };
     // A box that is the last one frees its own slot; a stack needs room for the reward
     if ((item.qty || 1) > 1 && countFreeCapacity(reward) < 1) { floatFailAt("Inventory is full!"); return; }
