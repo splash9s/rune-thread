@@ -3217,7 +3217,7 @@ function chestDropRatesHTML(chestType) {
     if (!cfg) return '';
     const rows = [];
     if (cfg.costume) {
-        const left = opensToTenth();
+        const left = opensToTenth('costume');
         rows.push(left === 1 ? 'Next open: rare costume (10th open)' : `${left} more opens until a rare costume (10th open)`);
         const n = COSTUME_BOX_POOL.length;
         const total = COSTUME_BOX_POOL.reduce((a, c) => a + (c.weight || 1), 0);
@@ -3225,6 +3225,8 @@ function chestDropRatesHTML(chestType) {
         else rows.push('Costumes: coming soon');
     }
     if (cfg.pet) {
+        const left = opensToTenth('pet');
+        rows.push(left === 1 ? 'Next open: rare pet (10th open)' : `${left} more opens until a rare pet (10th open)`);
         const total = PET_BOX_POOL.reduce((a, c) => a + (c.weight || 1), 0);
         if (PET_BOX_POOL.length) PET_BOX_POOL.forEach(c => rows.push(`${escapeHtml(c.name)}: ${((c.weight || 1) / total * 100).toFixed(2).replace(/\.?0+$/, '')}%`));
         else rows.push('Pets: coming soon');
@@ -6307,6 +6309,11 @@ function takeCostumeOpenIsTenth() {
     player.costumeOpens = (player.costumeOpens || 0) + 1;
     return player.costumeOpens % 10 === 0;
 }
+// Pet chest and pet box opens only: every 10th of these gives a rare pet (own count, apart from costumes)
+function takePetOpenIsTenth() {
+    player.petOpens = (player.petOpens || 0) + 1;
+    return player.petOpens % 10 === 0;
+}
 function chestGearPool() {
     const all = typeof ALL_ARMORY_ITEMS !== 'undefined' ? ALL_ARMORY_ITEMS : [];
     const lv = (typeof player !== 'undefined' && player && player.baseLv) || 1;
@@ -6369,19 +6376,22 @@ function openChest(chestType) {
     }
 
     if (cfg.pet && PET_BOX_POOL.length) {
+        const petTenth = takePetOpenIsTenth();
         const petTpl = pickWeighted(PET_BOX_POOL);
-        const pet = { ...petTpl, qty: 1, rarity: boxRarityOf(petTpl, tenth) };
+        const pet = { ...petTpl, qty: 1, rarity: boxRarityOf(petTpl, petTenth) };
         addItemToInventory(pet);
         rewardCells.push(rewardCellHTML(pet));
     }
 
     const showRewards = () => {
         let extra = '';
-        if (cfg.costume) {
-            const left = opensToTenth();
+        const kind = cfg.costume ? 'costume' : (cfg.pet ? 'pet' : null);
+        if (kind) {
+            const left = opensToTenth(kind);
+            const what = kind === 'costume' ? 'costume' : 'pet';
             const msg = left === 1
-                ? '<span class="font-bold text-green-400">Next</span> costume open gives a rare costume'
-                : `<span class="font-bold text-green-400">${left}</span> more costume opens until a rare costume`;
+                ? `<span class="font-bold text-green-400">Next</span> ${what} open gives a rare ${what}`
+                : `<span class="font-bold text-green-400">${left}</span> more ${what} opens until a rare ${what}`;
             extra = `<div class="text-center text-xs text-slate-300 mt-2">${msg}</div>`;
         }
         showModal("Chest Opened!", '', rewardPopupHTML('You received:', rewardCells.join('')) + extra);
@@ -7236,16 +7246,19 @@ function pickBoxReward(pool, tenth) {
     return pickWeighted(pool);
 }
 // Opens left until the next 10th open (1 means the next open is the 10th)
-function opensToTenth() { return 10 - ((player.costumeOpens || 0) % 10); }
+// kind: 'costume' or 'pet'
+function opensToTenth(kind) {
+    const n = kind === 'pet' ? (player.petOpens || 0) : (player.costumeOpens || 0);
+    return 10 - (n % 10);
+}
 // Opens a box at once: a random reward from its pool goes into the bag
 function openBoxNow(boxType, title) {
     const pool = boxType === 'costume' ? COSTUME_BOX_POOL : PET_BOX_POOL;
     if (!pool.length) { floatFailAt('Costumes are coming soon'); return false; }
     const isCostume = pool === COSTUME_BOX_POOL;
-    const tenth = takeChestOpenIsTenth();
-    const costumeTenth = isCostume && takeCostumeOpenIsTenth();
-    const rewardTpl = pickBoxReward(pool, costumeTenth);
-    const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl, isCostume ? costumeTenth : tenth) };
+    const special = isCostume ? takeCostumeOpenIsTenth() : takePetOpenIsTenth();
+    const rewardTpl = pickBoxReward(pool, special);
+    const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl, special) };
     if (countFreeCapacity(reward) < 1) { floatFailAt("Inventory is full!"); return false; }
     placeItemInInventory(reward);
     floatSuccessAt(`You got ${reward.name}!`);
@@ -7259,10 +7272,9 @@ function openBoxFromDetail(index) {
     const pool = item.boxType === 'costume' ? COSTUME_BOX_POOL : PET_BOX_POOL;
     if (!pool.length) { floatFailAt('Costumes are coming soon'); return; }
     const isCostume = pool === COSTUME_BOX_POOL;
-    const tenth = takeChestOpenIsTenth();
-    const costumeTenth = isCostume && takeCostumeOpenIsTenth();
-    const rewardTpl = pickBoxReward(pool, costumeTenth);
-    const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl, isCostume ? costumeTenth : tenth) };
+    const special = isCostume ? takeCostumeOpenIsTenth() : takePetOpenIsTenth();
+    const rewardTpl = pickBoxReward(pool, special);
+    const reward = { ...rewardTpl, qty: 1, rarity: boxRarityOf(rewardTpl, special) };
     // A box that is the last one frees its own slot; a stack needs room for the reward
     if ((item.qty || 1) > 1 && countFreeCapacity(reward) < 1) { floatFailAt("Inventory is full!"); return; }
     closeInvDetail();
