@@ -6298,8 +6298,8 @@ const BOX_RARITY_BY_NAME = {
     'Orange Stray Cat': 1,         // common
     'Midnight Stray Cat': 2        // uncommon (every other costume and pet is uncommon too)
 };
-// Every 10th chest or box opened gives a rare (rarity 3) costume or pet
-function boxRarityOf(tpl, tenth) { if (tenth) return 3; return BOX_RARITY_BY_NAME[tpl.name] ?? 2; }
+// A costume or pet keeps its own rarity; the 10th open picks the rarest one in its pool (see pickBoxReward)
+function boxRarityOf(tpl) { return BOX_RARITY_BY_NAME[tpl.name] ?? 2; }
 function takeChestOpenIsTenth() {
     player.chestOpens = (player.chestOpens || 0) + 1;
     return player.chestOpens % 10 === 0;
@@ -6377,7 +6377,7 @@ function openChest(chestType) {
 
     if (cfg.pet && PET_BOX_POOL.length) {
         const petTenth = takePetOpenIsTenth();
-        const petTpl = pickWeighted(PET_BOX_POOL);
+        const petTpl = pickBoxReward(PET_BOX_POOL, petTenth);
         const pet = { ...petTpl, qty: 1, rarity: boxRarityOf(petTpl, petTenth) };
         addItemToInventory(pet);
         rewardCells.push(rewardCellHTML(pet));
@@ -7238,11 +7238,13 @@ function pickWeighted(pool) {
     for (const c of pool) { r -= (c.weight || 1); if (r < 0) return c; }
     return pool[pool.length - 1];
 }
-// The 10th open (every 10th chest or box) gives a rare costume: the pick is made from the rare costumes only
+// The 10th open of a costume or pet counter gives the rarest entry in its pool (costumes: the rare one; pets: the rarest pet)
 function pickBoxReward(pool, tenth) {
-    if (tenth && pool === COSTUME_BOX_POOL) {
-        const rare = pool.filter(c => BOX_RARITY_BY_NAME[c.name] === 3);
-        if (rare.length) return pickWeighted(rare);
+    if (tenth) {
+        const rank = c => BOX_RARITY_BY_NAME[c.name] ?? 2;
+        const top = Math.max(...pool.map(rank));
+        const best = pool.filter(c => rank(c) === top);
+        if (best.length) return pickWeighted(best);
     }
     return pickWeighted(pool);
 }
