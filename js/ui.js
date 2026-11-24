@@ -3218,7 +3218,7 @@ function chestDropRatesHTML(chestType) {
     const rows = [];
     if (cfg.costume) {
         const left = opensToTenth('costume');
-        rows.push(left === 1 ? 'Next open: rare costume (10th open)' : `${left} more opens until a rare costume (10th open)`);
+        rows.push(left === 1 ? 'Next open guarantees a rare costume (10th open)' : `${left} more opens to guarantee a rare costume (10th open)`);
         const n = COSTUME_BOX_POOL.length;
         const total = COSTUME_BOX_POOL.reduce((a, c) => a + (c.weight || 1), 0);
         if (n) COSTUME_BOX_POOL.forEach(c => rows.push(`${escapeHtml(c.name)}: ${((c.weight || 1) / total * 100).toFixed(2).replace(/\.?0+$/, '')}%`));
@@ -3226,7 +3226,7 @@ function chestDropRatesHTML(chestType) {
     }
     if (cfg.pet) {
         const left = opensToTenth('pet');
-        rows.push(left === 1 ? 'Next open: rare pet (10th open)' : `${left} more opens until a rare pet (10th open)`);
+        rows.push(left === 1 ? 'Next open guarantees a rare pet (10th open)' : `${left} more opens to guarantee a rare pet (10th open)`);
         const total = PET_BOX_POOL.reduce((a, c) => a + (c.weight || 1), 0);
         if (PET_BOX_POOL.length) PET_BOX_POOL.forEach(c => rows.push(`${escapeHtml(c.name)}: ${((c.weight || 1) / total * 100).toFixed(2).replace(/\.?0+$/, '')}%`));
         else rows.push('Pets: coming soon');
@@ -6389,9 +6389,10 @@ function openChest(chestType) {
         if (kind) {
             const left = opensToTenth(kind);
             const what = kind === 'costume' ? 'costume' : 'pet';
+            const green = 'font-weight:700; color:#4ade80;'; // inline: the prebuilt Tailwind CSS has no green-400 class
             const msg = left === 1
-                ? `<span class="font-bold text-green-400">Next</span> ${what} open gives a rare ${what}`
-                : `<span class="font-bold text-green-400">${left}</span> more ${what} opens until a rare ${what}`;
+                ? `Next ${what} open <b style="${green}">guarantees</b> a rare ${what}`
+                : `<b style="${green}">${left}</b> more ${what} opens to guarantee a rare ${what}`;
             extra = `<div class="text-center text-xs text-slate-300 mt-2">${msg}</div>`;
         }
         showModal("Chest Opened!", '', rewardPopupHTML('You received:', rewardCells.join('')) + extra);
