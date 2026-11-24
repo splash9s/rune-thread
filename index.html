@@ -42,6 +42,7 @@
         window.addEventListener('error', function (e) {
             if (e.target && e.target !== window) return; // a missing image or sound, not a script error
             if (!e.message || e.message === 'Script error.') return; // other sites' scripts give no details
+            if (e.filename && e.filename.indexOf(location.origin + '/') !== 0) return; // browser extensions (e.g. a wallet's evmAsk.js), not this game
             show('Error: ' + e.message + ' @ ' + String(e.filename || '').split('/').pop() + ':' + (e.lineno || ''));
         }, true);
         window.addEventListener('unhandledrejection', function (e) {
