@@ -24,7 +24,7 @@
         }
         return false;
     }
-    const TAP_SLOP_PX = 24, TAP_MAX_MS = 800, NEAR_PX = 14;
+    const TAP_SLOP_PX = 24, TAP_MAX_MS = 800, NEAR_PX = 24; // NEAR_PX: a tap this close (screen px) to a button counts as that button
     const CLICKABLE = 'button, a[href], [onclick], [role="button"], label, summary';
     function nearestButton(x, y) {
         let best = null, bestD = 1e9;

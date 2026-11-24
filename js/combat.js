@@ -1347,18 +1347,18 @@ function tickEnemyStatuses(tickMs) {
         m.status.ms -= tickMs;
         if (m.status.ms <= 0) {
             m.element = m.baseElement || m.element;
+            if (m.status.kind === 'stun') m._stunEndAt = Date.now(); // stars pop and the head shakes
             m.status = null;
             logMessage(`[Status] ${m.name} is no longer affected.`, 'combat');
         }
     });
 }
 
-// Stuns a monster for 2 seconds (it cannot attack) and shows the STUNNED text. Returns true if applied.
+// Stuns a monster for 2 seconds (it cannot attack). The stars and STUN label are drawn by stunFxHTML (js/ui.js). Returns true if applied.
 function applyStunStatus(m) {
     if (!m || m.hp <= 0 || m.status) return false;
     m.status = { kind: 'stun', ms: STATUS_MS };
-    const i = monstersList.indexOf(m);
-    if (i >= 0) showCombatText(`#monsters-lineup-container > div:nth-child(${i + 1}) img`, 'STUNNED', 'stun');
+    m._stunAt = Date.now(); // the STUN label floats up for a moment from this time
     return true;
 }
 function getAliveMonsters() {
@@ -1975,10 +1975,12 @@ function updateSpeedButton() {
     const shown = battleSpeedShown();
     btn.title = 'Battle speed ' + shown + 'x' + (isVipActive() ? '' : ' (2x with VIP)');
     const img = document.getElementById('combat-speed-img');
-    const txt = document.getElementById('combat-speed-txt');
-    // 1.5x has no icon yet: it shows as text
-    if (img) { img.style.display = shown === 1.5 ? 'none' : 'block'; img.src = shown === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp'; }
-    if (txt) txt.style.display = shown === 1.5 ? 'flex' : 'none';
+    const press = document.getElementById('combat-speed-press');
+    // 1.5x has its own picture pair; 1x and 2x keep their pictures (pressed shows the same picture)
+    const src = shown === 1.5 ? 'assets/cha/button/btn_speed15x_q85.webp' : shown === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp';
+    const pressSrc = shown === 1.5 ? 'assets/cha/button/btn_speed15xpress_q85.webp' : src;
+    if (img) img.src = src;
+    if (press) press.src = pressSrc;
 }
 function stopCombatTimers() {
     clearInterval(combatInterval); clearInterval(monsterInterval);
@@ -2554,7 +2556,7 @@ function updateAutoRejoinButton() {
     const btn = document.getElementById('combat-rejoin-btn');
     if (!btn) return;
     btn.classList.toggle('hidden', !isVipActive() || currentMode !== 'campaign'); // campaign maps only
-    btn.classList.toggle('on', autoRejoinOn());
+    btn.classList.toggle('on', autoRejoinOn()); // the press picture and a green glow show while on
     btn.title = 'Auto Rejoin (VIP): ' + (autoRejoinOn() ? 'On' : 'Off');
 }
 function scheduleAutoRejoin(final) {
@@ -2642,7 +2644,7 @@ function getEventState() {
 function eventCanPlay(kind) {
     const st = getEventState();
     if (kind === 'daily' && st.dailyCleared) return false;
-    if (kind === 'tower') return true; // Warded Tower: unlimited attempts for now
+    if (kind === 'tower') return st.plays.tower < 1; // Warded Tower: one attempt per day
     return st.plays[kind] < EVENT_LIMIT;
 }
 
@@ -2776,10 +2778,12 @@ function buildTowerMap() {
 }
 
 // Starts a Warded Tower run. One attempt per day.
-const TOWER_FRIEND_COOLDOWN_MS = 3 * 24 * 3600 * 1000; // a friend can join again 3 days after their last run
-// Friend cooldown is off for now (set to 0). Restore the timer by returning the time left from TOWER_FRIEND_COOLDOWN_MS.
+const TOWER_FRIEND_COOLDOWN_MS = 72 * 3600 * 1000; // a friend can join again 72 hours after their last run
+// Time left (ms) before this friend can join a Tower run again. startTower stamps player.towerCooldowns[id].
 function towerFriendCooldownLeft(id) {
-    return 0;
+    const last = (player.towerCooldowns || {})[id];
+    if (!last) return 0;
+    return Math.max(0, last + TOWER_FRIEND_COOLDOWN_MS - Date.now());
 }
 // Ally from a friend's saved tent: HP from base level and VIT, ATK from STR and LUK (gear and skills not counted yet)
 function towerAllyFromSnapshot(snap) {

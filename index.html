@@ -231,9 +231,6 @@
         .matk-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; }
         .matk-icon > img, .matk-icon > span:first-child { filter: drop-shadow(0 0 4px #a855f7) drop-shadow(0 0 2px #c084fc); }
         .matk-badge { position: absolute; right: 2px; bottom: 2px; min-width: 18px; height: 18px; padding: 0 3px; border-radius: 9px; background: #7c3aed; border: 1px solid #e9d5ff; color: #fff; font: 900 11px/16px 'Roboto', sans-serif; text-align: center; pointer-events: none; }
-        /* Text button in the bag's icon row (until it gets its own art) */
-        .inv-icon-btn.inv-text-btn { border-radius: 12px; border: 2px solid #c09e6a; background: #3b2716; color: #fde68a; font-size: 13px; font-weight: 800; line-height: 1.1; }
-        .inv-icon-btn.inv-text-btn:active { background: #5a3d22; }
         .dd-row .inv-icon-btn { justify-self: center; }
         .inv-icon-btn .cb-press { display: none; position: absolute; inset: 0; }
         .inv-icon-btn:active .cb-normal { display: none; }
@@ -289,6 +286,8 @@
 #avatar-lock-panel.open { transform: translateX(0); opacity: 1; }
 /* Campaign panel buttons: art from graphic/cha/page/button (blue, red), press picture while held */
 .campaign-btn { position: relative; display: inline-block; width: 200px; height: 48px; padding: 0; border: 0; background: none; cursor: pointer; }
+/* Bigger touch area for phones: the stage is scaled down there (about 0.2-0.36), so the button is only 15-26 px tall on screen. This invisible area adds 60 stage px on every side. */
+.campaign-btn::before { content: ""; position: absolute; left: -60px; right: -60px; top: -60px; bottom: -60px; }
 .campaign-btn img { width: 100%; height: 100%; display: block; }
 .campaign-btn .cb-press { display: none; position: absolute; inset: 0; }
 .campaign-btn::after { content: ''; position: absolute; inset: -16px -12px -14px -120px; } /* bigger touch area than the art (free space to its left) */
@@ -653,7 +652,7 @@
         /* Hide UI keeps the minimize button, which now sits at the bottom left */
         #view-character #tent-ui-toggle { left: 24px; right: auto; }
         /* Red unread mark on the Guest Book icon and the menu button */
-        #view-character .tent-icon-btn img.tent-alert { position: absolute; right: -8px; top: -8px; width: 34px; height: 34px; z-index: 2; pointer-events: none; }
+        #view-character .tent-icon-btn .tent-alert { position: absolute; right: -8px; top: -8px; z-index: 2; pointer-events: none; }
         /* Guest Book panel (Diary button): write on a friend's tent, read and delete on your own */
         #guestbook-panel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(var(--ps, 1)); z-index: 290; width: 860px; max-width: 92vw; box-sizing: border-box; padding: 18px; display: flex; flex-direction: column; gap: 12px; background: rgba(17,26,44,.94); border: 2px solid #26344f; border-radius: 16px; color: #e9edf5; font-family: 'Roboto', 'Noto Sans Thai', sans-serif; box-shadow: 0 12px 30px rgba(0,0,0,.5); }
         #guestbook-panel .gb-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -841,7 +840,7 @@
         #view-events.events-float .ts-bg { display: none !important; }
         #view-events.events-float .ts-inner { background: transparent !important; }
         #events-menu .ev-menu-item { position: relative; }
-        #events-menu .ev-alert { position: absolute; right: 8px; top: 6px; width: 38px; height: 38px; z-index: 10; pointer-events: none; }
+        #events-menu .ev-alert { position: absolute; right: 8px; top: 6px; z-index: 10; pointer-events: none; }
         /* Mail, settings, shop, blacksmith, market and VIP shop as floating windows: no background, top bar and return button stay */
         #view-quests.float-page, #view-setting.float-page, #view-shop.float-page, #view-blacksmith.float-page, #view-market.float-page, #view-vip.float-page { background: transparent; }
         #view-quests.float-page .ts-bg, #view-setting.float-page .ts-bg, #view-shop.float-page .ts-bg, #view-blacksmith.float-page .ts-bg, #view-market.float-page .ts-bg, #view-vip.float-page .ts-bg { display: none !important; }
@@ -1075,14 +1074,46 @@
         .hat-idle { animation: playerIdleHat 2.4s infinite; }
         @media (prefers-reduced-motion: reduce) { .hat-idle { animation: none; } }
         .monster-idle { animation: monsterIdle 2.4s infinite; transform-origin: 50% 100%; }
-        .monster-idle[data-stunned="1"] { animation: none; }
-        @media (prefers-reduced-motion: reduce) { .player-idle, .monster-idle { animation: none; } }
+        /* Monster stun (js/ui.js stunFxHTML): droop to 0.9, sway +-0.08 rad (1.31 s), 2 s total.
+           The stars are two layers: back (behind, dimmer) and front. CSS only: no per-frame script. */
+        .monster-idle[data-stunned="1"] { animation: stun-sway 1.31s linear infinite; z-index: 1; }
+        .monster-idle.stun-end { animation: stun-end-shake 0.35s cubic-bezier(.34, 1.56, .64, 1) 1; z-index: 1; }
+        /* Player and monster share these: the droop-and-sway, and the head shake when the stun ends */
+        .stun-sway { animation: stun-sway 1.31s linear infinite; transform-origin: 50% 100%; z-index: 1; }
+        .stun-end { animation: stun-end-shake 0.35s cubic-bezier(.34, 1.56, .64, 1) 1; transform-origin: 50% 100%; z-index: 1; }
+        @keyframes stun-sway { 0% { transform: scaleY(.9) rotate(0deg); } 25% { transform: scaleY(.9) rotate(4.6deg); } 50% { transform: scaleY(.9) rotate(0deg); } 75% { transform: scaleY(.9) rotate(-4.6deg); } 100% { transform: scaleY(.9) rotate(0deg); } }
+        /* head shake: 2 px jitter, then back upright */
+        @keyframes stun-end-shake { 0% { transform: translateX(0) scaleY(.9); } 20% { transform: translateX(2px) scaleY(1); } 40% { transform: translateX(-2px) scaleY(1); } 60% { transform: translateX(1px) scaleY(1); } 80% { transform: translateX(-1px) scaleY(1); } 100% { transform: translateX(0) scaleY(1); } }
+        /* --u: one unit of the 10 x 3 ellipse. 4 px puts the ring at 40 x 12 px, the size of the old stun picture (102 x 78) */
+        .stun-stars { --u: 4.6px; position: absolute; left: 50%; top: var(--stun-top, 6px); width: 0; height: 0; pointer-events: none; }
+        .st-star { position: absolute; left: 0; top: 0; width: 16px; height: 16px; margin: -8px 0 0 -8px; image-rendering: pixelated; background-repeat: no-repeat; background-size: 100% 100%; }
+        .st-front { z-index: 2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7' shape-rendering='crispEdges'%3E%3Crect x='0' y='2' width='7' height='3' fill='%2316121f'/%3E%3Crect x='2' y='0' width='3' height='7' fill='%2316121f'/%3E%3Crect x='1' y='3' width='5' height='1' fill='%23ffd84a'/%3E%3Crect x='3' y='1' width='1' height='5' fill='%23ffd84a'/%3E%3Crect x='3' y='3' width='1' height='1' fill='%23fff3b0'/%3E%3C/svg%3E"); animation: st-orbit .873s linear infinite, st-front-vis .873s linear infinite; animation-delay: var(--d), var(--d); }
+        .st-back { z-index: 0; opacity: .55; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7' shape-rendering='crispEdges'%3E%3Crect x='0' y='2' width='7' height='3' fill='%2316121f'/%3E%3Crect x='2' y='0' width='3' height='7' fill='%2316121f'/%3E%3Crect x='1' y='3' width='5' height='1' fill='%23b8962a'/%3E%3Crect x='3' y='1' width='1' height='5' fill='%23b8962a'/%3E%3C/svg%3E"); animation: st-orbit .873s linear infinite, st-back-vis .873s linear infinite; animation-delay: var(--d), var(--d); }
+        /* ellipse 10 x 3 px, 0.12 rad per tick (8 points) */
+        @keyframes st-orbit { 0% { transform: translate(calc(var(--u) * 10), 0); } 12.5% { transform: translate(calc(var(--u) * 7.07), calc(var(--u) * 2.12)); } 25% { transform: translate(0, calc(var(--u) * 3)); } 37.5% { transform: translate(calc(var(--u) * -7.07), calc(var(--u) * 2.12)); } 50% { transform: translate(calc(var(--u) * -10), 0); } 62.5% { transform: translate(calc(var(--u) * -7.07), calc(var(--u) * -2.12)); } 75% { transform: translate(0, calc(var(--u) * -3)); } 87.5% { transform: translate(calc(var(--u) * 7.07), calc(var(--u) * -2.12)); } 100% { transform: translate(calc(var(--u) * 10), 0); } }
+        @keyframes st-back-vis { 0%, 49.9% { opacity: 0; } 50%, 100% { opacity: .55; } }
+        @keyframes st-front-vis { 0%, 49.9% { opacity: 1; } 50%, 100% { opacity: 0; } }
+        .st-mini { width: 10px; height: 10px; margin: 0; position: relative; display: inline-block; animation: none; vertical-align: middle; left: auto; top: auto; }
+        .stun-label { position: absolute; left: 0; top: -34px; transform: translate(-50%, 0); white-space: nowrap; color: #ffd84a; font: 900 13px/1 'Roboto', sans-serif; letter-spacing: 1px; text-shadow: 0 1px 0 #3a2a00, 0 0 4px rgba(0,0,0,.8); z-index: 3; animation: stun-label-rise .67s ease-out 1 both; }
+        .stun-label .st-mini { margin: 0 3px; }
+        @keyframes stun-label-rise { 0% { transform: translate(-50%, 0); opacity: 1; } 100% { transform: translate(-50%, -6px); opacity: 0; } }
+        .st-spark { position: absolute; left: 0; top: 0; width: 4px; height: 4px; margin: -2px 0 0 -2px; background: #fff3b0; box-shadow: 0 0 3px #ffd84a; animation: spark-burst .4s ease-out 1 forwards; transform: rotate(var(--sa)) translateX(0); }
+        @keyframes spark-burst { 0% { transform: rotate(var(--sa)) translateX(0); opacity: 1; } 100% { transform: rotate(var(--sa)) translateX(28px); opacity: 0; } }
+        /* Reduced motion (system setting, or the game's own toggle which sets html.menu-dot-still): no sway, no orbit; the droop stays, the stars stay as a front pair */
+        @media (prefers-reduced-motion: reduce) { .player-idle, .monster-idle { animation: none; } .monster-idle[data-stunned="1"], .stun-sway { animation: none; transform: scaleY(.9); } .stun-end { animation: none; } .st-star { animation: none !important; } .st-back { display: none; } .st-front { opacity: 1; transform: translate(0, -3px); } .monster-idle.stun-end { animation: none; } .st-spark { animation: none; opacity: 0; } }
+        html.menu-dot-still .monster-idle[data-stunned="1"], html.menu-dot-still .stun-sway { animation: none; transform: scaleY(.9); }
+        html.menu-dot-still .st-star { animation: none !important; }
+        html.menu-dot-still .st-back { display: none; }
+        html.menu-dot-still .st-front { opacity: 1; transform: translate(0, -3px); }
+        html.menu-dot-still .monster-idle.stun-end { animation: none; }
         .combat-dmg.miss { color: #ffffff; font-size: 39px; letter-spacing: 1px; }
         /* Item dropped on the ground where a monster fell (js/ui.js showGroundDrop): a soft golden glow */
         .ground-drop { position: absolute; z-index: 3; pointer-events: none; transform: translate(-50%, 0); filter: drop-shadow(0 0 4px #fde68a) drop-shadow(0 0 10px rgba(251,191,36,.8)); line-height: 0; }
         .combat-dmg.stun { color: #facc15; --dmg-edge: #8a6a00; font-size: 39px; letter-spacing: 1px; }
         .combat-dmg.heal { color: #4ade80; --dmg-edge: #14632f; }
         .combat-dmg.below { transform: translate(-50%, 0); } /* under the button, not above it */
+        /* Bigger touch area for the Return button on phones (scaled stage): 40 stage px on every side */
+        #combat-return-btn::before { content: ""; position: absolute; left: -40px; right: -40px; top: -40px; bottom: -40px; }
         #combat-return-btn.armed .ret-normal { display: none !important; }
         #combat-return-btn.armed .ret-press { display: block !important; }
         .combat-dmg.resoff { color: #f87171; --dmg-edge: #7f1d1d; }
@@ -1141,12 +1172,13 @@
         #combat-auto-rune-btn { background-image: url('assets/combat/auto_sign.png'); }
         #combat-auto-rune-btn:active, #combat-auto-rune-btn.on { background-image: url('assets/combat/auto_sign_press.png'); }
         #combat-pause-btn.hidden, #combat-auto-rune-btn.hidden, #combat-rejoin-btn.hidden { display: none !important; }
-        /* Round text buttons (until they get icons): Auto Rejoin, and the 1.5x speed label */
-        .combat-round-btn { padding: 0; border-radius: 50%; border: 3px solid #c09e6a; background: radial-gradient(circle at 50% 35%, #4a3320, #241509); cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.6); }
-        .combat-round-btn.on { border-color: #34d399; box-shadow: 0 0 14px #10b981, 0 3px 8px rgba(0,0,0,.6); }
-        .combat-round-txt { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: #fde68a; font: 900 17px/1.05 'Roboto', sans-serif; text-shadow: 0 1px 2px #000; }
-        .combat-round-btn.on .combat-round-txt { color: #a7f3d0; }
-        #combat-speed-txt { border-radius: 50%; border: 3px solid #c09e6a; background: radial-gradient(circle at 50% 35%, #4a3320, #241509); font-size: 26px; box-sizing: border-box; }
+        /* Battle round buttons (picture pairs): the press picture shows while pressed; Auto Rejoin shows it while on */
+        .combat-img-btn .cb-press { display: none; position: absolute; left: 0; top: 0; }
+        .combat-img-btn:active .cb-normal { display: none; }
+        .combat-img-btn:active .cb-press { display: block; }
+        .combat-img-btn.on .cb-normal { display: none; }
+        .combat-img-btn.on .cb-press { display: block; }
+        .combat-img-btn.on { filter: drop-shadow(0 0 8px #10b981); }
         /* Resurrection label: green "Resurrection ON" when auto-revive is on, red "Resurrection OFF" when off */
         #combat-elixir-btn > span:first-child { color: #4ade80; font-weight: 900; text-shadow: 0 1px 2px #000, 0 0 4px #000; }
         #view-combat #combat-elixir-btn > span:first-child { font-size: 18px; }
@@ -2055,7 +2087,7 @@
                     <img loading="lazy" id="tent-both" class="tent-light" src="assets/pages/character/tent/tent_both_q85.webp" alt="" style="position:absolute; left:0; top:0; width:1920px; height:1080px; opacity:0;">
                     
                     <img id="char-shadow" class="art-frame pointer-events-none" src="assets/cha/chashadow_q85.webp" alt="" style="left:339px; top:684px; width:102px; height:41px; z-index:4;">
-                    <img id="char-hero" class="art-frame pointer-events-none" src="" alt="" style="left:350px; top:527px; width:95px; height:193px; z-index:5;">                    <button class="char-skills-btn" onclick="switchView('skills')" style="position:absolute; left:399px; top:137px; box-sizing:border-box; width:198px; height:101px; line-height:101px; padding:0; white-space:nowrap; z-index:4; background-color:transparent; border:none; color:transparent; border-radius:0;" class="font-bold text-sm transition cursor-pointer hover:brightness-105">Skills<img id="alert-char-skills" src="assets/page01/alert_q85.webp" alt="" style="display:none; position:absolute; right:-8px; top:-8px; width:34px; height:34px; z-index:2; pointer-events:none;"></button>
+                    <img id="char-hero" class="art-frame pointer-events-none" src="" alt="" style="left:350px; top:527px; width:95px; height:193px; z-index:5;">                    <button class="char-skills-btn" onclick="switchView('skills')" style="position:absolute; left:399px; top:137px; box-sizing:border-box; width:198px; height:101px; line-height:101px; padding:0; white-space:nowrap; z-index:4; background-color:transparent; border:none; color:transparent; border-radius:0;" class="font-bold text-sm transition cursor-pointer hover:brightness-105">Skills<img id="alert-char-skills" src="assets/page01/alert_q85.webp" alt="" style="display:none; position:absolute; right:6px; top:-2px; width:34px; height:34px; z-index:2; pointer-events:none;"></button>
                     <div class="char-header-bar" style="left:0px; top:0px; width:1920px; height:70px;"></div>
                     <div class="ui char-return" style="left:1846px; top:2px; width:66px; height:67px;" id="char-return-btn" onclick="charReturn()">
                         <img loading="lazy" class="ret-normal" src="assets/cha/button/returnbuttonsmall_q85.webp" alt="">
@@ -2080,7 +2112,7 @@
                         <img loading="lazy" class="clr-normal" src="assets/cha/button/clearscreen_q85.webp" alt="">
                         <img loading="lazy" class="clr-press" src="assets/cha/button/clearscreenpress_q85.webp" alt="">
                     </div>
-                    <button id="char-stats-tab" class="char-stats-tab" onclick="toggleCharStats(true)">STATS<img id="alert-char-stats" src="assets/page01/alert_q85.webp" alt="" style="display:none; position:absolute; right:-8px; top:-8px; width:34px; height:34px; z-index:2; pointer-events:none;"></button>
+                    <button id="char-stats-tab" class="char-stats-tab" onclick="toggleCharStats(true)">STATS<img id="alert-char-stats" src="assets/page01/alert_q85.webp" alt="" style="display:none; position:absolute; right:6px; top:-2px; width:34px; height:34px; z-index:2; pointer-events:none;"></button>
                     <div id="char-panel-left" class="art-panel char-stats-panel" style="overflow-y:auto;">
                         <button class="char-stats-close dd-x" onclick="toggleCharStats(false)" aria-label="Close" title="Close">&#10005;</button>
                         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col gap-3">
@@ -2149,7 +2181,7 @@
                         <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventory Bag</h3>
                         <span id="inventory-count" class="text-xs font-mono text-slate-400 ml-6">0 / 63 slots</span>
                         <div class="inv-top-btns ml-auto flex items-center gap-2">
-                            <button onclick="autoEquipBest()" class="inv-icon-btn inv-text-btn" title="Auto Equip: wear your rarest usable gear" aria-label="Auto Equip">Auto<br>Equip</button>
+                            <button onclick="autoEquipBest()" class="inv-icon-btn" title="Auto Equip: wear your rarest usable gear" aria-label="Auto Equip"><img loading="lazy" class="cb-normal" src="assets/cha/button/btn_autoequip_q85.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/button/btn_autoequippress_q85.webp" alt=""></button>
                             <button onclick="stashOpenOrUnlock()" class="inv-icon-btn" title="Stash" aria-label="Stash"><img loading="lazy" class="cb-normal" src="assets/cha/button/stashbutton_q90.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/button/stashbuttonpress_q90.webp" alt=""></button>
                             <button onclick="startBulkSelect('salvage')" class="inv-icon-btn" title="Select to salvage" aria-label="Select to salvage"><img loading="lazy" class="cb-normal" src="assets/cha/page/btn_salvageall_q85.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/page/btn_salvageallpress_q85.webp" alt=""></button>
                             <button onclick="startBulkSelect('sell')" class="inv-icon-btn" title="Select to sell" aria-label="Select to sell"><img loading="lazy" class="cb-normal" src="assets/cha/page/btn_sellall_q85.webp" alt=""><img loading="lazy" class="cb-press" src="assets/cha/page/btn_sellallpress_q85.webp" alt=""></button>
@@ -2417,7 +2449,7 @@
                     <img id="combat-pet-sprite" class="pet-idle" src="assets/combat/ocat/ocat1_q85.webp" alt="" style="position:absolute; left:0; top:0; width:100px; height:90px; display:none; max-width:none; max-height:none; image-rendering:pixelated; pointer-events:none; z-index:3;">
 
                     <!-- Player stun effect: shown over the head while stunned (see the 60ms loop in ui.js) -->
-                    <img id="combat-player-stun-fx" src="assets/combat/stun/stuneffect_q85.webp" alt="" style="position:absolute; left:0; top:0; width:102px; height:78px; display:none; max-width:none; pointer-events:none; image-rendering:pixelated; z-index:5;">
+                    <div id="combat-player-stun" class="stun-stars" data-mode="" style="display:none; z-index:5;"></div>
 
                     <!-- Player HP and armor, below the character -->
                     <div id="combat-hp-under" style="position:absolute; left:413px; top:896px; width:204px; display:flex; flex-direction:column; gap:4px;">
@@ -2454,8 +2486,8 @@
                     <!-- Pause (bottom right); Next Stage takes its place once the stage is cleared -->
                     <button id="combat-pause-btn" onclick="toggleCombatPause()" title="Pause" style="position:absolute; left:1733px; top:694px; width:175px; height:178px;" class="hidden combat-slot-btn"></button>
                     <button id="combat-sound-btn" onclick="toggleSoundAll()" title="Sound and effects on / off" style="position:absolute; left:1770px; top:2px; width:66px; height:67px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-sound-img" src="assets/combat/sound/sound_on_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"></button>
-                    <button id="combat-speed-btn" onclick="toggleBattleSpeed()" title="Battle speed" class="hidden" style="position:absolute; left:1818px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-speed-img" src="assets/combat/speed/speed_1x_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><span id="combat-speed-txt" class="combat-round-txt" style="display:none;">1.5x</span></button>
-                    <button id="combat-rejoin-btn" onclick="toggleAutoRejoin()" title="Auto Rejoin (VIP)" class="hidden combat-round-btn" style="position:absolute; left:1722px; top:592px; width:88px; height:89px;"><span class="combat-round-txt">Auto<br>Rejoin</span></button>
+                    <button id="combat-speed-btn" onclick="toggleBattleSpeed()" title="Battle speed" class="hidden combat-img-btn" style="position:absolute; left:1818px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img id="combat-speed-img" class="cb-normal" src="assets/combat/speed/speed_1x_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><img id="combat-speed-press" class="cb-press" src="assets/cha/button/btn_speed15xpress_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain;"></button>
+                    <button id="combat-rejoin-btn" onclick="toggleAutoRejoin()" title="Auto Rejoin (VIP)" class="hidden combat-img-btn" style="position:absolute; left:1722px; top:592px; width:88px; height:89px; padding:0; border:0; background:none; cursor:pointer;"><img class="cb-normal" src="assets/cha/button/btn_autorejoin_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain; display:block;"><img class="cb-press" src="assets/cha/button/btn_autorejoinpress_q85.webp" alt="" style="width:100%; height:100%; object-fit:contain;"></button>
                     <button id="combat-auto-rune-btn" onclick="toggleVipAutoRune()" title="VIP: auto-pick a random rune" class="hidden combat-slot-btn" style="position:absolute; left:1351px; top:890px; width:175px; height:178px;"></button>
                     <button id="next-stage-btn" onclick="proceedToNextStage()" style="position:absolute; left:1733px; top:694px; width:175px; height:178px;" class="hidden bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl text-sm transition cursor-pointer shadow">Next Stage</button>
 
@@ -2500,13 +2532,14 @@
     <script src="js/level-roll.js?v=20261123fx2"></script>
     <script src="js/avatar-unlock.js?v=20261123au"></script>
     <script src="js/pet-alert.js?v=20261123pa"></script>
+    <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261124sr"></script>
-    <script src="js/touch-lock.js?v=20261124nc"></script>
-    <script src="js/combat.js?v=20261124el"></script>
+    <script src="js/touch-lock.js?v=20261124nd"></script>
+    <script src="js/combat.js?v=20261124s2"></script>
     <script src="js/crit-fx.js?v=20261123bi"></script>
     <script src="js/landscape.js?v=20261122a"></script>
     <script src="js/bolt-fx.js?v=20261123sm"></script>
-    <script src="js/ui.js?v=20261124el"></script>
+    <script src="js/ui.js?v=20261124s3"></script>
     <script src="js/equip-flash.js?v=20261123a"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>

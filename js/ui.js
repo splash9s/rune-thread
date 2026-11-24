@@ -832,9 +832,66 @@ function miniEmbersHTML(m) {
         .map(([l, dx, d]) => `<span class="mini-ember" style="left:${l}%; --dx:${dx}px; --ember:${c}; animation-delay:${d}s"></span>`).join('');
     return glow + embers;
 }
+// Monster stun (CSS, see index.html): three stars on a 10 x 3 px ellipse at 0.12 rad per tick (period 0.873 s).
+// The back half sits behind the monster and is dimmer; the front half is in front. "STUN" floats up once,
+// and when the stun ends the stars pop into sparkles while the monster shakes its head (stunEndClass).
+const STUN_STAR_PERIOD_S = 0.873;
+// The stars, back half first, then the STUN label (when withLabel), then the front half. Used by monsters and the player.
+function stunStarsHTML(withLabel) {
+    const delay = k => `${(-(k / 3) * STUN_STAR_PERIOD_S).toFixed(3)}s`; // stars 120 degrees apart
+    const back = [0, 1, 2].map(k => `<span class="st-star st-back" style="--d:${delay(k)}"></span>`).join('');
+    const front = [0, 1, 2].map(k => `<span class="st-star st-front" style="--d:${delay(k)}"></span>`).join('');
+    const label = withLabel
+        ? `<span class="stun-label"><i class="st-star st-front st-mini"></i>STUN<i class="st-star st-front st-mini"></i></span>`
+        : '';
+    return `<div class="stun-stars">${back}${label}${front}</div>`;
+}
+// Six sparkles that fly out when a stun ends
+function stunSparksHTML() {
+    const sparks = [0, 1, 2, 3, 4, 5].map(i => `<span class="st-spark" style="--sa:${i * 60}deg"></span>`).join('');
+    return `<div class="stun-stars">${sparks}</div>`;
+}
 function stunFxHTML(m) {
-    if (!(m.status && m.status.kind === 'stun' && m.hp > 0)) return '';
-    return '<img class="stun-fx" src="assets/combat/stun/stuneffect_q85.webp" alt="" style="position:absolute; left:0; top:0; width:102px; height:78px; max-width:none; pointer-events:none; image-rendering:pixelated;">';
+    if (m.hp <= 0) return '';
+    if (m.status && m.status.kind === 'stun') return stunStarsHTML(Date.now() - (m._stunAt || 0) < 700);
+    const endAge = Date.now() - (m._stunEndAt || 0);
+    if (m._stunEndAt && endAge < 450) return stunSparksHTML();
+    return '';
+}
+// Player stun: the same effect over the hero's head. Built once when the stun starts (so the label plays once),
+// then sparkles and a head shake when it ends. The hero's sway is the stun-sway class on its sprite.
+const PLAYER_STUN_TOP = 6; // px below the sprite's top edge, where the star ring is centred
+let playerStunEndTimer = null;
+function syncPlayerStunFx(pfx, psp, show) {
+    const mode = pfx.dataset.mode || '';
+    if (show) {
+        if (mode !== 'stun') {
+            clearTimeout(playerStunEndTimer);
+            psp.classList.remove('stun-end');
+            pfx.innerHTML = stunStarsHTML(true);
+            pfx.dataset.mode = 'stun';
+            psp.classList.add('stun-sway');
+        }
+        pfx.style.display = '';
+        return;
+    }
+    if (mode === 'stun') {   // the stun just ended
+        pfx.innerHTML = stunSparksHTML();
+        pfx.dataset.mode = 'end';
+        pfx.style.display = '';
+        psp.classList.remove('stun-sway');
+        psp.classList.add('stun-end');
+        playerStunEndTimer = setTimeout(() => {
+            psp.classList.remove('stun-end');
+            pfx.innerHTML = '';
+            pfx.dataset.mode = '';
+            pfx.style.display = 'none';
+        }, 450);
+    }
+}
+// The monster picture gets a head shake for a moment after its stun ends
+function stunEndClass(m) {
+    return m._stunEndAt && Date.now() - m._stunEndAt < 450 && !(m.status && m.status.kind === 'stun') ? ' stun-end' : '';
 }
 // The lineup card is rebuilt from HTML on every render, so a dying monster's image must start on the
 // frame it should be showing right now (and with its shift and fade), or it flickers back to idle
@@ -1523,31 +1580,20 @@ setInterval(() => {
         const frames = img.dataset.frames.split(',');
         setMonsterFrame(img, frames[Math.floor(now / 500) % frames.length]); // idle: one frame every 500ms
     });
-    // Stun effect: centred on the top edge of the monster's sprite, shaking side to side
-    document.querySelectorAll('img.stun-fx').forEach(fx => {
-        const body = fx.parentElement && fx.parentElement.querySelector('img.idle-anim');
-        if (!body) return;
-        const fw = fx.offsetWidth || 102, fh = fx.offsetHeight || 78;
-        const shake = Math.round(Math.sin(now / 50) * 4);
-        fx.style.left = (body.offsetLeft + body.offsetWidth / 2 - fw / 2 + shake) + 'px';
-        fx.style.top = (body.offsetTop - fh / 2) + 'px';
-    });
-    // Player stun effect: the same picture on the top edge of the player's sprite while stunned
-    const pfx = document.getElementById('combat-player-stun-fx');
+    // Player stun effect (same stars as the monsters): centred over the hero's head while stunned
+    const pfx = document.getElementById('combat-player-stun');
     const psp = document.getElementById('combat-player-sprite');
     if (pfx && psp) {
         const stunned = Date.now() < playerStunUntil;
         // Only over the hero once it has a real place on the stage: never at the page's top-left corner
         const placed = psp.style.left !== '' && psp.style.top !== '' && psp.getClientRects().length > 0;
-        pfx.style.display = stunned && placed ? '' : 'none';
+        syncPlayerStunFx(pfx, psp, stunned && placed);
         if (stunned && placed) {
-            const fw = 102, fh = 78;
             const sl = parseFloat(psp.style.left) || 0, st = parseFloat(psp.style.top) || 0, sw = parseFloat(psp.style.width) || 95;
-            const shake = Math.round(Math.sin(now / 50) * 4);
             const hx = heroBodyHeadX('base'); // the head's centre in the frame, scaled to the battle size
             const headX = hx === null ? sw / 2 : hx * COMBAT_PLAYER_SCALE;
-            pfx.style.left = (sl + headX - fw / 2 + shake) + 'px';
-            pfx.style.top = (st - fh / 2) + 'px';
+            pfx.style.left = (sl + headX) + 'px';
+            pfx.style.top = (st + PLAYER_STUN_TOP) + 'px';
         }
     }
 }, 60);
@@ -2646,6 +2692,21 @@ function updateTownAlerts() {
     setAlert('alert-char-stats', statPts); // STATS tab on the character page
     setAlert('alert-char-skills', skillPts); // SKILLS button on the character page
     setAlert('alert-skill-sp', skillPts);
+    // Warded Tower on the main page: red dot while today's attempt is still free
+    const towerBtn = document.querySelector('.ui[data-action="tower"]');
+    if (towerBtn) {
+        let dot = towerBtn.querySelector('.menu-dot');
+        const free = eventCanPlay('tower');
+        if (free && !dot) {
+            dot = document.createElement('span');
+            dot.className = 'menu-dot';
+            dot.setAttribute('aria-hidden', 'true');
+            dot.style.cssText = 'right:8px; top:8px; z-index:2;';
+            towerBtn.appendChild(dot);
+        } else if (!free && dot) {
+            dot.remove();
+        }
+    }
 }
 
 // Refresh everything on the shop row and the town alerts
@@ -4544,7 +4605,10 @@ function closeResultItemDetail() {
 // Salvage and Sell as the same round picture buttons as Salvage All / Sell All (inventory detail and combat result)
 function iconActionButtons(item, isEquip, canSell, salvageCall, sellCall) {
     const out = [];
-    const salvageImg = `<img class="cb-normal" src="assets/cha/page/btn_salvageall_q85.webp" alt=""><img class="cb-press" src="assets/cha/page/btn_salvageallpress_q85.webp" alt="">`;
+    // Costume and pet salvage shows the ticket pictures; gear keeps the Salvage All pictures
+    const salvageImg = item && (item.slot === 'costume' || item.slot === 'pet')
+        ? `<img class="cb-normal" src="assets/cha/button/btn_ticket_q85.webp" alt=""><img class="cb-press" src="assets/cha/button/btn_ticketpress_q85.webp" alt="">`
+        : `<img class="cb-normal" src="assets/cha/page/btn_salvageall_q85.webp" alt=""><img class="cb-press" src="assets/cha/page/btn_salvageallpress_q85.webp" alt="">`;
     const sellImg = `<img class="cb-normal" src="assets/cha/page/btn_sellall_q85.webp" alt=""><img class="cb-press" src="assets/cha/page/btn_sellallpress_q85.webp" alt="">`;
     if (isEquip && !item.favorite && (!NO_GEAR_SLOTS.includes(item.slot) || (salvageCall && salvageCall.indexOf('salvage') >= 0))) {
         const rw = salvageRewardOf(item);
@@ -6805,7 +6869,7 @@ function updateUI() {
             if (p) cardStyle += `${cardStyle ? '; ' : ''}left:${p[0]}px; top:${p[1]}px`;
             lineupContainer.innerHTML += `
                 <div class="flex flex-col items-center gap-1" data-pos="${posIdx}" data-slot="${hasSlot ? 'y' : ''}"${cardStyle ? ` style="${cardStyle}"` : ''}>
-                    <div style="height:100px; display:flex; align-items:flex-end; justify-content:center; position:relative;">${miniEmbersHTML(m)}${(() => { const sp = monsterSpriteOf(m); const idle = sp ? sp.idle.join(',') : COMBAT_SLIME_FRAMES; const dead = monsterDeathFrames(m); const init = monsterInitialFrame(m, idle, dead); return `<img class="idle-anim monster-idle ${monsterTintClass(m)}" data-stunned="${m.status && m.status.kind === 'stun' ? '1' : ''}" data-sprite="${m.id}" data-frames="${idle}" data-hit-at="${m._hitAt || 0}" data-flash-at="${m._flashAt || 0}" data-death-at="${m._deathAt || 0}" data-attack-at="${m._attackAt || 0}" data-lunge-at="${m._animAt || 0}" data-attack-frame="${monsterAttackFrame(m)}" data-attack-frames="${monsterAttackFrames(m).join(',')}" data-hurt-frames="${monsterHurtFrames(m).join(',')}" data-death-frames="${dead.join(',')}" data-death-ms="${monsterDeathMs(m)}" data-death-hurt-ms="${monsterDeathHurtMs(m)}" data-death-total="${monsterDeathTotalMs(m)}" data-slow-death="${monsterIsSlowDeath(m) ? 1 : 0}" src="${init.src}" alt="" style="${init.css}image-rendering:pixelated; pointer-events:none; position:relative; max-width:none; height:auto; flex-shrink:0; animation-delay:-${((idx * 0.37) % 1.8).toFixed(2)}s;${m._hitAt && Date.now() - m._hitAt < COMBAT_HIT_FLASH_MS ? ' filter:' + COMBAT_HIT_FLASH_FILTER + ';' : ''}">`; })()}${stunFxHTML(m)}</div>
+                    <div style="height:100px; display:flex; align-items:flex-end; justify-content:center; position:relative;">${miniEmbersHTML(m)}${(() => { const sp = monsterSpriteOf(m); const idle = sp ? sp.idle.join(',') : COMBAT_SLIME_FRAMES; const dead = monsterDeathFrames(m); const init = monsterInitialFrame(m, idle, dead); return `<img class="idle-anim monster-idle ${monsterTintClass(m)}${stunEndClass(m)}" data-stunned="${m.status && m.status.kind === 'stun' ? '1' : ''}" data-sprite="${m.id}" data-frames="${idle}" data-hit-at="${m._hitAt || 0}" data-flash-at="${m._flashAt || 0}" data-death-at="${m._deathAt || 0}" data-attack-at="${m._attackAt || 0}" data-lunge-at="${m._animAt || 0}" data-attack-frame="${monsterAttackFrame(m)}" data-attack-frames="${monsterAttackFrames(m).join(',')}" data-hurt-frames="${monsterHurtFrames(m).join(',')}" data-death-frames="${dead.join(',')}" data-death-ms="${monsterDeathMs(m)}" data-death-hurt-ms="${monsterDeathHurtMs(m)}" data-death-total="${monsterDeathTotalMs(m)}" data-slow-death="${monsterIsSlowDeath(m) ? 1 : 0}" src="${init.src}" alt="" style="${init.css}image-rendering:pixelated; pointer-events:none; position:relative; max-width:none; height:auto; flex-shrink:0; animation-delay:-${((idx * 0.37) % 1.8).toFixed(2)}s;${m._hitAt && Date.now() - m._hitAt < COMBAT_HIT_FLASH_MS ? ' filter:' + COMBAT_HIT_FLASH_FILTER + ';' : ''}">`; })()}${stunFxHTML(m)}</div>
                     <div class="w-[200px] p-2.5 rounded-lg border ${borderColor} flex flex-col gap-1.5 transition-all">
                         <div class="flex justify-between items-center gap-2 text-xs">
                             <span class="font-bold text-red-400 truncate">${m.name}</span>
