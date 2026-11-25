@@ -507,7 +507,8 @@
         #inv-detail-panel.dd-skin [class*="text-slate-5"], #shop-detail-panel.dd-skin [class*="text-slate-5"] , #result-item-detail-panel.dd-skin [class*="text-slate-5"] { color: #9aa6bd !important; }
         /* Battle summary banner (summaryBannerHTML in js/combat.js): YOU WIN gold glow, YOU LOSE red glow, with a shine sweep */
         .summary-banner { position: relative; width: min(100%, 336px); margin: 0 auto; }
-        .summary-banner img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+        /* The picture has a transparent border (48 px of 576) so the glow is not cut off; its margin cancels the border so the lettering keeps the same place */
+        .summary-banner img { display: block; width: 120%; max-width: none; height: auto; margin: -10%; image-rendering: pixelated; }
         .summary-banner.win img { filter: drop-shadow(0 0 6px #facc15) drop-shadow(0 0 18px rgba(250, 204, 21, .85)); }
         .summary-banner.lose img { filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 18px rgba(239, 68, 68, .85)); }
         .summary-shine { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }

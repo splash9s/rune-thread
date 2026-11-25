@@ -2465,7 +2465,7 @@ function summaryBannerHTML(kind) {
         const color = ['#fde047', '#facc15', '#fbbf24', '#f59e0b', '#fff7c2'][Math.floor(Math.random() * 5)];
         return `<span class="summary-spark" style="left:${r(40, 60).toFixed(1)}%; top:${r(30, 50).toFixed(1)}%; width:${r(4, 7).toFixed(1)}px; height:${r(6, 10).toFixed(1)}px; background:${color}; --dx:${r(-170, 170).toFixed(0)}px; --dy:${r(-90, 150).toFixed(0)}px; --rot:${r(-540, 540).toFixed(0)}deg; animation-delay:${r(0, 0.4).toFixed(2)}s;"></span>`;
     }).join('') : '';
-    return `<div class="summary-banner ${win ? 'win' : 'lose'}"><img src="assets/summary/${win ? 'win' : 'lose'}_q85.webp" alt="${win ? 'You Win' : 'You Lose'}"><span class="summary-shine"></span>${sparks}</div>`;
+    return `<div class="summary-banner ${win ? 'win' : 'lose'}"><img src="assets/summary/${win ? 'win' : 'lose'}_glow_q85.webp" alt="${win ? 'You Win' : 'You Lose'}"><span class="summary-shine"></span>${sparks}</div>`;
 }
 function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', guideHint = false, headerText = '') {
     const s = stageSummary || newStageSummary(currentStage);
