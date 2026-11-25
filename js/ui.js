@@ -1729,7 +1729,8 @@ function showModal(title, message, customHTML = '', onCloseCallback = null) {
     if (area) area.innerHTML = customHTML;
     if (modalEl && modalEl.firstElementChild) { modalEl.firstElementChild.classList.add('relative'); modalEl.firstElementChild.classList.remove('art-panel'); modalEl.firstElementChild.style.maxWidth = ''; const isSummary = !!(area && area.querySelector('.summary-banner'));
         modalEl.firstElementChild.classList.toggle('summary-window', isSummary);
-        modalEl.firstElementChild.style.overflow = isSummary ? 'visible' : ''; // the banner's glow and sparks may pass the window edge
+        modalEl.firstElementChild.style.overflowX = isSummary ? 'visible' : ''; // the banner's glow and sparks may pass the window edge
+        modalEl.firstElementChild.style.overflowY = isSummary ? 'visible' : '';
     }
     if (btn) {
         if (customHTML) btn.classList.add('hidden');
