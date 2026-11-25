@@ -508,7 +508,8 @@
         /* Battle summary banner (summaryBannerHTML in js/combat.js): YOU WIN gold glow, YOU LOSE red glow, with a shine sweep */
         .summary-banner { position: relative; width: min(100%, 336px); margin: 0 auto; }
         .summary-banner img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
-        .summary-banner img { filter: none; } /* no coloured glow */
+        .summary-banner.win img { filter: drop-shadow(0 0 6px #facc15) drop-shadow(0 0 18px rgba(250, 204, 21, .85)); }
+        .summary-banner.lose img { filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 18px rgba(239, 68, 68, .85)); }
         .summary-shine { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
         /* The shine only shows on the lettering (the banner's own picture is the mask) */
         .summary-banner.win .summary-shine { -webkit-mask: url(assets/summary/win_q85.webp) center / 100% 100% no-repeat; mask: url(assets/summary/win_q85.webp) center / 100% 100% no-repeat; }
@@ -520,8 +521,12 @@
         @media (prefers-reduced-motion: reduce) { .summary-shine, .summary-spark { display: none; } }
         .summary-return:active img { transform: translateY(1px); }
         /* The battle summary's own window has no background or border; only its sections keep their 70% panels */
-        #game-modal > div:has(.summary-banner) { background: transparent; border-color: transparent; box-shadow: none; padding-top: 0; }
-        #game-modal > div:has(.summary-banner) #modal-message:empty { display: none; }
+        /* The summary screen: no dark blurred overlay, no window, and the banner is the first thing at the top */
+        #game-modal:has(.summary-banner) { background: transparent !important; backdrop-filter: none !important; }
+        #game-modal > div:has(.summary-banner) { background: transparent; border-color: transparent; box-shadow: none; padding-top: 0; gap: 0; }
+        #game-modal > div:has(.summary-banner) #modal-title,
+        #game-modal > div:has(.summary-banner) #modal-message { display: none; }
+        #game-modal > div:has(.summary-banner) #modal-content-area { margin: 0; }
         /* Item Details layout (ddFill in js/ui.js) */
         #inv-detail-panel.dd-skin .dd-close, #shop-detail-panel.dd-skin .dd-close , #result-item-detail-panel.dd-skin .dd-close { position: absolute; top: 14px; right: 14px; width: 48px; height: 48px; border-radius: 10px; border: 2px solid #26344f; background: #1b2740 !important; color: #e9edf5 !important; font-size: 22px; font-weight: 800; cursor: pointer; }
         #inv-detail-panel.dd-skin .dd-head, #shop-detail-panel.dd-skin .dd-head , #result-item-detail-panel.dd-skin .dd-head { display: flex; align-items: center; gap: 18px; padding: 0 64px 14px 0; border-bottom: 2px solid #26344f; margin-bottom: 14px; }
