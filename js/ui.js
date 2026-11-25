@@ -1727,7 +1727,7 @@ function showModal(title, message, customHTML = '', onCloseCallback = null) {
     if (titleEl) { titleEl.innerText = title; titleEl.style.display = title ? '' : 'none'; } // an empty title is hidden (the banner replaces it)
     if (msgEl) msgEl.innerText = message;
     if (area) area.innerHTML = customHTML;
-    if (modalEl && modalEl.firstElementChild) { modalEl.firstElementChild.classList.add('relative'); modalEl.firstElementChild.classList.remove('art-panel'); modalEl.firstElementChild.style.maxWidth = ''; }
+    if (modalEl && modalEl.firstElementChild) { modalEl.firstElementChild.classList.add('relative'); modalEl.firstElementChild.classList.remove('art-panel'); modalEl.firstElementChild.style.maxWidth = ''; modalEl.firstElementChild.classList.toggle('summary-window', !!(area && area.querySelector('.summary-banner'))); }
     if (btn) {
         if (customHTML) btn.classList.add('hidden');
         else btn.classList.remove('hidden');
