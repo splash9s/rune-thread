@@ -5,7 +5,7 @@
     // Shows script errors on screen (tap the box to close it), so a tester's screenshot captures them: phones have no console.
     // Add ?debug=1 to the link to also list each start-up step with its time (window.rtDebug).
     (function () {
-        var BUILD = '20261126-s2';
+        var BUILD = window.BUILD = '20261126-s2'; // window.BUILD: the other scripts read the version from here
         var DEBUG = /[?&]debug=1/.test(location.search);
         var t0 = Date.now();
         function show(msg, isDebug) {
