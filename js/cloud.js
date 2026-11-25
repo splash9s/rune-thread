@@ -92,6 +92,7 @@ async function cloudStart() {
             }
         }
         await claimDiamondTopups();
+        if (typeof playBillingStart === 'function') playBillingStart(); // Android app: Play prices and unfinished purchases
         cloudPushProfile();
         if (typeof player !== 'undefined') syncServerMail();
         cloudStatsStart();

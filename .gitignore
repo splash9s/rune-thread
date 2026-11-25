@@ -1,3 +1,12 @@
 
 # Body animation tool: kept on the local machine only, not in git
 tools/body-animation/
+
+# Android app (android/README.md): never commit the signing key; build output is rebuilt by bubblewrap build
+*.keystore
+*.jks
+android/twa/**/build/
+android/twa/.gradle/
+android/twa/*.apk
+android/twa/*.aab
+android/twa/*.idsig

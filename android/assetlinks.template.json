@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.runethread.game",
+      "sha256_cert_fingerprints": [
+        "REPLACE_WITH_APP_SIGNING_KEY_SHA256 (Play Console > Test and release > App integrity > App signing)",
+        "REPLACE_WITH_UPLOAD_KEY_SHA256 (bubblewrap fingerprint list, or keytool -list -v -keystore android.keystore)"
+      ]
+    }
+  }
+]

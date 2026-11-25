@@ -87,13 +87,14 @@ function potionHealText(item) {
 
 const DIAMOND_SHOP_ITEMS = [
     // Real-money top-up: opens the Stripe payment link. Diamonds are credited by the server after payment is confirmed.
-    { id: 'topup_usd_1', name: "500 Diamonds", desc: "Top up 500 diamonds for $1.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 1, diamonds: 500, payLink: 'https://buy.stripe.com/28E5kE0x46Zwd2K6Kp0Fi00', card: 'assets/diamond/topup/topup_500_q85.webp', icon: 'assets/icons/diamondiconsmall_q85.webp' },
-    { id: 'topup_usd_5_9', name: "4,000 Diamonds", desc: "Top up 4,000 diamonds for $5.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 5.9, diamonds: 4000, payLink: 'https://buy.stripe.com/6oUdRaa7E4Ro9Qy5Gl0Fi01', card: 'assets/diamond/topup/topup_4000_q85.webp', icon: 'assets/icons/diamondiconsmall_q85.webp' },
-    { id: 'topup_usd_9_9', name: "8,000 Diamonds", desc: "Top up 8,000 diamonds for $9.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 9.9, diamonds: 8000, payLink: 'https://buy.stripe.com/eVq14o93AbfM0fY8Sx0Fi02', icon: 'assets/icons/diamondiconsmall_q85.webp' },
-    { id: 'topup_usd_19', name: "18,000 Diamonds", desc: "Top up 18,000 diamonds for $19.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 19, diamonds: 18000, payLink: 'https://buy.stripe.com/cNiaEY2FcdnU2o60m10Fi03', icon: 'assets/icons/diamondiconsmall_q85.webp' },
-    { id: 'topup_usd_29', name: "30,000 Diamonds", desc: "Top up 30,000 diamonds for $29.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 29, diamonds: 30000, payLink: 'https://buy.stripe.com/00w4gAbbIbfM6Emd8N0Fi04', icon: 'assets/icons/diamondiconsmall_q85.webp' },
-    { id: 'gold_usd_1', name: "30,000 Gold", desc: "Top up 30,000 gold for $1.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 1, gold: 30000, creditTag: 'gold', payLink: 'https://buy.stripe.com/dRm9AU4Nkfw20fYgkZ0Fi05', icon: 'assets/icons/goldpile_q85.webp' },
-    { id: 'gold_usd_2_9', name: "100,000 Gold", desc: "Top up 100,000 gold for $2.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 2.9, gold: 100000, creditTag: 'gold', payLink: 'https://buy.stripe.com/5kQcN6bbI83AaUC7Ot0Fi06', icon: 'assets/icons/goldpile_q85.webp' },
+    // playSku: the Google Play product ID used instead of Stripe in the Android app (play-billing.js, supabase/functions/play-purchase).
+    { id: 'topup_usd_1', name: "500 Diamonds", desc: "Top up 500 diamonds for $1.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 1, diamonds: 500, payLink: 'https://buy.stripe.com/28E5kE0x46Zwd2K6Kp0Fi00', playSku: 'diamonds_500', card: 'assets/diamond/topup/topup_500_q85.webp', icon: 'assets/icons/diamondiconsmall_q85.webp' },
+    { id: 'topup_usd_5_9', name: "4,000 Diamonds", desc: "Top up 4,000 diamonds for $5.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 5.9, diamonds: 4000, payLink: 'https://buy.stripe.com/6oUdRaa7E4Ro9Qy5Gl0Fi01', playSku: 'diamonds_4000', card: 'assets/diamond/topup/topup_4000_q85.webp', icon: 'assets/icons/diamondiconsmall_q85.webp' },
+    { id: 'topup_usd_9_9', name: "8,000 Diamonds", desc: "Top up 8,000 diamonds for $9.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 9.9, diamonds: 8000, payLink: 'https://buy.stripe.com/eVq14o93AbfM0fY8Sx0Fi02', playSku: 'diamonds_8000', icon: 'assets/icons/diamondiconsmall_q85.webp' },
+    { id: 'topup_usd_19', name: "18,000 Diamonds", desc: "Top up 18,000 diamonds for $19.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 19, diamonds: 18000, payLink: 'https://buy.stripe.com/cNiaEY2FcdnU2o60m10Fi03', playSku: 'diamonds_18000', icon: 'assets/icons/diamondiconsmall_q85.webp' },
+    { id: 'topup_usd_29', name: "30,000 Diamonds", desc: "Top up 30,000 diamonds for $29.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 29, diamonds: 30000, payLink: 'https://buy.stripe.com/00w4gAbbIbfM6Emd8N0Fi04', playSku: 'diamonds_30000', icon: 'assets/icons/diamondiconsmall_q85.webp' },
+    { id: 'gold_usd_1', name: "30,000 Gold", desc: "Top up 30,000 gold for $1.00.", price: 0, type: 'topup', vipCat: 'stone', usd: 1, gold: 30000, creditTag: 'gold', payLink: 'https://buy.stripe.com/dRm9AU4Nkfw20fYgkZ0Fi05', playSku: 'gold_30000', icon: 'assets/icons/goldpile_q85.webp' },
+    { id: 'gold_usd_2_9', name: "100,000 Gold", desc: "Top up 100,000 gold for $2.90.", price: 0, type: 'topup', vipCat: 'stone', usd: 2.9, gold: 100000, creditTag: 'gold', payLink: 'https://buy.stripe.com/5kQcN6bbI83AaUC7Ot0Fi06', playSku: 'gold_100000', icon: 'assets/icons/goldpile_q85.webp' },
     { id: 'vip_pass', name: "VIP Pass (30 days)", desc: "Auto stage, 3x battle speed, Get Resurrection Potion everyday.", price: 4000, type: 'vip', days: 30, icon: 'assets/shop/diamond/vip31.png' },
     { id: 'vip_7d', name: "VIP Pass (7 days)", desc: "Auto stage, 3x battle speed, Get Resurrection Potion everyday.", price: 1200, type: 'vip', days: 7, icon: 'assets/shop/diamond/vip7.png' },
     { id: 'vip_1d', name: "VIP Pass (1 day)", desc: "Auto stage, 3x battle speed, Get Resurrection Potion everyday.", price: 200, type: 'vip', days: 1, icon: 'assets/shop/diamond/vip1.png' },
@@ -2990,7 +2991,11 @@ const DIAMOND_SHOP_DISCOUNT = 20;
 // fixedPrice: a set price in diamonds that ignores the sale discount
 function dsPrice(item) { if (item.fixedPrice) return item.fixedPrice; return item.type === 'topup' ? item.price : Math.floor(item.price * (100 - DIAMOND_SHOP_DISCOUNT) / 100); }
 function vipPriceTagHTML(item) {
-    if (item.type === 'topup') return item.usd ? `$${item.usd.toFixed(2)}` : `${item.thb} THB`;
+    if (item.type === 'topup') {
+        // Android app: Google Play's price in the player's currency ("…" until Play answers)
+        if (typeof isAndroidApp === 'function' && isAndroidApp()) return (typeof playPrices !== 'undefined' && playPrices[item.playSku]) || '…';
+        return item.usd ? `$${item.usd.toFixed(2)}` : `${item.thb} THB`;
+    }
     // Ticket items are paid in their ticket, so the price shows the ticket icon and count
     if (item.ticket) {
         const icon = item.ticket.name === 'Pet Ticket' ? 'assets/items/mat_petticket_q85.webp' : 'assets/items/mat_costumeticket_q85.webp';
@@ -4926,8 +4931,15 @@ function useInventoryPotion(index) {
 }
 
 // Opens the Stripe payment link. client_reference_id carries the player's Supabase user ID so the webhook knows who to credit.
+// In the Android app the top-up goes through Google Play instead (Play policy; play-billing.js).
 function openDiamondTopUp(item) {
     const uid = typeof cloudUserId !== 'undefined' ? cloudUserId : null;
+    if (typeof isAndroidApp === 'function' && isAndroidApp()) {
+        if (!item.playSku || typeof playBuy !== 'function') { floatFailAt('This pack is not available yet'); return; }
+        if (!uid) { floatFailAt('Sign in with Google to top up'); return; }
+        playBuy(item);
+        return;
+    }
     if (!item.payLink) { floatFailAt('This pack is not available yet'); return; }
     if (!uid) { floatFailAt('Sign in with Google to top up'); return; }
     const ref = uid + (item.creditTag ? '|' + item.creditTag : ''); // '|gold' tells the webhook to credit gold, not diamonds
