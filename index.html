@@ -520,6 +520,8 @@
         @keyframes summary-shine { 0% { left: -60%; } 55%, 100% { left: 120%; } }
         @media (prefers-reduced-motion: reduce) { .summary-shine, .summary-spark { display: none; } }
         .summary-return:active img { transform: translateY(1px); }
+        /* The battle summary's own window has no background or border; only its sections keep their 70% panels */
+        #game-modal > div:has(.summary-banner) { background: transparent; border-color: transparent; box-shadow: none; }
         /* Item Details layout (ddFill in js/ui.js) */
         #inv-detail-panel.dd-skin .dd-close, #shop-detail-panel.dd-skin .dd-close , #result-item-detail-panel.dd-skin .dd-close { position: absolute; top: 14px; right: 14px; width: 48px; height: 48px; border-radius: 10px; border: 2px solid #26344f; background: #1b2740 !important; color: #e9edf5 !important; font-size: 22px; font-weight: 800; cursor: pointer; }
         #inv-detail-panel.dd-skin .dd-head, #shop-detail-panel.dd-skin .dd-head , #result-item-detail-panel.dd-skin .dd-head { display: flex; align-items: center; gap: 18px; padding: 0 64px 14px 0; border-bottom: 2px solid #26344f; margin-bottom: 14px; }
