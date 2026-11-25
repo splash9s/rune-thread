@@ -2458,7 +2458,9 @@ function logClassFor(type) {
 // The big YOU WIN / YOU LOSE banner: gold glow for a win, red for a loss, with a shine sweep (CSS in index.html)
 function summaryBannerHTML(kind) {
     const win = kind === 'win';
-    return `<div class="summary-banner ${win ? 'win' : 'lose'}"><img src="assets/summary/${win ? 'win' : 'lose'}_q85.webp" alt="${win ? 'You Win' : 'You Lose'}"><span class="summary-shine"></span></div>`;
+    // Win only: gold sparks float up over the background (CSS in index.html)
+    const sparks = win ? Array.from({ length: 12 }, (_, i) => `<span class="summary-spark" style="left:${(i * 83) % 100}%; bottom:${(i * 37) % 50}%; animation-delay:${((i * 0.37) % 2.6).toFixed(2)}s;"></span>`).join('') : '';
+    return `<div class="summary-banner ${win ? 'win' : 'lose'}"><img src="assets/summary/${win ? 'win' : 'lose'}_q85.webp" alt="${win ? 'You Win' : 'You Lose'}"><span class="summary-shine"></span>${sparks}</div>`;
 }
 function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', guideHint = false, headerText = '') {
     const s = stageSummary || newStageSummary(currentStage);
@@ -2485,7 +2487,7 @@ function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', g
     const title = kind === 'win'
         ? '' // the win banner replaces the "Map Cleared" heading
 
-        : `<h3 class="font-bold text-sm text-red-300">Defeated</h3>`;
+        : ''; // the banner is the heading after a defeat too
     // All three sections start collapsed; the Return button sits in the window's top-right corner (see showModal)
     const sections = kind === 'win'
         ? section('Item Drop', s.items.length, itemBody, false) + section('Rune Picked', s.runes.length, runeBody, false) + section('Fight Log', s.log.length, logBody, false)

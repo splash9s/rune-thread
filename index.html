@@ -511,9 +511,14 @@
         .summary-banner.win img { filter: drop-shadow(0 0 6px #facc15) drop-shadow(0 0 18px rgba(250, 204, 21, .85)); }
         .summary-banner.lose img { filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 18px rgba(239, 68, 68, .85)); }
         .summary-shine { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        /* The shine only shows on the lettering (the banner's own picture is the mask) */
+        .summary-banner.win .summary-shine { -webkit-mask: url(assets/summary/win_q85.webp) center / 100% 100% no-repeat; mask: url(assets/summary/win_q85.webp) center / 100% 100% no-repeat; }
+        .summary-banner.lose .summary-shine { -webkit-mask: url(assets/summary/lose_q85.webp) center / 100% 100% no-repeat; mask: url(assets/summary/lose_q85.webp) center / 100% 100% no-repeat; }
+        .summary-spark { position: absolute; width: 4px; height: 4px; border-radius: 1px; background: #fde047; box-shadow: 0 0 6px #facc15; pointer-events: none; opacity: 0; animation: summary-spark 2.6s linear infinite; }
+        @keyframes summary-spark { 0% { transform: translateY(0) scale(1); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-110px) scale(.4); opacity: 0; } }
         .summary-shine::after { content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 32%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .6), transparent); transform: skewX(-18deg); mix-blend-mode: screen; animation: summary-shine 2.8s ease-in-out infinite; }
         @keyframes summary-shine { 0% { left: -60%; } 55%, 100% { left: 120%; } }
-        @media (prefers-reduced-motion: reduce) { .summary-shine { display: none; } }
+        @media (prefers-reduced-motion: reduce) { .summary-shine, .summary-spark { display: none; } }
         .summary-return:active img { transform: translateY(1px); }
         /* Item Details layout (ddFill in js/ui.js) */
         #inv-detail-panel.dd-skin .dd-close, #shop-detail-panel.dd-skin .dd-close , #result-item-detail-panel.dd-skin .dd-close { position: absolute; top: 14px; right: 14px; width: 48px; height: 48px; border-radius: 10px; border: 2px solid #26344f; background: #1b2740 !important; color: #e9edf5 !important; font-size: 22px; font-weight: 800; cursor: pointer; }
@@ -2539,7 +2544,7 @@
     <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261126sr"></script>
     <script src="js/touch-lock.js?v=20261124nd"></script>
-    <script src="js/combat.js?v=20261126rb"></script>
+    <script src="js/combat.js?v=20261126sp"></script>
     <script src="js/crit-fx.js?v=20261124ef"></script>
     <script src="js/landscape.js?v=20261122a"></script>
     <script src="js/bolt-fx.js?v=20261124ef"></script>
