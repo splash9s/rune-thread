@@ -2490,14 +2490,15 @@ function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', g
     const sections = kind === 'win'
         ? section('Item Drop', s.items.length, itemBody, false) + section('Rune Picked', s.runes.length, runeBody, false) + section('Fight Log', s.log.length, logBody, false)
         : section('Fight Log', s.log.length, logBody, false) + section('Item Drop', s.items.length, itemBody, false) + section('Rune Picked', s.runes.length, runeBody, false);
-    const returnBtn = `<button onclick="closeModal()" title="${escapeHtml(returnLabel)}" class="summary-return shrink-0 p-0 border-0 bg-transparent cursor-pointer"><img src="assets/compaign/returnbutton_q85.webp" alt="${escapeHtml(returnLabel)}" style="width:163px;height:auto;display:block;"></button>`;
-    const header = `<div class="flex items-center justify-between gap-3">${title}${returnBtn}</div>`;
+    // Return button: top-right corner of the window (the window is the modal panel, which is position:relative)
+    const returnBtn = `<button onclick="closeModal()" title="${escapeHtml(returnLabel)}" class="summary-return cursor-pointer" style="position:absolute; top:12px; right:12px; z-index:2; padding:0; border:0; background:transparent;"><img src="assets/cha/button/returnbuttonsmall_q85.webp" alt="${escapeHtml(returnLabel)}" style="width:72px; height:auto; display:block;"></button>`;
+    const header = title ? `<div class="flex items-center justify-between gap-3">${title}</div>` : '';
     // After a defeat: the main page's refining menu icon links to the Refining page to improve gear
     const powerBox = kind === 'win' ? '' : `<div class="flex flex-col gap-2">`
         + `<button onclick="goFromResult('blacksmith')" class="${guideHint ? 'guide-flash-link ' : ''}flex items-center gap-3 bg-slate-950 border border-amber-700/50 rounded-xl p-2 text-left cursor-pointer hover:bg-slate-900 transition"><img src="assets/page01/articanbutton_q85.webp" alt="" style="width:64px;height:64px;object-fit:contain;flex:none"><span class="text-xs font-bold text-amber-300">Lost this stage? Make your gear stronger at the Refining.</span></button>`
         + `<button onclick="goFromResult('character')" class="flex items-center gap-3 bg-slate-950 border border-amber-700/50 rounded-xl p-2 text-left cursor-pointer hover:bg-slate-900 transition"><img src="assets/page01/characterbutton_q85.webp" alt="" style="width:64px;height:64px;object-fit:contain;flex:none"><span class="text-xs font-bold text-amber-300">Check your upgrade status and skills on the Character.</span></button>`
         + `</div>`;
-    return `<div class="flex flex-col gap-3 text-left">${summaryBannerHTML(kind)}${header}<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${statCards}</div>${towerRewardHTML()}${powerBox}<div class="flex flex-col gap-2">${sections}</div></div>`;
+    return `<div class="flex flex-col gap-3 text-left">${returnBtn}${summaryBannerHTML(kind)}${header}<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${statCards}</div>${towerRewardHTML()}${powerBox}<div class="flex flex-col gap-2">${sections}</div></div>`;
 }
 
 // Result-screen quick link: close the result without running its return action, then open the page
