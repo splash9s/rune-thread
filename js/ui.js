@@ -1724,7 +1724,7 @@ function showModal(title, message, customHTML = '', onCloseCallback = null) {
     let btn = document.getElementById('modal-close-btn');
     let modalEl = document.getElementById('game-modal');
 
-    if (titleEl) titleEl.innerText = title;
+    if (titleEl) { titleEl.innerText = title; titleEl.style.display = title ? '' : 'none'; } // an empty title is hidden (the banner replaces it)
     if (msgEl) msgEl.innerText = message;
     if (area) area.innerHTML = customHTML;
     if (modalEl && modalEl.firstElementChild) { modalEl.firstElementChild.classList.add('relative'); modalEl.firstElementChild.classList.remove('art-panel'); modalEl.firstElementChild.style.maxWidth = ''; }

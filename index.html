@@ -505,6 +505,16 @@
         #inv-detail-panel.dd-skin button, #shop-detail-panel.dd-skin button , #result-item-detail-panel.dd-skin button { color: #e9edf5 !important; }
         #inv-detail-panel.dd-skin [class*="text-slate-9"], #shop-detail-panel.dd-skin [class*="text-slate-9"], #result-item-detail-panel.dd-skin [class*="text-slate-9"], #inv-detail-panel.dd-skin [class*="text-slate-2"], #shop-detail-panel.dd-skin [class*="text-slate-2"], #result-item-detail-panel.dd-skin [class*="text-slate-2"], #inv-detail-panel.dd-skin [class*="text-black"], #shop-detail-panel.dd-skin [class*="text-black"] , #result-item-detail-panel.dd-skin [class*="text-black"] { color: #e9edf5 !important; }
         #inv-detail-panel.dd-skin [class*="text-slate-5"], #shop-detail-panel.dd-skin [class*="text-slate-5"] , #result-item-detail-panel.dd-skin [class*="text-slate-5"] { color: #9aa6bd !important; }
+        /* Battle summary banner (summaryBannerHTML in js/combat.js): YOU WIN gold glow, YOU LOSE red glow, with a shine sweep */
+        .summary-banner { position: relative; width: min(100%, 480px); margin: 0 auto; }
+        .summary-banner img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+        .summary-banner.win img { filter: drop-shadow(0 0 6px #facc15) drop-shadow(0 0 18px rgba(250, 204, 21, .85)); }
+        .summary-banner.lose img { filter: drop-shadow(0 0 6px #ef4444) drop-shadow(0 0 18px rgba(239, 68, 68, .85)); }
+        .summary-shine { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .summary-shine::after { content: ""; position: absolute; top: -20%; bottom: -20%; left: -60%; width: 32%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .6), transparent); transform: skewX(-18deg); mix-blend-mode: screen; animation: summary-shine 2.8s ease-in-out infinite; }
+        @keyframes summary-shine { 0% { left: -60%; } 55%, 100% { left: 120%; } }
+        @media (prefers-reduced-motion: reduce) { .summary-shine { display: none; } }
+        .summary-return:active img { transform: translateY(1px); }
         /* Item Details layout (ddFill in js/ui.js) */
         #inv-detail-panel.dd-skin .dd-close, #shop-detail-panel.dd-skin .dd-close , #result-item-detail-panel.dd-skin .dd-close { position: absolute; top: 14px; right: 14px; width: 48px; height: 48px; border-radius: 10px; border: 2px solid #26344f; background: #1b2740 !important; color: #e9edf5 !important; font-size: 22px; font-weight: 800; cursor: pointer; }
         #inv-detail-panel.dd-skin .dd-head, #shop-detail-panel.dd-skin .dd-head , #result-item-detail-panel.dd-skin .dd-head { display: flex; align-items: center; gap: 18px; padding: 0 64px 14px 0; border-bottom: 2px solid #26344f; margin-bottom: 14px; }
@@ -2529,7 +2539,7 @@
     <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261126sr"></script>
     <script src="js/touch-lock.js?v=20261124nd"></script>
-    <script src="js/combat.js?v=20261126cm"></script>
+    <script src="js/combat.js?v=20261126bn"></script>
     <script src="js/crit-fx.js?v=20261124ef"></script>
     <script src="js/landscape.js?v=20261122a"></script>
     <script src="js/bolt-fx.js?v=20261124ef"></script>

@@ -1934,7 +1934,7 @@ function monsterTurnTick() {
         const failReturn = currentMode === 'tower' ? 'tower' : (currentMode === 'voidtest' || currentMode === 'bossmap') ? 'events' : 'expeditions';
         const rejoinCampaign = currentMode === 'campaign', rejoinFinal = currentPath === 'final';
         setTimeout(() => {
-            showModal(isEventMap ? "Event Failed" : "Expedition Failed", '', defeatHtml, () => switchView(failReturn));
+            showModal('', '', defeatHtml, () => switchView(failReturn));
             if (rejoinCampaign) scheduleAutoRejoin(rejoinFinal); // VIP Auto Rejoin
         }, PLAYER_FALL_MS);
     }
@@ -2317,7 +2317,7 @@ function onStageCleared() {
 
             if ((currentMode === 'voidtest' || currentMode === 'bossmap') && currentStage > maxStages) {
                 if (typeof resetMapRunes === 'function') resetMapRunes();
-                showModal(currentMode === 'bossmap' ? "Boss Gauntlet Cleared!" : "Void Test Map Cleared!", '', buildMapSummaryHTML('win', 'Return to Events'), () => switchView('events'));
+                showModal('', '', buildMapSummaryHTML('win', 'Return to Events'), () => switchView('events'));
                 updateUI();
                 saveGame();
                 return;
@@ -2339,7 +2339,7 @@ function onStageCleared() {
                 const reward = generatePoEItem(template, 3, 1);
                 addItemToInventory(rollSetForDrop(reward));
 
-                showModal("Map Cleared!", '', buildMapSummaryHTML('win'), () => switchView('expeditions'));
+                showModal('', '', buildMapSummaryHTML('win'), () => switchView('expeditions'));
                 scheduleAutoRejoin(currentPath === 'final'); // VIP Auto Rejoin
                 return;
             }
@@ -2455,6 +2455,11 @@ function logClassFor(type) {
     return type === 'combat' ? "text-red-400" : (type === 'winlose' ? "text-blue-400 font-bold" : (type === 'drop' ? "text-yellow-400 font-bold" : (type === 'levelup' ? "text-purple-400 font-bold" : "text-slate-300")));
 }
 
+// The big YOU WIN / YOU LOSE banner: gold glow for a win, red for a loss, with a shine sweep (CSS in index.html)
+function summaryBannerHTML(kind) {
+    const win = kind === 'win';
+    return `<div class="summary-banner ${win ? 'win' : 'lose'}"><img src="assets/summary/${win ? 'win' : 'lose'}_q85.webp" alt="${win ? 'You Win' : 'You Lose'}"><span class="summary-shine"></span></div>`;
+}
 function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', guideHint = false, headerText = '') {
     const s = stageSummary || newStageSummary(currentStage);
     const label = escapeHtml(kind === 'win' && activeMap ? activeMap.title : (document.getElementById('node-title')?.innerText || `Stage ${s.stage}`));
@@ -2475,23 +2480,24 @@ function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', g
     const runeBody = s.runes.length ? s.runes.map(r => `<div class="${(RARITY_INFO[r.rarity] || RARITY_INFO[1]).text}">${escapeHtml(r.text)}</div>`).join('') : '<div class="text-slate-500">No rune picked</div>';
     const logBody = s.log.length ? `<div class="max-h-48 overflow-y-auto font-mono text-[10px] flex flex-col gap-0.5">${s.log.map(l => `<div class="${logClassFor(l.type)}">${l.msg}</div>`).join('')}</div>` : '<div class="text-slate-500">No log</div>';
     const statCards = (kind === 'win')
-        ? card('Gold', `+${fmt(s.gold)}`, 'text-yellow-300') + card('Items', s.items.length, 'text-amber-300') + card('Base EXP', `+${fmt(s.baseExp)}`, 'text-blue-300') + card('Job EXP', `+${fmt(s.jobExp)}`, 'text-purple-300')
+        ? card('Gold', `+${fmt(s.gold)}`, 'text-yellow-300') + card('Base EXP', `+${fmt(s.baseExp)}`, 'text-blue-300') + card('Job EXP', `+${fmt(s.jobExp)}`, 'text-purple-300')
         : card('Killed by', escapeHtml(lastHitBy || 'Unknown'), 'text-red-300') + card('Stage Died', `Stage ${currentStage}${currentMode !== 'endless' && maxStages < 999 ? ' / ' + maxStages : ''}`, 'text-slate-200') + card('Base EXP', `+${fmt(s.baseExp)}`, 'text-blue-300') + card('Job EXP', `+${fmt(s.jobExp)}`, 'text-purple-300') + card('Gold', `+${fmt(s.gold)}`, 'text-yellow-300');
     const title = kind === 'win'
-        ? `<h3 class="font-bold text-sm text-emerald-300">${escapeHtml(headerText || 'Map Cleared')}</h3>`
+        ? '' // the win banner replaces the "Map Cleared" heading
+
         : `<h3 class="font-bold text-sm text-red-300">Defeated</h3>`;
     // All three sections start collapsed; the Return button sits in the window's top-right corner (see showModal)
     const sections = kind === 'win'
         ? section('Item Drop', s.items.length, itemBody, false) + section('Rune Picked', s.runes.length, runeBody, false) + section('Fight Log', s.log.length, logBody, false)
         : section('Fight Log', s.log.length, logBody, false) + section('Item Drop', s.items.length, itemBody, false) + section('Rune Picked', s.runes.length, runeBody, false);
-    const returnBtn = `<button onclick="closeModal()" class="shrink-0 whitespace-nowrap px-3 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-xl text-xs transition cursor-pointer">${escapeHtml(returnLabel)}</button>`;
+    const returnBtn = `<button onclick="closeModal()" title="${escapeHtml(returnLabel)}" class="summary-return shrink-0 p-0 border-0 bg-transparent cursor-pointer"><img src="assets/compaign/returnbutton_q85.webp" alt="${escapeHtml(returnLabel)}" style="width:163px;height:auto;display:block;"></button>`;
     const header = `<div class="flex items-center justify-between gap-3">${title}${returnBtn}</div>`;
     // After a defeat: the main page's refining menu icon links to the Refining page to improve gear
     const powerBox = kind === 'win' ? '' : `<div class="flex flex-col gap-2">`
         + `<button onclick="goFromResult('blacksmith')" class="${guideHint ? 'guide-flash-link ' : ''}flex items-center gap-3 bg-slate-950 border border-amber-700/50 rounded-xl p-2 text-left cursor-pointer hover:bg-slate-900 transition"><img src="assets/page01/articanbutton_q85.webp" alt="" style="width:64px;height:64px;object-fit:contain;flex:none"><span class="text-xs font-bold text-amber-300">Lost this stage? Make your gear stronger at the Refining.</span></button>`
         + `<button onclick="goFromResult('character')" class="flex items-center gap-3 bg-slate-950 border border-amber-700/50 rounded-xl p-2 text-left cursor-pointer hover:bg-slate-900 transition"><img src="assets/page01/characterbutton_q85.webp" alt="" style="width:64px;height:64px;object-fit:contain;flex:none"><span class="text-xs font-bold text-amber-300">Check your upgrade status and skills on the Character.</span></button>`
         + `</div>`;
-    return `<div class="flex flex-col gap-3 text-left">${header}<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${statCards}</div>${towerRewardHTML()}${powerBox}<div class="flex flex-col gap-2">${sections}</div></div>`;
+    return `<div class="flex flex-col gap-3 text-left">${summaryBannerHTML(kind)}${header}<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${statCards}</div>${towerRewardHTML()}${powerBox}<div class="flex flex-col gap-2">${sections}</div></div>`;
 }
 
 // Result-screen quick link: close the result without running its return action, then open the page
