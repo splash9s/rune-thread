@@ -522,7 +522,7 @@
         .summary-return:active img { transform: translateY(1px); }
         /* The battle summary's own window has no background or border; only its sections keep their 70% panels */
         /* The summary screen: no dark blurred overlay, no window, and the banner is the first thing at the top */
-        #game-modal > div:has(.summary-banner) { background: transparent; border-color: transparent; box-shadow: none; padding-top: 0; gap: 0; }
+        #game-modal > div:has(.summary-banner) { background: transparent; border-color: transparent; box-shadow: none; padding-top: 0; gap: 0; overflow: visible; }
         #game-modal > div:has(.summary-banner) #modal-title,
         #game-modal > div:has(.summary-banner) #modal-message { display: none; }
         #game-modal > div:has(.summary-banner) #modal-content-area { margin: 0; }
