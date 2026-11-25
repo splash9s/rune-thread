@@ -449,7 +449,7 @@ function cloudCheckAdmin() {
         if (sm) sm.classList.remove('hidden');
         document.getElementById('library-dev-btn')?.classList.remove('hidden'); // Library is for the developer only
         const s = document.createElement('script');
-        s.src = 'js/admin.js?v=20261116a';
+        s.src = 'js/admin.js?v=20261126v';
         document.head.appendChild(s);
     });
 }

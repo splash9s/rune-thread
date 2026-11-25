@@ -91,7 +91,7 @@
         panel.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.85);display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:20px;box-sizing:border-box;';
         panel.innerHTML = `<div style="width:min(1100px,100%);background:#120d09;color:#f5ecd6;border:2px solid #f5c451;border-radius:10px;padding:16px;font-family:sans-serif;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                <h2 style="margin:0;color:#f5c451;font-size:20px;">Developer dashboard</h2>
+                <h2 style="margin:0;color:#f5c451;font-size:20px;">Developer dashboard <span style="font-size:12px;color:#a8a29e;font-weight:normal;">${typeof BUILD !== 'undefined' ? 'v' + BUILD : ''}</span></h2>
                 <div style="display:flex;gap:8px;">
                     <button id="dev-refresh" style="padding:6px 12px;cursor:pointer;">Refresh</button>
                     <button id="dev-close" style="padding:6px 12px;cursor:pointer;">Close</button>
