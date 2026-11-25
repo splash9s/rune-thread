@@ -2471,8 +2471,8 @@ function buildMapSummaryHTML(kind, returnLabel = 'Return to Expedition Gates', g
     const s = stageSummary || newStageSummary(currentStage);
     const label = escapeHtml(kind === 'win' && activeMap ? activeMap.title : (document.getElementById('node-title')?.innerText || `Stage ${s.stage}`));
     const fmt = n => Number(n).toLocaleString();
-    const card = (title, value, cls) => `<div class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-center min-w-0"><div class="text-[10px] text-slate-500 uppercase">${title}</div><div class="text-sm font-bold font-mono truncate ${cls}">${value}</div></div>`;
-    const section = (title, count, body, open = true) => `<details ${open ? 'open' : ''} class="bg-slate-950 border border-slate-800 rounded-xl p-3"><summary class="cursor-pointer text-xs font-bold text-slate-300 select-none">${title} <span class="text-slate-500">(${count})</span></summary><div class="mt-2 text-[11px] text-slate-300 flex flex-col gap-1">${body}</div></details>`;
+    const card = (title, value, cls) => `<div class="border border-slate-800 rounded-xl p-2 text-center min-w-0" style="background:rgba(2,6,23,.7);"><div class="text-[10px] text-slate-500 uppercase">${title}</div><div class="text-sm font-bold font-mono truncate ${cls}">${value}</div></div>`;
+    const section = (title, count, body, open = true) => `<details ${open ? 'open' : ''} class="border border-slate-800 rounded-xl p-3" style="background:rgba(2,6,23,.7);"><summary class="cursor-pointer text-xs font-bold text-slate-300 select-none">${title} <span class="text-slate-500">(${count})</span></summary><div class="mt-2 text-[11px] text-slate-300 flex flex-col gap-1">${body}</div></details>`;
     // Items as icons; a click opens the item's detail (the same detail menu as the inventory)
     // Same plain items (materials, planks, potions) share one slot with a count; gear stays one slot per piece
     const dropGroups = [], dropByKey = {};
