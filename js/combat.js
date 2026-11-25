@@ -913,8 +913,8 @@ function makeBoss(t) {
     return {
         ...t,
         ...combatHitFlee(t),
-        hp: Math.floor(t.hp * (t.bossHpMult || BOSS_HP_MULT)),
-        maxHp: Math.floor(t.maxHp * (t.bossHpMult || BOSS_HP_MULT)),
+        hp: Math.floor(t.hp * (t.bossHpMult || BOSS_HP_MULT) * bossLevelHpCut()),
+        maxHp: Math.floor(t.maxHp * (t.bossHpMult || BOSS_HP_MULT) * bossLevelHpCut()),
         atkMin: Math.floor(t.atkMin * BOSS_ATK_MULT),
         atkMax: Math.floor(t.atkMax * BOSS_ATK_MULT),
         isBoss: true, rewarded: false, ailments: {}, attackCount: 0, enraged: false,
@@ -1216,17 +1216,28 @@ function makeUnit(t, mult) {
     return unit;
 }
 
-// Monster count per campaign stage. First half of the map: by level band. Second half: 4-6.
-// Lv 1-20: 1-3 | Lv 30-40: 2-3 | Lv 50-80: 3 | Lv 90-110: 4. Boss and mini boss stages are not affected.
+// Most monsters on one campaign stage, by map level: Lv 1-19: 3 | Lv 20-29: 5 | Lv 30+: 6
+function campaignMonsterCap(lv) {
+    return lv >= 30 ? 6 : lv >= 20 ? 5 : 3;
+}
+// Monster count per campaign stage. First half of the map: by level band. Second half: 4-6 (never above the cap).
+// Lv 1-20: 1-cap | Lv 30-40: 2-cap | Lv 50-80: 3 | Lv 90-110: 4. Boss and mini boss stages are not affected.
 function campaignCountRange() {
     const lv = activeMap.levelReq || 1;
-    if (lv <= 1) return [1, 3]; // level 1 maps never have more than 3 monsters at once
+    const cap = campaignMonsterCap(lv);
+    if (lv <= 1) return [1, cap]; // level 1 maps never have more than 3 monsters at once
     const firstHalf = currentStage <= Math.floor(maxStages / 2);
-    if (!firstHalf) return [4, 6];
-    if (lv <= 20) return [1, 3];
-    if (lv <= 40) return [2, 3];
+    if (!firstHalf) return [Math.min(4, cap), cap];
+    if (lv <= 20) return [1, cap];
+    if (lv <= 40) return [Math.min(2, cap), cap];
     if (lv <= 80) return [3, 3];
     return [4, 4];
+}
+
+// Campaign boss on a level 1 map: 10% less max HP
+function bossLevelHpCut() {
+    const campaign = currentMode === 'campaign' || currentMode === 'event';
+    return campaign && activeMap && (activeMap.levelReq || 1) === 1 ? 0.9 : 1;
 }
 
 function randomInRange(lo, hi) {
