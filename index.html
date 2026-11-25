@@ -63,6 +63,9 @@
             img.replaceWith(box);
         };
     </script>
+    <!-- Web app manifest: used by Bubblewrap to build the Android app (android/README.md) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a">
     <!-- Tailwind, prebuilt (no in-browser compiling). Rebuild after adding new Tailwind classes:
          npx @tailwindcss/cli@4.1.11 -i tw-input.css -o css/tailwind.css --minify -->
     <link rel="stylesheet" href="css/tailwind.css?v=20261121tw">
@@ -2508,9 +2511,10 @@
     <script src="data/maps.js?v=20261123vc"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+    <script src="js/platform.js?v=20261126an"></script>
     <script src="js/player.js?v=20261125cs"></script>
     <script src="js/audio.js?v=20261123mv"></script>
-    <script src="js/cloud.js?v=20261121lib"></script>
+    <script src="js/cloud.js?v=20261126an"></script>
     <!-- hero-art.js holds the hero art as data URLs (948 KB); only file:// pages need it, web pages load the image files -->
     <script>if (location.protocol === 'file:') document.write('<script src="js/hero-art.js?v=20261118t"><\/script>');</script>
     <script src="js/hero-body.js?v=20261125hb"></script>
@@ -2525,12 +2529,13 @@
     <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261126sr"></script>
     <script src="js/touch-lock.js?v=20261124nd"></script>
-    <script src="js/combat.js?v=20261126s4"></script>
+    <script src="js/combat.js?v=20261126rf"></script>
     <script src="js/crit-fx.js?v=20261124ef"></script>
     <script src="js/landscape.js?v=20261122a"></script>
     <script src="js/bolt-fx.js?v=20261124ef"></script>
-    <script src="js/rewarded-ad.js?v=20261126ra"></script>
-    <script src="js/ui.js?v=20261126ue"></script>
+    <script src="js/rewarded-ad.js?v=20261126an"></script>
+    <script src="js/play-billing.js?v=20261126an"></script>
+    <script src="js/ui.js?v=20261126an"></script>
     <script src="js/equip-flash.js?v=20261124ef"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
