@@ -1806,6 +1806,7 @@
         </div>
 
         <div id="view-library" class="hidden flex flex-col gap-4 flex-1">
+            <p id="library-version" class="text-[11px] text-slate-400 font-mono"></p>
             <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex justify-between items-center">
                 <div>
                     <h2 class="page-title text-base font-bold text-sky-300">Library</h2>
@@ -2556,7 +2557,7 @@
     <script src="js/bolt-fx.js?v=20261124ef"></script>
     <script src="js/rewarded-ad.js?v=20261126an"></script>
     <script src="js/play-billing.js?v=20261126an"></script>
-    <script src="js/ui.js?v=20261126s4"></script>
+    <script src="js/ui.js?v=20261126s5"></script>
     <script src="js/equip-flash.js?v=20261124ef"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
@@ -2596,16 +2597,6 @@
         if (typeof refreshAccountBar === 'function') refreshAccountBar();
         if (typeof cloudStart === 'function') cloudStart();
     }
-    // Small build label, bottom right, so a player can tell whether the game is updated
-    (function addBuildTag() {
-        if (document.getElementById('build-tag')) return;
-        if (!document.body) { document.addEventListener('DOMContentLoaded', addBuildTag); return; }
-        var tag = document.createElement('div');
-        tag.id = 'build-tag';
-        tag.textContent = 'v' + BUILD;
-        tag.style.cssText = 'position:fixed; right:6px; bottom:4px; font-size:10px; color:rgba(226,232,240,.55); z-index:60; pointer-events:none; font-family:monospace;';
-        document.body.appendChild(tag);
-    })();
 </script>
 </body>
 </html>

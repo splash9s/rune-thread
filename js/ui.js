@@ -7311,6 +7311,8 @@ function openChestFromDetail(index) {
 // ---------- LIBRARY ----------
 function renderLibraryView() {
     renderLibraryRules();
+    const verEl = document.getElementById('library-version');
+    if (verEl && typeof BUILD !== 'undefined') verEl.textContent = 'Game version: v' + BUILD;
     const runesEl = document.getElementById('library-runes');
     const monstersEl = document.getElementById('library-monsters');
     if (runesEl && typeof RUNE_DEFS !== 'undefined') {
