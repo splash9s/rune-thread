@@ -1778,7 +1778,9 @@ function fitModalPanel(isSummary) {
     const s = Math.min(2.5, (window.innerWidth * 0.9) / SUMMARY_PANEL_W);
     panel.style.transform = `scale(${s})`;
     panel.style.maxHeight = ((window.innerHeight * 0.9) / s) + 'px'; // design px: 90% of the window height when scaled
-    panel.style.overflowY = 'auto';
+    // The win/lose banner's glow and sparks may pass the window edge, so the banner window does not clip them
+    panel.style.overflowY = panel.classList.contains('summary-window') ? 'visible' : 'auto';
+    panel.style.overflowX = panel.classList.contains('summary-window') ? 'visible' : '';
 }
 window.addEventListener('resize', () => {
     const modalEl = document.getElementById('game-modal');
