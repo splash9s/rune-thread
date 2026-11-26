@@ -1995,11 +1995,11 @@ function updateSpeedButton() {
     const img = document.getElementById('combat-speed-img');
     const press = document.getElementById('combat-speed-press');
     const badge3 = document.getElementById('combat-speed-3x');
-    if (badge3) badge3.style.display = shown === 3 ? 'block' : 'none';
-    // 1.5x has its own picture pair; 1x and 2x keep their pictures (pressed shows the same picture)
-    const src = shown === 1.5 ? 'assets/cha/button/btn_speed15x_q85.webp' : shown === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp';
-    const pressSrc = shown === 1.5 ? 'assets/cha/button/btn_speed15xpress_q85.webp' : src;
-    if (img) { img.src = src; img.style.filter = shown === 3 ? 'hue-rotate(150deg) saturate(1.4)' : ''; } // 3x: no picture of its own yet, so the 2x picture is tinted
+    if (badge3) badge3.style.display = 'none'; // 3x has its own picture now, no text badge
+    // 1.5x and 3x have their own picture pairs; 1x and 2x keep their pictures (pressed shows the same picture)
+    const src = shown === 3 ? 'assets/cha/button/btn_3x_q85.webp' : shown === 1.5 ? 'assets/cha/button/btn_speed15x_q85.webp' : shown === 2 ? 'assets/combat/speed/speed_2x_q85.webp' : 'assets/combat/speed/speed_1x_q85.webp';
+    const pressSrc = shown === 3 ? 'assets/cha/button/btn_3xpress_q85.webp' : shown === 1.5 ? 'assets/cha/button/btn_speed15xpress_q85.webp' : src;
+    if (img) { img.src = src; img.style.filter = ''; }
     if (press) press.src = pressSrc;
 }
 function stopCombatTimers() {
