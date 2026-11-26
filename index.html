@@ -5,7 +5,7 @@
     // Shows script errors on screen (tap the box to close it), so a tester's screenshot captures them: phones have no console.
     // Add ?debug=1 to the link to also list each start-up step with its time (window.rtDebug).
     (function () {
-        var BUILD = window.BUILD = '20261126-s9'; // window.BUILD: the other scripts read the version from here
+        var BUILD = window.BUILD = '20261126-s10'; // window.BUILD: the other scripts read the version from here
         var DEBUG = /[?&]debug=1/.test(location.search);
         var t0 = Date.now();
         function show(msg, isDebug) {
@@ -1235,7 +1235,6 @@
         .camp-sweep:not(:disabled):active .sw-press { display: block; }
         .camp-sweep:disabled { cursor: not-allowed; }
         .camp-sweep:disabled img { filter: grayscale(1) brightness(.75); opacity: .6; }
-        .camp-sweep span { position: absolute; right: -4px; top: -6px; padding: 1px 7px; border-radius: 10px; background: #1e293b; border: 2px solid #c9a227; color: #fde68a; font: 700 13px sans-serif; }
         .camp-clears { margin-left: 10px; padding: 1px 8px; border-radius: 9px; background: rgba(22,101,52,.15); border: 1px solid #15803d; color: #15803d; font-size: .85em; vertical-align: middle; }
         /* Player HP and armor block: dark panel behind it, like the monster cards */
         #combat-hp-under { background: rgba(2, 6, 23, .55); border: 1px solid #1e293b; border-radius: 8px; padding: 6px 8px; }
@@ -1957,11 +1956,13 @@
                 .ev-start img { width: 100%; height: 100%; display: block; }
                 .ev-start:disabled { filter: grayscale(1); opacity: .45; cursor: not-allowed; }
                 /* Sweep (Gold Frenzy and Wisdom Trial): finishes a map cleared before, sits just above Start */
-                .ev-sweep { position: absolute; right: 0; bottom: 118px; width: 190px; height: 78px; padding: 0 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 3px solid #c9a227; border-radius: 14px; background: linear-gradient(#7a4a17, #4a2a0b); color: #fde68a; cursor: pointer; box-shadow: 0 3px 0 #2b1806; }
-                .ev-sweep b { font-size: 28px; line-height: 1; }
-                .ev-sweep span { font-size: 18px; color: #fef3c7; white-space: nowrap; }
-                .ev-sweep:active { transform: translateY(2px); box-shadow: none; }
-                .ev-sweep:disabled { filter: grayscale(1); opacity: .45; cursor: not-allowed; }
+                .ev-sweep { position: absolute; right: 0; bottom: 118px; width: 190px; height: 84px; padding: 0; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+                .ev-sweep img { display: block; width: 100%; height: auto; pointer-events: none; }
+                .ev-sweep .sw-press { display: none; width: 88%; }
+                .ev-sweep:not(:disabled):active .sw-normal { display: none; }
+                .ev-sweep:not(:disabled):active .sw-press { display: block; }
+                .ev-sweep:disabled { cursor: not-allowed; }
+                .ev-sweep:disabled img { filter: grayscale(1) brightness(.75); opacity: .6; }
             </style>
             <div id="events-stage" class="town-stage" data-w="1920" data-h="1080">
                 <div class="ts-inner" style="width:1920px; height:1080px;">
@@ -2574,7 +2575,7 @@
     <script src="js/bolt-fx.js?v=20261124ef"></script>
     <script src="js/rewarded-ad.js?v=20261126an"></script>
     <script src="js/play-billing.js?v=20261126an"></script>
-    <script src="js/ui.js?v=20261126ct"></script>
+    <script src="js/ui.js?v=20261126cu"></script>
     <script src="js/equip-flash.js?v=20261124ef"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>

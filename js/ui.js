@@ -2395,7 +2395,7 @@ function renderMapGateUI() {
         const ready = typeof campaignSweepReady === 'function' && campaignSweepReady(sel);
         const n = typeof campaignClearCount === 'function' ? Math.min(CAMPAIGN_SWEEP_CLEARS, campaignClearCount(sel)) : 0;
         pathIconEl.style.width = 'auto';
-        pathIconEl.innerHTML = `<button class="camp-sweep" ${ready ? '' : 'disabled'} onclick="sweepCampaign('${sel}')" title="${ready ? 'Sweep: uses 1 stamina' : `Clear ${CAMPAIGN_SWEEP_CLEARS} times to sweep (${n}/${CAMPAIGN_SWEEP_CLEARS})`}"><img class="sw-normal" src="assets/cha/button/sweepbutton_q85.webp" alt="Sweep"><img class="sw-press" src="assets/cha/button/sweepbuttonpress_q85.webp" alt="">${ready ? '' : `<span>${n}/${CAMPAIGN_SWEEP_CLEARS}</span>`}</button>`;
+        pathIconEl.innerHTML = `<button class="camp-sweep" ${ready ? '' : 'disabled'} onclick="sweepCampaign('${sel}')" title="${ready ? 'Sweep: uses 1 stamina' : `Clear ${CAMPAIGN_SWEEP_CLEARS} times to sweep (${n}/${CAMPAIGN_SWEEP_CLEARS})`}"><img class="sw-normal" src="assets/cha/button/sweepbutton_q85.webp" alt="Sweep"><img class="sw-press" src="assets/cha/button/sweepbuttonpress_q85.webp" alt=""></button>`;
     }
 
     if (!listEl) return;
@@ -7045,7 +7045,7 @@ function renderEventsView() {
         const rec = typeof eventSweepRecord === 'function' ? eventSweepRecord(cur, pick) : null;
         if (rec) {
             const amount = cur === 'gold' ? `+${Number(rec.gold || 0).toLocaleString()} Gold` : `+${Number(rec.baseExp || 0).toLocaleString()} EXP`;
-            sweep = `<button class="ev-sweep" ${eventCanPlay(cur) ? '' : 'disabled'} onclick="sweepEvent('${cur}','${pick}')"><b>Sweep</b><span>${amount}</span></button>`;
+            sweep = `<button class="ev-sweep" ${eventCanPlay(cur) ? '' : 'disabled'} onclick="sweepEvent('${cur}','${pick}')" title="Sweep: ${amount}"><img class="sw-normal" src="assets/cha/button/sweepbutton_q85.webp" alt="Sweep"><img class="sw-press" src="assets/cha/button/sweepbuttonpress_q85.webp" alt=""></button>`;
         }
     } else if (cur === 'tower') {
         const left = Math.max(0, 1 - (st.plays.tower || 0));
