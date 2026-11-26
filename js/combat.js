@@ -767,9 +767,15 @@ function startExpedition(mode, opts = {}) {
     const startSid = combatSessionId;
     whenCombatCoversClear(() => {
         if (startSid !== combatSessionId) return; // left combat while the cover was up
-        spawnStageMonsters();
-        stopCombatTimers(); combatRunId++;
-        startCombatTimers(derived);
+        const begin = () => {
+            if (startSid !== combatSessionId) return;
+            spawnStageMonsters();
+            stopCombatTimers(); combatRunId++;
+            startCombatTimers(getDerivedStats()); // fresh stats: a rune picked just now counts
+        };
+        // Daily Challenge: pick a rune before stage 1 too (the others come after each cleared stage)
+        if (mode === 'daily') checkRuneSelectionPrompt(begin);
+        else begin();
     });
 }
 
@@ -786,7 +792,7 @@ function isRuneStage(stage) {
 
 // True when clearing this stage opens a rune pick in the current mode
 function isRuneDueAfter(stage) {
-    if (currentMode === 'daily') return stage % 5 === 0;
+    if (currentMode === 'daily') return true; // Daily Challenge: a rune pick before every stage (stage 1's is at the start)
     if (currentMode === 'endless') return stage % 4 === 0;
     return (currentMode === 'campaign' || currentMode === 'event' || currentMode === 'tower') && isRuneStage(stage);
 }
