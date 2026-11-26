@@ -356,6 +356,7 @@ function exitFriendTent() {
     Object.assign(player, backup);
     window.friendVisit = null;
     document.body.classList.remove('friend-visiting');
+    if (typeof levelRollResync === 'function') levelRollResync(); // back on our own level: no popup
     refreshGuestBookAlert();
     if (isCharClear()) toggleCharClear();
     switchView('friend');

@@ -7068,7 +7068,7 @@ function renderEventsView() {
     } else if (cur === 'tower') {
         const left = Math.max(0, 1 - (st.plays.tower || 0));
         body = `<p>${TOWER_FLOORS} floors in the castle. Monsters grow stronger on every floor. Bring two friends. Each friend can join again 3 days after a run. You are paid for each floor you clear.</p>`;
-        foot = `<div class="ev-tower-pick"><p class="ev-status">Unlimited attempts for now · ${towerPick.length} / 2 friends</p>${towerFriendsHTML()}</div>`;
+        foot = `<div class="ev-tower-pick"><p class="ev-status">${left > 0 ? 'One entry per day' : 'Already entered today: back tomorrow'} · ${towerPick.length} / 2 friends</p>${towerFriendsHTML()}</div>`;
         start = { can: eventCanPlay('tower'), js: `towerOpenArrange()` };
         if (towerFriends === null) loadTowerFriends();
     } else if (cur === 'endless') {

@@ -124,6 +124,7 @@ function levelRollPoll(now) {
     levelRollState.polled = now;
     const S = levelRollState;
     if (typeof player === 'undefined' || !player) return;
+    if (typeof friendTentVisiting === 'function' && friendTentVisiting()) return; // the friend's tent swaps in their level: not a level up
     const lv = player.baseLv, xp = player.baseExp;
     if (S.lastBaseLv === null) { S.lastBaseLv = lv; S.lastBaseExp = xp; S.lastText = null; return; }
     if (lv !== S.lastBaseLv) {
