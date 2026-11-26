@@ -2395,7 +2395,7 @@ function renderMapGateUI() {
         const ready = typeof campaignSweepReady === 'function' && campaignSweepReady(sel);
         const n = typeof campaignClearCount === 'function' ? Math.min(CAMPAIGN_SWEEP_CLEARS, campaignClearCount(sel)) : 0;
         pathIconEl.style.width = 'auto';
-        pathIconEl.innerHTML = `<button class="camp-sweep" ${ready ? '' : 'disabled'} onclick="sweepCampaign('${sel}')"><b>Sweep</b><span>${ready ? 'Uses 1 stamina' : `Clear ${CAMPAIGN_SWEEP_CLEARS} times (${n}/${CAMPAIGN_SWEEP_CLEARS})`}</span></button>`;
+        pathIconEl.innerHTML = `<button class="camp-sweep" ${ready ? '' : 'disabled'} onclick="sweepCampaign('${sel}')" title="${ready ? 'Sweep: uses 1 stamina' : `Clear ${CAMPAIGN_SWEEP_CLEARS} times to sweep (${n}/${CAMPAIGN_SWEEP_CLEARS})`}"><img class="sw-normal" src="assets/cha/button/sweepbutton_q85.webp" alt="Sweep"><img class="sw-press" src="assets/cha/button/sweepbuttonpress_q85.webp" alt="">${ready ? '' : `<span>${n}/${CAMPAIGN_SWEEP_CLEARS}</span>`}</button>`;
     }
 
     if (!listEl) return;
@@ -2419,7 +2419,7 @@ function renderMapGateUI() {
         const bg = '';
         return `<button ${unlocked ? '' : 'disabled'} onclick="selectCampaignMap('${key}')" class="relative overflow-hidden p-3 pl-12 rounded-xl border text-left text-xs transition ${cls}">
             ${unlocked ? '' : '<span class="absolute left-2 top-2 text-base leading-none pointer-events-none">🔒</span>'}
-            ${bg}<span class="relative block font-bold">${localGameName(GAME_DATA.paths[pk].maps[m].title)}</span>
+            ${bg}<span class="relative block font-bold">${localGameName(GAME_DATA.paths[pk].maps[m].title)}${cleared ? `<span class="camp-clears" title="Times cleared">×${Math.max(1, (player.clearCounts && player.clearCounts[key]) || 0)}</span>` : ''}</span>
             ${sub ? `<span class="relative block text-[10px] mt-0.5">${sub}</span>` : ''}
         </button>`;
     }).join('');

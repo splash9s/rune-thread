@@ -5,7 +5,7 @@
     // Shows script errors on screen (tap the box to close it), so a tester's screenshot captures them: phones have no console.
     // Add ?debug=1 to the link to also list each start-up step with its time (window.rtDebug).
     (function () {
-        var BUILD = window.BUILD = '20261126-s8'; // window.BUILD: the other scripts read the version from here
+        var BUILD = window.BUILD = '20261126-s9'; // window.BUILD: the other scripts read the version from here
         var DEBUG = /[?&]debug=1/.test(location.search);
         var t0 = Date.now();
         function show(msg, isDebug) {
@@ -1228,11 +1228,15 @@
         /* Campaign Dungeons: soft background on the Close button */
         #campaign-panel .campaign-btn.campaign-start { width: 220px; height: 73px; }
         /* Campaign Sweep (in place of the element icon, left of Start): maps cleared 3 times */
-        .camp-sweep { height: 70px; min-width: 190px; padding: 0 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 3px solid #c9a227; border-radius: 14px; background: linear-gradient(#7a4a17, #4a2a0b); color: #fde68a; cursor: pointer; box-shadow: 0 3px 0 #2b1806; }
-        .camp-sweep b { font-size: 26px; line-height: 1; }
-        .camp-sweep span { font-size: 14px; color: #fef3c7; white-space: nowrap; }
-        .camp-sweep:active { transform: translateY(2px); box-shadow: none; }
-        .camp-sweep:disabled { filter: grayscale(1); opacity: .5; cursor: not-allowed; }
+        .camp-sweep { position: relative; width: 170px; height: 75px; padding: 0; border: 0; background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .camp-sweep img { display: block; width: 100%; height: auto; pointer-events: none; }
+        .camp-sweep .sw-press { display: none; width: 88%; }
+        .camp-sweep:not(:disabled):active .sw-normal { display: none; }
+        .camp-sweep:not(:disabled):active .sw-press { display: block; }
+        .camp-sweep:disabled { cursor: not-allowed; }
+        .camp-sweep:disabled img { filter: grayscale(1) brightness(.75); opacity: .6; }
+        .camp-sweep span { position: absolute; right: -4px; top: -6px; padding: 1px 7px; border-radius: 10px; background: #1e293b; border: 2px solid #c9a227; color: #fde68a; font: 700 13px sans-serif; }
+        .camp-clears { margin-left: 10px; padding: 1px 8px; border-radius: 9px; background: rgba(22,101,52,.15); border: 1px solid #15803d; color: #15803d; font-size: .85em; vertical-align: middle; }
         /* Player HP and armor block: dark panel behind it, like the monster cards */
         #combat-hp-under { background: rgba(2, 6, 23, .55); border: 1px solid #1e293b; border-radius: 8px; padding: 6px 8px; }
         #view-combat.tower-mode #combat-hp-under { top: 840px !important; } /* Warded Tower: HP and armor bars sit just below the hero's feet, not over the hero */
@@ -2570,7 +2574,7 @@
     <script src="js/bolt-fx.js?v=20261124ef"></script>
     <script src="js/rewarded-ad.js?v=20261126an"></script>
     <script src="js/play-billing.js?v=20261126an"></script>
-    <script src="js/ui.js?v=20261126cs"></script>
+    <script src="js/ui.js?v=20261126ct"></script>
     <script src="js/equip-flash.js?v=20261124ef"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
