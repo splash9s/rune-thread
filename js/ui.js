@@ -2419,7 +2419,7 @@ function renderMapGateUI() {
         const bg = '';
         return `<button ${unlocked ? '' : 'disabled'} onclick="selectCampaignMap('${key}')" class="relative overflow-hidden p-3 pl-12 rounded-xl border text-left text-xs transition ${cls}">
             ${unlocked ? '' : '<span class="absolute left-2 top-2 text-base leading-none pointer-events-none">🔒</span>'}
-            ${bg}<span class="relative block font-bold">${localGameName(GAME_DATA.paths[pk].maps[m].title)}${cleared ? `<span class="camp-clears" title="Times cleared">×${Math.max(1, (player.clearCounts && player.clearCounts[key]) || 0)}</span>` : ''}</span>
+            ${bg}<span class="relative block font-bold">${localGameName(GAME_DATA.paths[pk].maps[m].title)}${unlocked ? (() => { const c = Math.min(CAMPAIGN_SWEEP_CLEARS, cleared ? Math.max(1, (player.clearCounts && player.clearCounts[key]) || 0) : 0); return `<span class="camp-clears${c >= CAMPAIGN_SWEEP_CLEARS ? ' camp-clears-done' : ''}" title="Clears toward Sweep">${c >= CAMPAIGN_SWEEP_CLEARS ? '✔' : `${c}/${CAMPAIGN_SWEEP_CLEARS}`}</span>`; })() : ''}</span>
             ${sub ? `<span class="relative block text-[10px] mt-0.5">${sub}</span>` : ''}
         </button>`;
     }).join('');
