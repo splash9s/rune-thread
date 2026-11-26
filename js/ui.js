@@ -2389,7 +2389,14 @@ function renderMapGateUI() {
     selectEl.value = `${pk}:${current}`;
 
     const pathIconEl = document.getElementById('campaign-path-icon');
-    if (pathIconEl) pathIconEl.innerHTML = `<img class="el-ico" style="width:72px;height:72px;vertical-align:baseline;" src="assets/icons/element_${pk}_q85.webp" alt="">`;
+    // Sweep (replaces the element icon): a map cleared 3 times can be finished at once for 1 stamina
+    if (pathIconEl) {
+        const sel = `${pk}:${current}`;
+        const ready = typeof campaignSweepReady === 'function' && campaignSweepReady(sel);
+        const n = typeof campaignClearCount === 'function' ? Math.min(CAMPAIGN_SWEEP_CLEARS, campaignClearCount(sel)) : 0;
+        pathIconEl.style.width = 'auto';
+        pathIconEl.innerHTML = `<button class="camp-sweep" ${ready ? '' : 'disabled'} onclick="sweepCampaign('${sel}')"><b>Sweep</b><span>${ready ? 'Uses 1 stamina' : `Clear ${CAMPAIGN_SWEEP_CLEARS} times (${n}/${CAMPAIGN_SWEEP_CLEARS})`}</span></button>`;
+    }
 
     if (!listEl) return;
     listEl.innerHTML = order.map(m => {

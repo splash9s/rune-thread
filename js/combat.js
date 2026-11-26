@@ -2340,6 +2340,11 @@ function onStageCleared() {
                 if (!player.clearedMaps) player.clearedMaps = {};
                 const clearKey = `${currentPath}:${activeMap.dropKey}`;
                 const firstClear = !player.clearedMaps[clearKey];
+                // Clear count and best rewards: a map cleared 3 times can be swept from the map select page
+                if (!player.clearCounts) player.clearCounts = {};
+                if (!firstClear && !player.clearCounts[clearKey]) player.clearCounts[clearKey] = 1; // cleared before counts started
+                player.clearCounts[clearKey] = (player.clearCounts[clearKey] || 0) + 1;
+                recordCampaignSweep(clearKey, stageSummary);
                 player.clearedMaps[clearKey] = true;
                 if (firstClear) {
                     const diamondBonus = 1;
@@ -2655,6 +2660,48 @@ function getEventState() {
         player.events = { date: todayKey(), plays: { daily: 0, gold: 0, xp: 0, tower: 0 }, dailyCleared: false };
     }
     return player.events;
+}
+
+// ---------- CAMPAIGN SWEEP ----------
+// A campaign map cleared 3 times or more can be swept from the map select page: it costs 1 stamina like a run and
+// pays the best clear's Gold and EXP plus the map's clear reward (one Rarity 3 gear piece). Monster item drops are
+// not included. Records live in player.campaignSweep['earth:map10'] = { gold, baseExp, jobExp }.
+const CAMPAIGN_SWEEP_CLEARS = 3;
+function campaignClearCount(key) { return (player.clearCounts && player.clearCounts[key]) || 0; }
+function campaignSweepRecord(key) { return (player.campaignSweep && player.campaignSweep[key]) || null; }
+function campaignSweepReady(key) { return campaignClearCount(key) >= CAMPAIGN_SWEEP_CLEARS && !!campaignSweepRecord(key); }
+function recordCampaignSweep(key, summary) {
+    if (!key || !summary) return;
+    if (!player.campaignSweep) player.campaignSweep = {};
+    const rec = { gold: summary.gold || 0, baseExp: summary.baseExp || 0, jobExp: summary.jobExp || 0 };
+    const old = player.campaignSweep[key];
+    if (!old || rec.baseExp + rec.gold > old.baseExp + old.gold) player.campaignSweep[key] = rec;
+}
+function sweepCampaign(key) {
+    if (!campaignSweepReady(key)) { floatFailAt(`Clear this map ${CAMPAIGN_SWEEP_CLEARS} times to unlock Sweep`); return; }
+    if (typeof staminaSpendCampaign === 'function' && !staminaSpendCampaign()) return; // none left: the refill window opens
+    const rec = campaignSweepRecord(key);
+    const gold = rec.gold || 0;
+    const baseExp = player.baseLv >= MAX_BASE_LV ? 0 : (rec.baseExp || 0);
+    const jobExp = player.jobLv >= MAX_CLASS_LV ? 0 : (rec.jobExp || 0);
+    player.gold += gold;
+    player.baseExp += baseExp;
+    player.jobExp += jobExp;
+    if (gold > 0) updateQuestProgress('gold', gold);
+    // The map's clear reward: one Rarity 3 gear piece from its drop pool, as on a real clear
+    const dropKey = key.split(':')[1];
+    const pool = typeof GEAR_POOL !== 'undefined' ? (GEAR_POOL[dropKey] || GEAR_POOL.map1) : [];
+    if (pool.length > 0) addItemToInventory(rollSetForDrop(generatePoEItem(pool[Math.floor(Math.random() * pool.length)], 3, 1)));
+    player.clearCounts[key] = campaignClearCount(key) + 1;
+    checkLevelUps();
+    const fmt = n => Number(n).toLocaleString();
+    const text = `+${fmt(gold)} Gold, +${fmt(baseExp)} Base EXP, +${fmt(jobExp)} Class EXP`;
+    logMessage(`[Campaign] Sweep: ${text} and a Rarity 3 gear piece`, 'levelup');
+    floatSuccessAt(`Sweep: ${text}`);
+    if (gold > 0 && typeof playSfx === 'function') playSfx(SFX.coin);
+    updateUI();
+    saveGame();
+    if (typeof renderMapGateUI === 'function') renderMapGateUI();
 }
 
 // ---------- EVENT SWEEP ----------
