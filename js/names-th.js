@@ -216,6 +216,7 @@ const NAMES_TH = {
     'Elemental': 'ธาตุ',
     'Inherit': 'ถ่ายทอด',
     'Iron Scraps:': 'เศษเหล็ก:',
+    '5 Planks → 1 Iron Scraps': 'แผ่นไม้ 5 → เศษเหล็ก 1',
     '20 Iron Scraps → 1 Ingot': 'เศษเหล็ก 20 → แท่งเหล็ก 1',
     'Smelt': 'หลอม',
     '20 Ingots → 1 Bar': 'แท่งเหล็ก 20 → แท่ง 1',

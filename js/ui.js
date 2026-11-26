@@ -3716,6 +3716,7 @@ function renderRefiningUI() {
                 <span class="inline-flex items-center gap-1.5"><img src="assets/items/mat_scrap.png" alt="" style="width:20px;height:20px;object-fit:contain;"> Iron Scraps: <strong class="text-slate-200">${scraps}</strong></span>
             </div>
             <div class="flex flex-col gap-1.5 text-xs">
+                <div class="flex justify-between items-center gap-2"><span>5 Planks → 1 Iron Scraps <span class="text-slate-400">(${typeof countPlanks === 'function' ? countPlanks() : 0})</span></span><button onclick="smeltPlank()" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs cursor-pointer">Smelt</button></div>
                 <div class="flex justify-between items-center gap-2"><span>20 Iron Scraps → 1 Ingot <span class="text-slate-400">(${refineOreCount(1)})</span></span><button onclick="smeltMaterial(1)" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs cursor-pointer">Smelt</button></div>
                 <div class="flex justify-between items-center gap-2"><span>20 Ingots → 1 Bar <span class="text-slate-400">(${refineOreCount(2)})</span></span><button onclick="smeltMaterial(2)" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs cursor-pointer">Smelt</button></div>
                 <div class="flex justify-between items-center gap-2"><span>10 Bars → 1 Alloy <span class="text-slate-400">(${refineOreCount(3)})</span></span><button onclick="smeltMaterial(3)" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded-lg text-xs cursor-pointer">Smelt</button></div>
@@ -4009,6 +4010,23 @@ function smeltMaterial(tier) {
     saveGame();
 }
 
+
+// 5 Planks -> 1 Iron Scraps (Blacksmith)
+const PLANK_SMELT_COST = 5;
+function smeltPlank() {
+    if (countPlanks() < PLANK_SMELT_COST) { floatFailAt(`Need ${PLANK_SMELT_COST} Planks to smelt`); return; }
+    removeItemByName(PLANK_ITEM.name, PLANK_SMELT_COST);
+    if (!addScraps(1)) {
+        placeItemInInventory({ ...PLANK_ITEM, qty: PLANK_SMELT_COST }); // refund the Planks
+        showFloatNotice("Inventory is full! Cannot smelt.");
+        return;
+    }
+    logMessage(`[Forge] Smelted 1 Iron Scraps from ${PLANK_SMELT_COST} Planks.`, 'levelup');
+    floatSuccessAt("Smelted");
+    updateUI();
+    renderRefiningUI();
+    saveGame();
+}
 
 const MAX_STACK = 99;
 
