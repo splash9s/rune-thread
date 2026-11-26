@@ -7019,7 +7019,7 @@ function renderEventsView() {
         return;
     }
 
-    let body = '', foot = '', start = null;
+    let body = '', foot = '', start = null, sweep = '';
     if (cur === 'daily') {
         const left = Math.max(0, EVENT_LIMIT - st.plays.daily);
         const status = st.dailyCleared ? 'Cleared today: locked until tomorrow' : `${left} / ${EVENT_LIMIT} plays left today`;
@@ -7034,6 +7034,12 @@ function renderEventsView() {
         body = `<p>${cfg.desc}</p><p class="ev-status">${left} / ${EVENT_LIMIT} plays left today</p>`;
         foot = `<div class="ev-maps">${maps.map(m => `<button class="ev-map${m.mapKey === pick ? ' ev-map-on' : ''}" onclick="selectEventMap('${cur}','${m.mapKey}')"><b>${m.label}</b><span>${m.sub}</span></button>`).join('')}</div>`;
         start = { can: eventCanPlay(cur), js: `startEvent('${cur}','${pick}')` };
+        // Sweep: a map cleared before can be finished at once for one play, paying the best clear's rewards
+        const rec = typeof eventSweepRecord === 'function' ? eventSweepRecord(cur, pick) : null;
+        if (rec) {
+            const amount = cur === 'gold' ? `+${Number(rec.gold || 0).toLocaleString()} Gold` : `+${Number(rec.baseExp || 0).toLocaleString()} EXP`;
+            sweep = `<button class="ev-sweep" ${eventCanPlay(cur) ? '' : 'disabled'} onclick="sweepEvent('${cur}','${pick}')"><b>Sweep</b><span>${amount}</span></button>`;
+        }
     } else if (cur === 'tower') {
         const left = Math.max(0, 1 - (st.plays.tower || 0));
         body = `<p>${TOWER_FLOORS} floors in the castle. Monsters grow stronger on every floor. Bring two friends. Each friend can join again 3 days after a run. You are paid for each floor you clear.</p>`;
@@ -7053,7 +7059,7 @@ function renderEventsView() {
     }
     detailEl.innerHTML = `
         <div class="ev-body">${body}</div>
-        <div class="ev-foot">${foot}${start ? `<button class="ev-start" ${start.can ? '' : 'disabled'} onclick="${start.js}"><img src="assets/events/start_q85.webp" alt="Start"></button>` : ''}</div>`;
+        <div class="ev-foot">${foot}${sweep}${start ? `<button class="ev-start" ${start.can ? '' : 'disabled'} onclick="${start.js}"><img src="assets/events/start_q85.webp" alt="Start"></button>` : ''}</div>`;
     if (cur === 'bossmap' && typeof populateBossGauntletPick === 'function') populateBossGauntletPick();
 }
 

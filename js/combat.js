@@ -30,6 +30,7 @@ let dodgeStreak = 0;
 let monsterHitStreak = 0;
 let stageClearing = false;
 let currentEvent = null; // 'gold' | 'xp' while in an event
+let currentEventMapKey = null; // the event's map (EVENT_MAPS mapKey) while in an event
 let currentPath = null; // campaign path key while in campaign
 
 const DAILY_TOTAL_STAGES = 31;
@@ -659,6 +660,7 @@ function startExpedition(mode, opts = {}) {
     currentMode = mode;
     document.getElementById('view-combat')?.classList.toggle('tower-mode', mode === 'tower'); // Tower: HP and armor bars sit lower
     currentEvent = mode === 'event' ? opts.kind : null;
+    currentEventMapKey = mode === 'event' ? opts.mapKey : null;
     currentPath = null;
     attackCount = 0;
     stageClearing = false;
@@ -2308,6 +2310,7 @@ function onStageCleared() {
 
             if (currentMode === 'event' && currentStage > maxStages) {
                 if (typeof resetMapRunes === 'function') resetMapRunes();
+                recordEventSweep(currentEvent, currentEventMapKey, stageSummary); // unlocks Sweep for this map
                 logMessage(`[Event] ${activeMap.title} cleared!`, 'levelup');
                 showModal("Event Cleared!", '', buildMapSummaryHTML('win', 'Return to Events'), () => switchView('events'));
                 updateUI();
@@ -2643,6 +2646,45 @@ function getEventState() {
         player.events = { date: todayKey(), plays: { daily: 0, gold: 0, xp: 0, tower: 0 }, dailyCleared: false };
     }
     return player.events;
+}
+
+// ---------- EVENT SWEEP ----------
+// Gold Frenzy and Wisdom Trial: once a map is fully cleared, Sweep finishes it at once for one of the day's plays.
+// A Sweep pays the rewards of your best full clear of that map (best = most Gold for Gold Frenzy, most Base EXP
+// for Wisdom Trial). Records live in player.eventSweep['gold:map10'] = { gold, baseExp, jobExp }.
+function eventSweepRecord(kind, mapKey) {
+    return (player.eventSweep && player.eventSweep[`${kind}:${mapKey}`]) || null;
+}
+function recordEventSweep(kind, mapKey, summary) {
+    if ((kind !== 'gold' && kind !== 'xp') || !mapKey || !summary) return;
+    if (!player.eventSweep) player.eventSweep = {};
+    const key = `${kind}:${mapKey}`;
+    const rec = { gold: summary.gold || 0, baseExp: summary.baseExp || 0, jobExp: summary.jobExp || 0 };
+    const old = player.eventSweep[key];
+    const score = r => kind === 'gold' ? r.gold : r.baseExp;
+    if (!old || score(rec) > score(old)) player.eventSweep[key] = rec;
+}
+function sweepEvent(kind, mapKey) {
+    const rec = eventSweepRecord(kind, mapKey);
+    if (!rec) { floatFailAt('Clear this map once to unlock Sweep'); return; }
+    if (!eventCanPlay(kind)) { floatFailAt(`No plays left today (${EVENT_LIMIT} per day)`); return; }
+    getEventState().plays[kind]++;
+    const gold = rec.gold || 0;
+    const baseExp = player.baseLv >= MAX_BASE_LV ? 0 : (rec.baseExp || 0);
+    const jobExp = player.jobLv >= MAX_CLASS_LV ? 0 : (rec.jobExp || 0);
+    player.gold += gold;
+    player.baseExp += baseExp;
+    player.jobExp += jobExp;
+    if (gold > 0) updateQuestProgress('gold', gold);
+    checkLevelUps();
+    const fmt = n => Number(n).toLocaleString();
+    const text = kind === 'gold' ? `+${fmt(gold)} Gold` : `+${fmt(baseExp)} Base EXP, +${fmt(jobExp)} Class EXP`;
+    logMessage(`[Event] Sweep: ${EVENT_CONFIG[kind].name} ${text}`, 'levelup');
+    floatSuccessAt(`Sweep: ${text}`);
+    if (gold > 0 && typeof playSfx === 'function') playSfx(SFX.coin);
+    updateUI();
+    saveGame();
+    if (typeof renderEventsView === 'function') renderEventsView();
 }
 
 function eventCanPlay(kind) {

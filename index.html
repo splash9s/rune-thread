@@ -5,7 +5,7 @@
     // Shows script errors on screen (tap the box to close it), so a tester's screenshot captures them: phones have no console.
     // Add ?debug=1 to the link to also list each start-up step with its time (window.rtDebug).
     (function () {
-        var BUILD = window.BUILD = '20261126-s3'; // window.BUILD: the other scripts read the version from here
+        var BUILD = window.BUILD = '20261126-s4'; // window.BUILD: the other scripts read the version from here
         var DEBUG = /[?&]debug=1/.test(location.search);
         var t0 = Date.now();
         function show(msg, isDebug) {
@@ -1946,6 +1946,13 @@
                 .ev-start { flex: none; margin-left: auto; width: 190px; height: 106px; padding: 0; border: 0; background: none; cursor: pointer; }
                 .ev-start img { width: 100%; height: 100%; display: block; }
                 .ev-start:disabled { filter: grayscale(1); opacity: .45; cursor: not-allowed; }
+                /* Sweep (Gold Frenzy and Wisdom Trial): finishes a map cleared before, left of Start */
+                .ev-sweep { flex: none; margin-left: auto; height: 96px; min-width: 170px; padding: 0 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 3px solid #c9a227; border-radius: 14px; background: linear-gradient(#7a4a17, #4a2a0b); color: #fde68a; cursor: pointer; box-shadow: 0 3px 0 #2b1806; }
+                .ev-sweep b { font-size: 30px; line-height: 1; }
+                .ev-sweep span { font-size: 18px; color: #fef3c7; white-space: nowrap; }
+                .ev-sweep:active { transform: translateY(2px); box-shadow: none; }
+                .ev-sweep:disabled { filter: grayscale(1); opacity: .45; cursor: not-allowed; }
+                .ev-sweep + .ev-start { margin-left: 0; }
             </style>
             <div id="events-stage" class="town-stage" data-w="1920" data-h="1080">
                 <div class="ts-inner" style="width:1920px; height:1080px;">
@@ -2552,13 +2559,13 @@
     <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261126sr"></script>
     <script src="js/touch-lock.js?v=20261124nd"></script>
-    <script src="js/combat.js?v=20261126pg"></script>
+    <script src="js/combat.js?v=20261126sw"></script>
     <script src="js/crit-fx.js?v=20261124ef"></script>
     <script src="js/landscape.js?v=20261122a"></script>
     <script src="js/bolt-fx.js?v=20261124ef"></script>
     <script src="js/rewarded-ad.js?v=20261126an"></script>
     <script src="js/play-billing.js?v=20261126an"></script>
-    <script src="js/ui.js?v=20261126s6"></script>
+    <script src="js/ui.js?v=20261126sw"></script>
     <script src="js/equip-flash.js?v=20261124ef"></script>
     <script src="js/names-th.js?v=20261121rn"></script>
     <script src="js/i18n.js?v=20261121sf"></script>
