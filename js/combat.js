@@ -1757,8 +1757,11 @@ function monsterAct(m, derived, position = 0) {
     if (m.isBoss) m.attackCount = (m.attackCount || 0) + 1;
     if (m.isBoss) bossSkillOnAttack(m);
 
-    // Healers restore the most wounded ally by a flat amount instead of attacking
-    if (roleOf(m) === 'healer' && m.heal) {
+    // Healers restore the most wounded ally by a flat amount instead of attacking.
+    // When every monster still standing is a healer (for example a wave of only healers), they attack instead:
+    // healing each other forever would leave a fight that nobody can win or lose.
+    const onlyHealersLeft = getAliveMonsters().every(x => roleOf(x) === 'healer');
+    if (roleOf(m) === 'healer' && m.heal && !onlyHealersLeft) {
         const hurtAllies = getAliveMonsters().filter(x => x !== m && x.hp < x.maxHp).sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp));
         const wounded = hurtAllies[0] || (m.hp < m.maxHp ? m : null); // no hurt ally: heal self
         if (wounded) {
