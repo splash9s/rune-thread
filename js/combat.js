@@ -518,7 +518,7 @@ function showRuneChoices(isNew) {
             </div>`;
     }).join('') || '<div style="color:#cbd5e1; font-size:14px;">No rune acquired yet</div>';
     let html = `<div id="rune-pick-root" class="flex flex-col gap-4">`;
-    html += `<div class="flex justify-center items-start flex-wrap gap-5">`;
+    html += `<div class="rune-pick-row">`; // the three cards stay in one row and scale to the screen (CSS: .rune-pick-row)
     choices.forEach(id => {
         const r = RUNE_DEFS[id];
         const n = getRuneOwnedCount(id);

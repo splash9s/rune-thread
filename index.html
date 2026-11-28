@@ -5,7 +5,7 @@
     // Shows script errors on screen (tap the box to close it), so a tester's screenshot captures them: phones have no console.
     // Add ?debug=1 to the link to also list each start-up step with its time (window.rtDebug).
     (function () {
-        var BUILD = window.BUILD = '20261126-s17'; // window.BUILD: the other scripts read the version from here
+        var BUILD = window.BUILD = '20261126-s18'; // window.BUILD: the other scripts read the version from here
         var DEBUG = /[?&]debug=1/.test(location.search);
         var t0 = Date.now();
         function show(msg, isDebug) {
@@ -1177,6 +1177,13 @@
         .rune-pick-desc { font-size: 4.8cqw; line-height: 1.2; color: #ffffff; text-decoration: none; }
         /* Rune pick window: edge tab and slide-out list of acquired runes */
         #rune-pick-root { position: relative; overflow: hidden; }
+        /* Rune pick: the three cards sit in one row and shrink to fit the screen width and height (phone portrait and landscape),
+           so the cards and the refresh button show together without scrolling */
+        #rune-pick-root { gap: 10px; }
+        #rune-pick-root .rune-pick-row { display: flex; flex-wrap: nowrap; justify-content: center; align-items: flex-start; gap: clamp(6px, 2vw, 20px); }
+        #rune-pick-root .rune-pick-row .rune-pick-card { flex: 0 1 auto; width: min(270px, max(96px, calc((100vw - 56px - 2 * clamp(6px, 2vw, 20px)) / 3)), max(96px, calc((100vh - 140px) * 270 / 366))); max-width: none; }
+        #rune-pick-root .rune-pick-row .rune-pick-name { font-size: clamp(9px, 6.3cqw, 26px); }
+        #rune-pick-root .rune-pick-row .rune-pick-desc { font-size: clamp(8px, 4.8cqw, 20px); }
         #rune-acq-tab { position: absolute; right: 0; top: 50%; transform: translateY(-50%); z-index: 5; writing-mode: vertical-rl; padding: 16px 8px; background: rgba(15, 23, 42, .9); border: 1px solid #b8945a; border-right: 0; border-radius: 12px 0 0 12px; color: #fbbf24; font-size: 14px; font-weight: 900; letter-spacing: 2px; cursor: pointer; }
         #rune-acq-panel { position: absolute; top: 0; bottom: 0; right: 0; z-index: 6; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px; padding: 16px; background: rgba(15, 23, 42, .94); border-left: 2px solid #b8945a; border-radius: 16px 0 0 16px; transform: translateX(105%); transition: transform .25s ease; }
         #rune-acq-panel.open { transform: translateX(0); }
@@ -2572,7 +2579,7 @@
     <script src="js/menu-dot.js?v=20261124md"></script>
     <script src="js/stamina.js?v=20261126sr"></script>
     <script src="js/touch-lock.js?v=20261124nd"></script>
-    <script src="js/combat.js?v=20261126cb3"></script>
+    <script src="js/combat.js?v=20261128rp"></script>
     <script src="js/crit-fx.js?v=20261124ef"></script>
     <script src="js/landscape.js?v=20261122a"></script>
     <script src="js/bolt-fx.js?v=20261124ef"></script>
